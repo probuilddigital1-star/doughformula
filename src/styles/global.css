@@ -67,6 +67,7 @@
    ============================================ */
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
@@ -75,6 +76,7 @@ body {
   color: var(--espresso);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
   -moz-osx-font-smoothing: grayscale;
 }
 
@@ -311,7 +313,6 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid var(--border-light);
   border-radius: var(--radius-lg);
   background-color: white;
-  overflow: hidden;
 }
 
 .accordion-trigger {
@@ -675,6 +676,7 @@ section:not(.hero-editorial) {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1rem;
+  overflow-x: hidden;
 }
 
 @media (min-width: 640px) {
@@ -695,6 +697,12 @@ section:not(.hero-editorial) {
 
 /* Touch-friendly tap targets (min 44px) */
 @media (max-width: 768px) {
+  /* Prevent horizontal overflow on mobile */
+  .grid > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
   .btn {
     min-height: 48px;
     padding: 0.875rem 1.25rem;
@@ -868,6 +876,49 @@ section:not(.hero-editorial) {
 
 .advanced-tab-content {
   animation: fadeIn 0.2s ease-out;
+}
+
+/* Tab Navigation - Flexbox with Wrap */
+.advanced-tabs-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.advanced-tabs-grid .advanced-tab {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  background: var(--cream-warm);
+  border: 1px solid var(--border-light);
+  transition: all 0.2s ease;
+}
+
+.advanced-tabs-grid .advanced-tab:hover {
+  background: var(--parchment);
+  border-color: var(--crust-brown);
+}
+
+.advanced-tabs-grid .advanced-tab-active {
+  background: var(--accent-gold);
+  color: white;
+  border-color: var(--accent-gold);
+}
+
+/* Mobile adjustments for tab grid */
+@media (max-width: 640px) {
+  .advanced-tabs-grid {
+    gap: 0.375rem;
+    padding: 0.5rem;
+  }
+
+  .advanced-tabs-grid .advanced-tab {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+  }
 }
 
 @keyframes fadeIn {

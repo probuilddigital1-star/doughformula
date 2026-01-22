@@ -402,7 +402,7 @@ const breadStyles = [
           </div>
 
           <!-- Advanced Options - Tabbed Interface -->
-          <div class="card p-0 overflow-hidden">
+          <div class="card p-0">
             <div class="accordion-item border-0">
               <button class="accordion-trigger px-4 sm:px-6 py-4" id="advanced-trigger">
                 <span class="flex items-center gap-2">
@@ -416,29 +416,15 @@ const breadStyles = [
                 </svg>
               </button>
               <div class="hidden" id="advanced-content">
-                <!-- Tab Navigation -->
-                <div class="flex border-b border-[var(--border-light)] px-2 overflow-x-auto">
-                  <button class="advanced-tab advanced-tab-active px-4 py-3 text-sm font-medium whitespace-nowrap" data-tab="basics">
-                    Basics
-                  </button>
-                  <button class="advanced-tab px-4 py-3 text-sm font-medium whitespace-nowrap" data-tab="yeast">
-                    Yeast
-                  </button>
-                  <button class="advanced-tab px-4 py-3 text-sm font-medium whitespace-nowrap" data-tab="flour">
-                    Flour
-                  </button>
-                  <button class="advanced-tab px-4 py-3 text-sm font-medium whitespace-nowrap" data-tab="enrichments">
-                    Enrichments
-                  </button>
-                  <button class="advanced-tab px-4 py-3 text-sm font-medium whitespace-nowrap" data-tab="temperature">
-                    Temperature
-                  </button>
-                  <button class="advanced-tab px-4 py-3 text-sm font-medium whitespace-nowrap" data-tab="timing">
-                    Timing
-                  </button>
-                  <button class="advanced-tab px-4 py-3 text-sm font-medium whitespace-nowrap" data-tab="preferments">
-                    Preferments
-                  </button>
+                <!-- Tab Navigation - Wrapping Grid -->
+                <div class="advanced-tabs-grid" id="tabs-wrapper">
+                    <button class="advanced-tab advanced-tab-active" data-tab="basics">Basics</button>
+                    <button class="advanced-tab" data-tab="yeast">Yeast</button>
+                    <button class="advanced-tab" data-tab="flour">Flour</button>
+                    <button class="advanced-tab" data-tab="enrichments">Enrichments</button>
+                    <button class="advanced-tab" data-tab="temperature">Temperature</button>
+                    <button class="advanced-tab" data-tab="timing">Timing</button>
+                    <button class="advanced-tab" data-tab="preferments">Preferments</button>
                 </div>
 
                 <!-- Tab: Basics -->
@@ -2740,8 +2726,44 @@ const breadStyles = [
     if (content && chevron) {
       content.classList.toggle('hidden');
       chevron.style.transform = content.classList.contains('hidden') ? '' : 'rotate(180deg)';
+      // Initialize scroll indicator when opening
+      if (!content.classList.contains('hidden')) {
+        setTimeout(updateScrollIndicators, 50);
+      }
     }
   });
+
+  // Tab scroll indicators for mobile
+  const tabsWrapper = document.getElementById('tabs-wrapper');
+  const tabsScroll = document.getElementById('tabs-scroll');
+  const scrollHint = document.getElementById('scroll-hint');
+
+  function updateScrollIndicators() {
+    if (!tabsScroll || !tabsWrapper) return;
+
+    const { scrollLeft, scrollWidth, clientWidth } = tabsScroll;
+    const isAtStart = scrollLeft <= 5;
+    const isAtEnd = scrollLeft + clientWidth >= scrollWidth - 5;
+
+    // Toggle fade indicators
+    tabsWrapper.classList.toggle('scrolled-start', !isAtStart);
+    tabsWrapper.classList.toggle('scrolled-end', isAtEnd);
+
+    // Show/hide scroll hint on mobile
+    if (scrollHint) {
+      if (window.innerWidth <= 640 && !isAtEnd) {
+        scrollHint.classList.remove('hidden');
+      } else {
+        scrollHint.classList.add('hidden');
+      }
+    }
+  }
+
+  tabsScroll?.addEventListener('scroll', updateScrollIndicators);
+  window.addEventListener('resize', updateScrollIndicators);
+
+  // Initial check
+  setTimeout(updateScrollIndicators, 100);
 
   // Tab switching
   document.querySelectorAll('.advanced-tab').forEach(tab => {
