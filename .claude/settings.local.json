@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(frontend-design)",
+      "Skill(ralph-wiggum:ralph-loop)",
+      "Bash(bash \"C:\\\\Users\\\\zckpe\\\\.claude\\\\plugins\\\\cache\\\\claude-code-plugins\\\\ralph-wiggum\\\\1.0.0/scripts/setup-ralph-loop.sh\")",
+      "Bash(bash \"C:\\\\Users\\\\zckpe\\\\.claude\\\\plugins\\\\cache\\\\claude-code-plugins\\\\ralph-wiggum\\\\1.0.0/scripts/setup-ralph-loop.sh\" \"Execute user stories from USER_STORIES.md starting with P0 MVP items. Build thedoughformula.com using Astro and Tailwind with Fraunces and DM Sans fonts, honey gold accent color, flour dust texture, torn parchment recipe cards. Create bread calculator similar to thepizzadoughformula.com but with magazine editorial vibe.\")",
+      "Bash(npm create:*)",
+      "Bash(npm run dev:*)",
+      "Bash(curl:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run preview:*)",
+      "Bash(taskkill:*)",
+      "Bash(timeout /t:*)",
+      "Bash(findstr:*)",
+      "WebSearch",
+      "Bash(npx lighthouse:*)",
+      "Bash(node -e:*)",
+      "Bash(npx sharp-cli:*)",
+      "Bash(npx @aspect-image/sharp:*)",
+      "Bash(npx squoosh-cli:*)",
+      "Bash(magick:*)",
+      "Bash(ls:*)",
+      "Bash(python -c:*)",
+      "Bash(dir:*)",
+      "Bash(powershell \"Get-Item ''C:\\\\Users\\\\zckpe\\\\Documents\\\\claude-projects\\\\thedoughformula\\\\public\\\\hero-bread.jpg'' | Select-Object Name, Length, @{Name=''SizeMB'';Expression={[math]::Round\\($_Length/1MB, 2\\)}}\")",
+      "Bash(wc:*)",
+      "Bash(\"C:\\\\Users\\\\zckpe\\\\.claude\\\\plugins\\\\cache\\\\claude-code-plugins\\\\ralph-wiggum\\\\1.0.0/scripts/setup-ralph-loop.sh\" \"Implement Sprint 1 from USER_STORIES.md for bread calculator\")",
+      "Bash(netstat:*)",
+      "Bash(grep:*)",
+      "Bash(tasklist:*)",
+      "Bash(npx astro dev)",
+      "Bash(powershell:*)",
+      "Bash(npx astro dev:*)",
+      "Bash(npm install:*)",
+      "Bash(git init:*)",
+      "Bash(git remote add:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

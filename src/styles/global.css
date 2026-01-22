@@ -1,0 +1,1266 @@
+@import "tailwindcss";
+
+/* ============================================
+   THE DOUGH FORMULA - Design System
+   French Boulangerie meets Kinfolk Magazine
+   ============================================ */
+
+/* ============================================
+   CSS Custom Properties (Design Tokens)
+   ============================================ */
+:root {
+  /* Primary — Aged Honey Gold */
+  --accent-gold: #B38B4D;
+  --accent-gold-hover: #9A7640;
+  --accent-gold-light: #E8DCC8;
+  --accent-gold-glow: rgba(179, 139, 77, 0.3);
+
+  /* Warm Neutrals — Flour & Crust */
+  --cream-flour: #FAF7F2;
+  --cream-warm: #F3EDE4;
+  --parchment: #EDE6D8;
+
+  /* Deep Tones — Espresso & Crust */
+  --espresso: #2C2416;
+  --crust-brown: #5C4A3D;
+  --crust-dark: #3D3229;
+
+  /* Accent Moments */
+  --scoring-line: #8B7355;
+  --wheat-gold: #D4A84B;
+
+  /* Functional */
+  --border-light: #E5DFD5;
+  --border-medium: #C9C0B3;
+  --success: #5D8A66;
+  --error: #B35D4D;
+
+  /* Typography */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-editorial: 'Cormorant Garamond', Georgia, serif;
+
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+
+  /* Border Radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(44, 36, 22, 0.05);
+  --shadow-md: 0 4px 12px rgba(44, 36, 22, 0.08);
+  --shadow-lg: 0 12px 40px rgba(44, 36, 22, 0.12);
+  --shadow-glow: 0 0 30px var(--accent-gold-glow);
+}
+
+/* ============================================
+   Base Styles
+   ============================================ */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--cream-flour);
+  color: var(--espresso);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+   Typography
+   ============================================ */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--espresso);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-editorial {
+  font-family: var(--font-editorial);
+}
+
+.text-accent {
+  color: var(--accent-gold);
+}
+
+/* ============================================
+   Flour Dust Texture Overlay
+   ============================================ */
+.flour-dusted {
+  position: relative;
+}
+
+.flour-dusted::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.025;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  z-index: 1;
+}
+
+.flour-dusted > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* ============================================
+   Buttons
+   ============================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 1rem;
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-primary {
+  background-color: var(--espresso);
+  color: var(--cream-flour);
+}
+
+.btn-primary:hover {
+  background-color: var(--crust-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-gold {
+  background-color: var(--accent-gold);
+  color: white;
+}
+
+.btn-gold:hover {
+  background-color: var(--accent-gold-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-glow);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--espresso);
+  border: 1.5px solid var(--border-medium);
+}
+
+.btn-outline:hover {
+  border-color: var(--espresso);
+  background-color: var(--cream-warm);
+}
+
+/* ============================================
+   Cards
+   ============================================ */
+.card {
+  background-color: white;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.card-selected {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 3px rgba(179, 139, 77, 0.15);
+}
+
+/* ============================================
+   Recipe Card (Torn Parchment Effect)
+   ============================================ */
+.recipe-card {
+  background-color: var(--parchment);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  position: relative;
+}
+
+.recipe-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background:
+    linear-gradient(135deg, var(--accent-gold) 25%, transparent 25%) -10px 0,
+    linear-gradient(225deg, var(--accent-gold) 25%, transparent 25%) -10px 0,
+    linear-gradient(315deg, var(--accent-gold) 25%, transparent 25%),
+    linear-gradient(45deg, var(--accent-gold) 25%, transparent 25%);
+  background-size: 20px 20px;
+  background-color: var(--accent-gold);
+}
+
+.recipe-card-header {
+  background-color: var(--accent-gold);
+  color: white;
+  padding: 1.5rem 1.5rem 1rem;
+  margin-top: 10px;
+}
+
+.recipe-card-body {
+  padding: 1.5rem;
+}
+
+/* ============================================
+   Scoring Mark Dividers
+   ============================================ */
+.scoring-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 0;
+  color: var(--scoring-line);
+  font-size: 1.25rem;
+  letter-spacing: 0.5rem;
+}
+
+.scoring-divider::before,
+.scoring-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-light), transparent);
+}
+
+/* ============================================
+   Form Elements
+   ============================================ */
+.input {
+  padding: 0.75rem 1rem;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background-color: white;
+  transition: all 0.2s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 3px rgba(179, 139, 77, 0.1);
+}
+
+.input-number {
+  width: 80px;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* ============================================
+   Preset Pills
+   ============================================ */
+.preset-pill {
+  display: inline-flex;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--crust-brown);
+  background-color: var(--cream-warm);
+  border: 1px solid var(--border-light);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-pill:hover {
+  background-color: var(--accent-gold-light);
+  border-color: var(--accent-gold);
+}
+
+.preset-pill-active {
+  background-color: var(--accent-gold);
+  color: white;
+  border-color: var(--accent-gold);
+}
+
+/* ============================================
+   Accordion
+   ============================================ */
+.accordion-item {
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  background-color: white;
+  overflow: hidden;
+}
+
+.accordion-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--espresso);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.accordion-trigger:hover {
+  background-color: var(--cream-warm);
+}
+
+.accordion-content {
+  padding: 0 1.25rem 1rem;
+  color: var(--crust-brown);
+}
+
+/* ============================================
+   Dark Section
+   ============================================ */
+.section-dark {
+  background-color: var(--crust-dark);
+  color: var(--cream-flour);
+}
+
+.section-dark h2,
+.section-dark h3 {
+  color: var(--cream-flour);
+}
+
+.section-dark .input {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--cream-flour);
+}
+
+.section-dark .input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ============================================
+   Animations
+   ============================================ */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes kenburns {
+  0% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1.15) translate(-2%, -1%);
+  }
+}
+
+.animate-rise {
+  animation: rise 0.8s ease-out both;
+}
+
+/* ============================================
+   Hero Image with Ken Burns Effect
+   ============================================ */
+
+/* Full-bleed editorial hero */
+.hero-editorial {
+  position: relative;
+  min-height: 85vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.hero-editorial::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(250, 247, 242, 0.95) 0%,
+    rgba(250, 247, 242, 0.7) 40%,
+    rgba(250, 247, 242, 0.3) 60%,
+    transparent 100%
+  );
+  z-index: 2;
+  pointer-events: none;
+}
+
+@media (max-width: 1024px) {
+  .hero-editorial::before {
+    background: linear-gradient(
+      to bottom,
+      rgba(250, 247, 242, 0.9) 0%,
+      rgba(250, 247, 242, 0.7) 50%,
+      rgba(250, 247, 242, 0.4) 100%
+    );
+  }
+}
+
+.hero-bg-image {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.hero-bg-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 60% center;
+  animation: kenburns-drift 25s ease-in-out infinite alternate;
+  will-change: transform;
+  contain: layout style paint;
+}
+
+/* Ken Burns: Start on crumb detail, slowly reveal full loaf */
+@keyframes kenburns-drift {
+  0% {
+    transform: scale(1.15) translate(-3%, 2%);
+  }
+  100% {
+    transform: scale(1.05) translate(1%, -1%);
+  }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 3;
+}
+
+/* Flour dust particles floating over hero */
+.hero-editorial::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,0.4) 1px, transparent 1px),
+    radial-gradient(circle at 80% 20%, rgba(255,255,255,0.3) 1px, transparent 1px),
+    radial-gradient(circle at 40% 70%, rgba(255,255,255,0.5) 1px, transparent 1px),
+    radial-gradient(circle at 90% 80%, rgba(255,255,255,0.3) 1px, transparent 1px),
+    radial-gradient(circle at 10% 90%, rgba(255,255,255,0.4) 1px, transparent 1px);
+  background-size: 100px 100px;
+  opacity: 0.6;
+  z-index: 4;
+  pointer-events: none;
+  animation: flour-drift 30s linear infinite;
+}
+
+@keyframes flour-drift {
+  0% { transform: translateY(0) translateX(0); }
+  100% { transform: translateY(-20px) translateX(10px); }
+}
+
+/* Photo credit badge */
+.photo-credit {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  font-size: 0.75rem;
+  color: var(--crust-brown);
+  opacity: 0.6;
+  z-index: 5;
+  font-family: var(--font-body);
+}
+
+/* Scroll indicator */
+.scroll-indicator {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--crust-brown);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
+
+.scroll-indicator::after {
+  content: '';
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, var(--accent-gold), transparent);
+}
+
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(5px); }
+}
+
+/* Legacy wrapper styles (fallback) */
+.hero-image-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+}
+
+.hero-image-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 60%,
+    rgba(44, 36, 22, 0.3) 100%
+  );
+  pointer-events: none;
+}
+
+.hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: kenburns 20s ease-out infinite alternate;
+  will-change: transform;
+}
+
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
+.delay-5 { animation-delay: 0.5s; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================
+   Toast Notifications
+   ============================================ */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  padding: 1rem 1.5rem;
+  background-color: var(--espresso);
+  color: white;
+  border-radius: var(--radius-lg);
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* ============================================
+   Performance Optimizations
+   ============================================ */
+
+/* Content-visibility for below-fold sections */
+section:not(.hero-editorial) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
+/* Reduce hero height on smaller screens for faster LCP */
+@media (max-width: 768px) {
+  .hero-editorial {
+    min-height: 70vh;
+  }
+}
+
+/* Optimize animations for GPU acceleration */
+.hero-bg-image img {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* ============================================
+   Print Styles
+   ============================================ */
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+
+  .no-print,
+  nav,
+  footer,
+  .btn,
+  .newsletter-section {
+    display: none !important;
+  }
+
+  .recipe-card {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+}
+
+/* ============================================
+   Accessibility Utilities
+   ============================================ */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sr-only:focus,
+.sr-only:focus-within,
+.focus\:not-sr-only:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* ============================================
+   Responsive Utilities
+   ============================================ */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding: 0 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding: 0 2rem;
+  }
+}
+
+/* ============================================
+   Mobile-First Enhancements
+   ============================================ */
+
+/* Touch-friendly tap targets (min 44px) */
+@media (max-width: 768px) {
+  .btn {
+    min-height: 48px;
+    padding: 0.875rem 1.25rem;
+  }
+
+  .preset-pill {
+    min-height: 44px;
+    padding: 0.625rem 1rem;
+  }
+
+  .style-card {
+    padding: 1rem;
+  }
+
+  .accordion-trigger {
+    padding: 1rem;
+    min-height: 48px;
+  }
+
+  /* Larger touch targets for inputs */
+  .input {
+    min-height: 48px;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+
+  .input-number {
+    width: 70px;
+    font-size: 16px;
+  }
+
+  /* Better mobile spacing */
+  section {
+    scroll-margin-top: 70px;
+  }
+
+  /* Recipe card mobile polish */
+  .recipe-card-header {
+    padding: 1.25rem;
+  }
+
+  .recipe-card-body {
+    padding: 1rem;
+  }
+
+  /* Mobile navigation improvements */
+  nav .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  /* Full-width mobile menu */
+  #mobile-menu {
+    padding: 2rem;
+  }
+
+  #mobile-menu a {
+    padding: 1rem;
+    display: block;
+    width: 100%;
+    text-align: center;
+    border-radius: var(--radius-md);
+    transition: background-color 0.2s;
+  }
+
+  #mobile-menu a:active {
+    background-color: var(--cream-warm);
+  }
+
+  /* Better horizontal scrolling prevention */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Sticky bottom CTA for mobile */
+  .mobile-sticky-cta {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1rem;
+    background: linear-gradient(to top, var(--cream-flour) 80%, transparent);
+    z-index: 30;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 380px) {
+  .container {
+    padding: 0 0.75rem;
+  }
+
+  h1 {
+    font-size: 2.25rem;
+  }
+
+  .style-card {
+    padding: 0.75rem;
+  }
+
+  .style-card span:first-child {
+    font-size: 1.5rem;
+  }
+
+  .btn {
+    padding: 0.75rem 1rem;
+    font-size: 0.9375rem;
+  }
+}
+
+/* Improved focus states for accessibility */
+@media (hover: none) and (pointer: coarse) {
+  /* Touch devices - larger tap targets */
+  .card:active,
+  .style-card:active {
+    transform: scale(0.98);
+    transition: transform 0.1s;
+  }
+
+  .btn:active {
+    transform: scale(0.97);
+  }
+
+  /* Remove hover effects on touch */
+  .card:hover {
+    box-shadow: none;
+  }
+}
+
+/* Safe area padding for notched devices */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  footer {
+    padding-bottom: calc(3rem + env(safe-area-inset-bottom));
+  }
+
+  .mobile-sticky-cta {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Landscape mode on mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .hero-section {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .scoring-divider {
+    padding: 0.5rem 0;
+  }
+}
+
+/* ============================================
+   Advanced Options Tabs
+   ============================================ */
+.advanced-tab {
+  position: relative;
+  color: var(--crust-brown);
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.advanced-tab:hover {
+  color: var(--espresso);
+  background-color: var(--cream-warm);
+}
+
+.advanced-tab-active {
+  color: var(--accent-gold);
+  border-bottom-color: var(--accent-gold);
+}
+
+.advanced-tab-content {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================
+   Yeast Type Buttons
+   ============================================ */
+.yeast-type-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.75rem;
+  background-color: var(--cream-warm);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  color: var(--crust-brown);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.yeast-type-btn:hover {
+  border-color: var(--accent-gold);
+  background-color: var(--accent-gold-light);
+}
+
+.yeast-type-btn svg {
+  color: var(--crust-brown);
+  transition: color 0.2s ease;
+}
+
+.yeast-type-active {
+  background-color: var(--accent-gold);
+  border-color: var(--accent-gold);
+  color: white;
+}
+
+.yeast-type-active svg {
+  color: white;
+}
+
+/* Preferment Type Buttons */
+.preferment-type-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.75rem 0.5rem;
+  background-color: var(--cream-warm);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  color: var(--crust-brown);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preferment-type-btn:hover {
+  border-color: var(--accent-gold);
+  background-color: var(--accent-gold-light);
+}
+
+.preferment-type-btn svg {
+  color: var(--crust-brown);
+  transition: color 0.2s ease;
+}
+
+.preferment-type-active {
+  background-color: var(--accent-gold);
+  border-color: var(--accent-gold);
+  color: white;
+}
+
+.preferment-type-active svg {
+  color: white;
+}
+
+/* Autolyse Duration Buttons */
+.autolyse-duration-btn {
+  padding: 0.5rem 0.75rem;
+  background-color: var(--cream-warm);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  color: var(--crust-brown);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.autolyse-duration-btn:hover {
+  border-color: var(--accent-gold);
+  background-color: var(--accent-gold-light);
+}
+
+.autolyse-duration-active {
+  background-color: var(--accent-gold);
+  border-color: var(--accent-gold);
+  color: white;
+}
+
+/* Schedule Timeline */
+.schedule-item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.schedule-item-time {
+  width: 5rem;
+  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--accent-gold);
+  font-size: 0.875rem;
+}
+
+.schedule-item-task {
+  flex: 1;
+  color: var(--crust-brown);
+  font-size: 0.875rem;
+}
+
+.schedule-item-duration {
+  flex-shrink: 0;
+  color: var(--crust-brown);
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+/* ============================================
+   Pizza Dough Formula CTA
+   ============================================ */
+.pizza-cta {
+  background: linear-gradient(135deg, var(--cream-warm) 0%, var(--parchment) 100%);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.pizza-cta:hover {
+  border-color: var(--accent-gold);
+  box-shadow: var(--shadow-md);
+}
+
+.pizza-cta-link {
+  display: block;
+  padding: 1rem 1.25rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.pizza-cta-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pizza-cta-icon {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  background-color: var(--accent-gold);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.pizza-cta:hover .pizza-cta-icon {
+  transform: rotate(45deg);
+}
+
+.pizza-cta-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.pizza-cta-label {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-gold);
+  margin-bottom: 0.125rem;
+}
+
+.pizza-cta-headline {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--espresso);
+  line-height: 1.3;
+}
+
+.pizza-cta-headline em {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  color: var(--crust-brown);
+}
+
+.pizza-cta-subtext {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--crust-brown);
+  margin-top: 0.125rem;
+  line-height: 1.4;
+}
+
+.pizza-cta-arrow {
+  flex-shrink: 0;
+  color: var(--accent-gold);
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.pizza-cta:hover .pizza-cta-arrow {
+  opacity: 1;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+  .pizza-cta-link {
+    padding: 0.875rem 1rem;
+  }
+
+  .pizza-cta-content {
+    gap: 0.75rem;
+  }
+
+  .pizza-cta-icon {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .pizza-cta-headline {
+    font-size: 0.9375rem;
+  }
+
+  .pizza-cta-subtext {
+    font-size: 0.75rem;
+  }
+}
+
+/* ============================================
+   Mixer Type Buttons
+   ============================================ */
+.mixer-btn {
+  padding: 0.625rem 0.75rem;
+  background-color: var(--cream-warm);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  color: var(--crust-brown);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mixer-btn:hover {
+  border-color: var(--accent-gold);
+  background-color: var(--accent-gold-light);
+}
+
+.mixer-btn-active {
+  background-color: var(--accent-gold);
+  border-color: var(--accent-gold);
+  color: white;
+}
+
+/* ============================================
+   Range Slider Enhancements
+   ============================================ */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: var(--cream-warm);
+  border-radius: 3px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: var(--accent-gold);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transition: transform 0.15s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: var(--accent-gold);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* ============================================
+   Toggle Switch
+   ============================================ */
+.toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background-color: var(--border-light);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
+}
+
+.toggle-switch.active {
+  background-color: var(--accent-gold);
+}
+
+.toggle-switch.active::after {
+  transform: translateX(20px);
+}
+
+/* ============================================
+   Temperature & Timing Info Cards
+   ============================================ */
+.info-card {
+  background-color: var(--cream-warm);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+
+.info-card-highlight {
+  background-color: rgba(179, 139, 77, 0.1);
+  border: 1px solid rgba(179, 139, 77, 0.2);
+}
+
+/* ============================================
+   Mobile Adjustments for Advanced Options
+   ============================================ */
+@media (max-width: 640px) {
+  .advanced-tab {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .yeast-type-btn {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .yeast-type-btn svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .mixer-btn {
+    padding: 0.5rem;
+  }
+
+  .mixer-btn span {
+    font-size: 0.6875rem;
+  }
+}

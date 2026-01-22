@@ -1,0 +1,3546 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { Image } from 'astro:assets';
+import heroImage from '../assets/hero-bread.jpg';
+
+// Bread style icons (SVG paths)
+const icons = {
+  sourdough: `<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="16" cy="18" rx="12" ry="8"/><path d="M8 14c2-4 6-6 8-6s6 2 8 6"/><path d="M12 18c1-2 3-3 4-3s3 1 4 3"/></svg>`,
+  baguette: `<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22c-1-2-1-4 0-6 2-4 8-8 14-10 2 0 4 1 5 3 1 2 1 5-1 7-3 4-10 8-16 9-1 0-2-1-2-3z"/><path d="M10 16l3-3M14 18l3-3M18 14l2-2"/></svg>`,
+  focaccia: `<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="22" height="14" rx="3"/><circle cx="10" cy="17" r="1.5"/><circle cx="16" cy="14" r="1.5"/><circle cx="22" cy="17" r="1.5"/><circle cx="13" cy="20" r="1.5"/><circle cx="19" cy="20" r="1.5"/></svg>`,
+  sandwich: `<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="8" width="18" height="16" rx="4"/><path d="M7 16h18"/><path d="M10 12h2M14 12h2"/></svg>`,
+  ciabatta: `<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18c0-3 2-6 6-7h12c4 1 6 4 6 7s-2 5-5 6H9c-3-1-5-3-5-6z"/><circle cx="11" cy="16" r="1"/><circle cx="16" cy="18" r="1.5"/><circle cx="21" cy="15" r="1"/><circle cx="14" cy="14" r="0.75"/></svg>`,
+  brioche: `<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="10" r="5"/><ellipse cx="16" cy="21" rx="8" ry="6"/><path d="M12 15c0 1 2 2 4 2s4-1 4-2"/></svg>`,
+  noknead: `<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="11"/><path d="M16 8v8l5 3"/></svg>`,
+  custom: `<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="3"/><path d="M16 6v3M16 23v3M6 16h3M23 16h3"/><path d="M9.5 9.5l2 2M20.5 20.5l2 2M9.5 22.5l2-2M20.5 11.5l2-2"/></svg>`
+};
+
+// Bread style data
+const breadStyles = [
+  {
+    id: 'sourdough',
+    name: 'Sourdough',
+    description: 'Wild yeast, complex tang, overnight fermentation',
+    icon: icons.sourdough,
+    hydration: 75,
+    salt: 2,
+    yeastType: 'starter',
+    yeastPercent: 20,
+    wholeGrain: 10,
+    flour: 'Bread Flour + Whole Wheat',
+    waterTemp: '78-82°F / 26-28°C',
+    instructions: [
+      'Mix flour and water, autolyse 30-60 minutes',
+      'Add starter and salt, mix until combined',
+      'Stretch and fold every 30 min for 2 hours',
+      'Bulk ferment 4-6 hours at room temperature',
+      'Shape and proof overnight in refrigerator (8-12 hrs)',
+      'Bake in Dutch oven at 500°F for 20 min covered, 25 min uncovered'
+    ]
+  },
+  {
+    id: 'baguette',
+    name: 'Baguette',
+    description: 'Crisp crust, open crumb, classic French',
+    icon: icons.baguette,
+    hydration: 68,
+    salt: 2,
+    yeastType: 'instant',
+    yeastPercent: 0.5,
+    wholeGrain: 0,
+    flour: 'Bread Flour or T65',
+    waterTemp: '75-78°F / 24-26°C',
+    instructions: [
+      'Mix flour, water, yeast. Autolyse 20 minutes',
+      'Add salt, mix until smooth',
+      'Fold every 30 minutes for 1.5 hours',
+      'Bulk ferment 2-3 hours until doubled',
+      'Divide and pre-shape, rest 20 minutes',
+      'Final shape into baguettes, proof 45-60 minutes',
+      'Score and bake at 475°F with steam for 22-25 minutes'
+    ]
+  },
+  {
+    id: 'focaccia',
+    name: 'Focaccia',
+    description: 'Olive oil enriched, dimpled, herbaceous',
+    icon: icons.focaccia,
+    hydration: 80,
+    salt: 2.2,
+    yeastType: 'instant',
+    yeastPercent: 0.8,
+    wholeGrain: 0,
+    flour: 'Bread Flour or All-Purpose',
+    waterTemp: '80-85°F / 27-29°C',
+    instructions: [
+      'Mix flour, water, yeast, and 2 tbsp olive oil',
+      'Add salt, mix until smooth and elastic',
+      'Stretch and fold every 30 min for 1.5 hours',
+      'Pour into oiled pan, dimple with fingers',
+      'Proof 1-2 hours until puffy',
+      'Dimple again, drizzle olive oil, add toppings',
+      'Bake at 425°F for 20-25 minutes until golden'
+    ]
+  },
+  {
+    id: 'sandwich',
+    name: 'Sandwich Loaf',
+    description: 'Soft, tender crumb for everyday slicing',
+    icon: icons.sandwich,
+    hydration: 62,
+    salt: 1.8,
+    yeastType: 'instant',
+    yeastPercent: 1,
+    wholeGrain: 0,
+    flour: 'Bread Flour or All-Purpose',
+    waterTemp: '95-105°F / 35-40°C',
+    instructions: [
+      'Dissolve yeast in warm water, let bloom 5 minutes',
+      'Mix flour, salt, and 2 tbsp butter or oil',
+      'Add yeast mixture, knead 8-10 minutes',
+      'Bulk ferment 1-1.5 hours until doubled',
+      'Shape into loaf, place in greased pan',
+      'Proof 45-60 minutes until risen above pan',
+      'Bake at 375°F for 30-35 minutes'
+    ]
+  },
+  {
+    id: 'ciabatta',
+    name: 'Ciabatta',
+    description: 'High hydration, irregular holes, rustic',
+    icon: icons.ciabatta,
+    hydration: 82,
+    salt: 2,
+    yeastType: 'instant',
+    yeastPercent: 0.6,
+    wholeGrain: 0,
+    flour: 'Bread Flour',
+    waterTemp: '70-75°F / 21-24°C',
+    instructions: [
+      'Mix flour, water, yeast into shaggy dough',
+      'Rest 30 minutes (autolyse)',
+      'Add salt, fold until incorporated',
+      'Stretch and fold every 30 min for 3 hours',
+      'Bulk ferment 2-3 hours until very bubbly',
+      'Gently turn out, divide without degassing',
+      'Proof 30-45 min, bake at 475°F with steam for 20-25 min'
+    ]
+  },
+  {
+    id: 'brioche',
+    name: 'Brioche',
+    description: 'Butter and eggs for rich, tender bread',
+    icon: icons.brioche,
+    hydration: 55,
+    salt: 1.8,
+    yeastType: 'instant',
+    yeastPercent: 1.2,
+    wholeGrain: 0,
+    flour: 'All-Purpose Flour',
+    waterTemp: '80-85°F / 27-29°C',
+    instructions: [
+      'Mix flour, sugar (8%), eggs, milk, and yeast',
+      'Knead until smooth, about 10 minutes',
+      'Gradually add soft butter (25%), knead until silky',
+      'Add salt, knead 2 more minutes',
+      'Bulk ferment 2 hours, then refrigerate overnight',
+      'Shape cold dough, proof 2-3 hours until doubled',
+      'Egg wash and bake at 350°F for 25-30 minutes'
+    ]
+  },
+  {
+    id: 'no-knead',
+    name: 'No-Knead',
+    description: 'Hands-off, long ferment, crispy crust',
+    icon: icons.noknead,
+    hydration: 78,
+    salt: 2,
+    yeastType: 'instant',
+    yeastPercent: 0.25,
+    wholeGrain: 0,
+    flour: 'Bread Flour or All-Purpose',
+    waterTemp: '70-75°F / 21-24°C',
+    instructions: [
+      'Mix flour, water, salt, and yeast until shaggy (2 min)',
+      'Cover and let rise at room temperature 12-18 hours',
+      'Dough is ready when bubbly and doubled',
+      'Turn out onto floured surface, fold into ball',
+      'Let rest 15 min, then shape into round',
+      'Proof in bowl lined with floured towel 1-2 hours',
+      'Preheat Dutch oven at 450°F for 30 min',
+      'Bake covered 30 min, uncovered 15-20 min until deep golden'
+    ]
+  },
+  {
+    id: 'custom',
+    name: 'Custom',
+    description: 'Your recipe, your rules',
+    icon: icons.custom,
+    hydration: 70,
+    salt: 2,
+    yeastType: 'instant',
+    yeastPercent: 1,
+    wholeGrain: 0,
+    flour: 'Your choice',
+    waterTemp: 'Varies',
+    instructions: [
+      'Mix ingredients according to your method',
+      'Knead or fold as needed',
+      'Ferment according to your schedule',
+      'Shape and proof',
+      'Bake at appropriate temperature'
+    ]
+  }
+];
+---
+
+<Layout>
+  <main id="main-content">
+  <nav class="sticky top-0 z-50 bg-[var(--cream-flour)]/95 backdrop-blur-sm border-b border-[var(--border-light)]">
+    <div class="container flex items-center justify-between py-4">
+      <a href="/" class="flex items-center gap-2">
+        <svg class="w-7 h-7 text-[var(--accent-gold)]" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 28V12"/>
+          <path d="M16 12c-2-3-2-6 0-8 2 2 2 5 0 8z"/>
+          <path d="M16 16c-3-2-5-1-7 1 2 2 5 2 7-1z"/>
+          <path d="M16 16c3-2 5-1 7 1-2 2-5 2-7-1z"/>
+          <path d="M16 20c-3-2-5-1-7 1 2 2 5 2 7-1z"/>
+          <path d="M16 20c3-2 5-1 7 1-2 2-5 2-7-1z"/>
+          <path d="M16 24c-3-2-5-1-7 1 2 2 5 2 7-1z"/>
+          <path d="M16 24c3-2 5-1 7 1-2 2-5 2-7-1z"/>
+        </svg>
+        <span class="font-display text-xl font-semibold">
+          The Dough <span class="text-[var(--accent-gold)]">Formula</span>
+        </span>
+      </a>
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#calculator" class="text-[var(--accent-gold)] font-medium">Calculator</a>
+        <a href="#bread-styles" class="text-[var(--crust-brown)] hover:text-[var(--espresso)] transition-colors">Bread Styles</a>
+        <a href="#bakers-percent" class="text-[var(--crust-brown)] hover:text-[var(--espresso)] transition-colors">Baker's %</a>
+        <a href="#about" class="text-[var(--crust-brown)] hover:text-[var(--espresso)] transition-colors">About</a>
+      </div>
+      <button id="mobile-menu-btn" class="md:hidden p-2" aria-label="Menu">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div id="mobile-menu" class="fixed inset-0 z-40 bg-[var(--cream-flour)] transform translate-x-full transition-transform md:hidden">
+    <div class="flex flex-col items-center justify-center h-full gap-8 text-xl">
+      <a href="#calculator" class="text-[var(--accent-gold)] font-medium mobile-menu-link">Calculator</a>
+      <a href="#bread-styles" class="text-[var(--crust-brown)] mobile-menu-link">Bread Styles</a>
+      <a href="#bakers-percent" class="text-[var(--crust-brown)] mobile-menu-link">Baker's %</a>
+      <a href="#about" class="text-[var(--crust-brown)] mobile-menu-link">About</a>
+      <button id="mobile-menu-close" class="mt-8 btn btn-outline">Close</button>
+    </div>
+  </div>
+
+  <!-- Hero Section - Full Bleed Editorial -->
+  <section class="hero-editorial">
+    <!-- Background Image with Ken Burns -->
+    <div class="hero-bg-image">
+      <Image
+        src={heroImage}
+        alt="Freshly baked artisan sourdough bread with beautiful open crumb, sliced and displayed with rosemary"
+        loading="eager"
+        fetchpriority="high"
+        decoding="async"
+        width={1920}
+        height={1280}
+        quality={80}
+        format="webp"
+      />
+    </div>
+
+    <!-- Content Overlay -->
+    <div class="hero-content container">
+      <div class="max-w-2xl">
+        <p class="animate-rise delay-1 text-sm tracking-[0.25em] text-[var(--accent-gold)] font-medium mb-6 flex items-center gap-4">
+          <span class="w-12 h-px bg-[var(--accent-gold)]"></span>
+          FOR HOME BAKERS
+        </p>
+        <h1 class="animate-rise delay-2 font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-medium mb-2 leading-[0.9]">
+          The Art of
+        </h1>
+        <p class="animate-rise delay-3 font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-medium italic text-[var(--accent-gold)] mb-8 leading-[0.9]">
+          Perfect Bread
+        </p>
+        <p class="animate-rise delay-4 font-editorial text-xl md:text-2xl text-[var(--crust-brown)] max-w-lg mb-10 leading-relaxed">
+          Master baker's percentages. Calculate precise recipes for sourdough, baguettes, focaccia, and beyond.
+        </p>
+        <a href="#calculator" class="animate-rise delay-5 btn btn-primary text-lg px-8 py-4 inline-flex">
+          Begin Your Bake
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Scroll Indicator -->
+    <div class="scroll-indicator hidden md:flex">
+      <span>Scroll</span>
+    </div>
+  </section>
+
+  <!-- Transition Divider -->
+  <div class="py-8 scoring-divider">╱ ╱ ╱</div>
+
+  <!-- Calculator Section -->
+  <section id="calculator" class="py-12 md:py-20">
+    <div class="container">
+      <div class="grid lg:grid-cols-2 gap-8 lg:gap-12">
+
+        <!-- Left Column: Style Selection & Quantity -->
+        <div class="space-y-8">
+          <!-- Bread Styles -->
+          <div id="bread-styles">
+            <h2 class="text-2xl font-display mb-2">Choose Your Style</h2>
+            <p class="text-[var(--crust-brown)] mb-6">Select a style for recommended settings, or go custom.</p>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="style-grid">
+              {breadStyles.map((style, index) => (
+                <button
+                  class={`card p-4 text-left cursor-pointer hover:shadow-md transition-all style-card ${index === 0 ? 'card-selected' : ''}`}
+                  data-style={style.id}
+                  data-hydration={style.hydration}
+                  data-salt={style.salt}
+                  data-yeast-type={style.yeastType}
+                  data-yeast-percent={style.yeastPercent}
+                  data-whole-grain={style.wholeGrain}
+                  data-flour={style.flour}
+                  data-water-temp={style.waterTemp}
+                  data-instructions={JSON.stringify(style.instructions)}
+                >
+                  <span class="w-8 h-8 mb-2 block text-[var(--accent-gold)]" set:html={style.icon}></span>
+                  <span class="font-medium block">{style.name}</span>
+                  <span class="text-sm text-[var(--crust-brown)] block mt-1">{style.description}</span>
+                </button>
+              ))}
+            </div>
+
+            <!-- Pizza Dough CTA -->
+            <div class="pizza-cta mt-6" id="pizza-cta">
+              <a href="https://thepizzadoughformula.com" target="_blank" rel="noopener" class="pizza-cta-link group">
+                <div class="pizza-cta-content">
+                  <div class="pizza-cta-icon">
+                    <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
+                      <circle cx="16" cy="16" r="12"/>
+                      <path d="M16 4v24M4 16h24"/>
+                      <circle cx="11" cy="11" r="1.5" fill="currentColor"/>
+                      <circle cx="20" cy="13" r="1" fill="currentColor"/>
+                      <circle cx="13" cy="19" r="1.5" fill="currentColor"/>
+                      <circle cx="19" cy="20" r="1" fill="currentColor"/>
+                    </svg>
+                  </div>
+                  <div class="pizza-cta-text">
+                    <span class="pizza-cta-label">Making Pizza?</span>
+                    <span class="pizza-cta-headline">Discover <em>The Pizza Dough Formula</em></span>
+                    <span class="pizza-cta-subtext">Neapolitan, New York, Detroit & more — precision-crafted for the perfect pie</span>
+                  </div>
+                  <div class="pizza-cta-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 transition-transform group-hover:translate-x-1">
+                      <path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- Dough Quantity -->
+          <div class="card p-4 sm:p-6">
+            <h3 class="text-lg font-display mb-4">Dough Quantity</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4">
+              <div>
+                <label for="num-loaves" class="block text-sm text-[var(--crust-brown)] mb-2">Number of Loaves</label>
+                <div class="flex items-center gap-2">
+                  <input
+                    type="number"
+                    id="num-loaves"
+                    value="2"
+                    min="1"
+                    max="12"
+                    class="input input-number"
+                    aria-label="Number of loaves"
+                  />
+                  <span class="text-[var(--crust-brown)]" aria-hidden="true">loaves</span>
+                </div>
+              </div>
+              <div>
+                <label for="loaf-weight" class="block text-sm text-[var(--crust-brown)] mb-2">Weight per Loaf</label>
+                <div class="flex items-center gap-2">
+                  <input
+                    type="number"
+                    id="loaf-weight"
+                    value="900"
+                    min="200"
+                    max="2000"
+                    step="50"
+                    class="input input-number"
+                    aria-label="Weight per loaf in grams"
+                  />
+                  <span class="text-[var(--crust-brown)]" aria-hidden="true">g</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between py-3 px-4 bg-[var(--cream-warm)] rounded-lg mb-4">
+              <span class="text-[var(--crust-brown)]">Total Dough Weight:</span>
+              <span class="text-xl font-semibold text-[var(--accent-gold)]" id="total-weight">1800g</span>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              <span class="text-sm text-[var(--crust-brown)]">Quick presets:</span>
+              <button class="preset-pill" data-loaves="1" data-weight="500">1 loaf</button>
+              <button class="preset-pill preset-pill-active" data-loaves="2" data-weight="900">2 loaves</button>
+              <button class="preset-pill" data-loaves="4" data-weight="900">4 loaves</button>
+            </div>
+          </div>
+
+          <!-- Advanced Options - Tabbed Interface -->
+          <div class="card p-0 overflow-hidden">
+            <div class="accordion-item border-0">
+              <button class="accordion-trigger px-4 sm:px-6 py-4" id="advanced-trigger">
+                <span class="flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+                  </svg>
+                  Advanced Options
+                </span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform" id="advanced-chevron" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <div class="hidden" id="advanced-content">
+                <!-- Tab Navigation -->
+                <div class="flex border-b border-[var(--border-light)] px-2 overflow-x-auto">
+                  <button class="advanced-tab advanced-tab-active px-4 py-3 text-sm font-medium whitespace-nowrap" data-tab="basics">
+                    Basics
+                  </button>
+                  <button class="advanced-tab px-4 py-3 text-sm font-medium whitespace-nowrap" data-tab="yeast">
+                    Yeast
+                  </button>
+                  <button class="advanced-tab px-4 py-3 text-sm font-medium whitespace-nowrap" data-tab="flour">
+                    Flour
+                  </button>
+                  <button class="advanced-tab px-4 py-3 text-sm font-medium whitespace-nowrap" data-tab="enrichments">
+                    Enrichments
+                  </button>
+                  <button class="advanced-tab px-4 py-3 text-sm font-medium whitespace-nowrap" data-tab="temperature">
+                    Temperature
+                  </button>
+                  <button class="advanced-tab px-4 py-3 text-sm font-medium whitespace-nowrap" data-tab="timing">
+                    Timing
+                  </button>
+                  <button class="advanced-tab px-4 py-3 text-sm font-medium whitespace-nowrap" data-tab="preferments">
+                    Preferments
+                  </button>
+                </div>
+
+                <!-- Tab: Basics -->
+                <div class="advanced-tab-content p-4 sm:p-6 space-y-4" id="tab-basics">
+                  <div>
+                    <label for="hydration-slider" class="flex justify-between text-sm mb-2">
+                      <span>Hydration</span>
+                      <span class="font-medium" id="hydration-value">75%</span>
+                    </label>
+                    <input type="range" id="hydration-slider" min="55" max="90" value="75" class="w-full accent-[var(--accent-gold)]" aria-label="Hydration percentage" />
+                  </div>
+                  <div>
+                    <label for="whole-grain-slider" class="flex justify-between text-sm mb-2">
+                      <span>Whole Grain</span>
+                      <span class="font-medium" id="whole-grain-value">10%</span>
+                    </label>
+                    <input type="range" id="whole-grain-slider" min="0" max="50" value="10" class="w-full accent-[var(--accent-gold)]" aria-label="Whole grain percentage" />
+                  </div>
+                  <div>
+                    <label for="salt-slider" class="flex justify-between text-sm mb-2">
+                      <span>Salt</span>
+                      <span class="font-medium" id="salt-value">2%</span>
+                    </label>
+                    <input type="range" id="salt-slider" min="1.5" max="3" value="2" step="0.1" class="w-full accent-[var(--accent-gold)]" aria-label="Salt percentage" />
+                  </div>
+                </div>
+
+                <!-- Tab: Yeast -->
+                <div class="advanced-tab-content hidden p-4 sm:p-6 space-y-4" id="tab-yeast">
+                  <div>
+                    <label class="block text-sm mb-2">Yeast Type</label>
+                    <div class="grid grid-cols-2 gap-2" id="yeast-type-selector">
+                      <button class="yeast-type-btn yeast-type-active" data-yeast="starter">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                          <circle cx="12" cy="12" r="8"/>
+                          <circle cx="9" cy="10" r="1.5" fill="currentColor"/>
+                          <circle cx="15" cy="11" r="1" fill="currentColor"/>
+                          <circle cx="11" cy="14" r="1.5" fill="currentColor"/>
+                          <circle cx="14" cy="15" r="0.75" fill="currentColor"/>
+                        </svg>
+                        <span>Starter</span>
+                      </button>
+                      <button class="yeast-type-btn" data-yeast="instant">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                          <rect x="7" y="4" width="10" height="16" rx="2"/>
+                          <line x1="7" y1="8" x2="17" y2="8"/>
+                          <circle cx="12" cy="14" r="2" fill="currentColor"/>
+                        </svg>
+                        <span>Instant</span>
+                      </button>
+                      <button class="yeast-type-btn" data-yeast="active-dry">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                          <rect x="6" y="6" width="12" height="12" rx="1"/>
+                          <circle cx="10" cy="12" r="1" fill="currentColor"/>
+                          <circle cx="14" cy="10" r="1" fill="currentColor"/>
+                          <circle cx="12" cy="14" r="1" fill="currentColor"/>
+                        </svg>
+                        <span>Active Dry</span>
+                      </button>
+                      <button class="yeast-type-btn" data-yeast="fresh">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                          <rect x="5" y="8" width="14" height="8" rx="2"/>
+                          <path d="M8 8V6a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                        </svg>
+                        <span>Fresh</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Yeast Percentage (for commercial yeast) -->
+                  <div id="yeast-percent-control">
+                    <label for="yeast-percent-slider" class="flex justify-between text-sm mb-2">
+                      <span id="yeast-percent-label">Starter Amount</span>
+                      <span class="font-medium" id="yeast-percent-value">20%</span>
+                    </label>
+                    <input type="range" id="yeast-percent-slider" min="0.1" max="30" value="20" step="0.1" class="w-full accent-[var(--accent-gold)]" />
+                  </div>
+
+                  <!-- Starter Hydration (only for sourdough starter) -->
+                  <div id="starter-hydration-control">
+                    <label for="starter-hydration-slider" class="flex justify-between text-sm mb-2">
+                      <span>Starter Hydration</span>
+                      <span class="font-medium" id="starter-hydration-value">100%</span>
+                    </label>
+                    <input type="range" id="starter-hydration-slider" min="50" max="200" value="100" class="w-full accent-[var(--accent-gold)]" />
+                    <p class="text-xs text-[var(--crust-brown)] mt-1">100% = equal parts flour and water in your starter</p>
+                  </div>
+
+                  <!-- Yeast Tips -->
+                  <div class="bg-[var(--cream-warm)] rounded-lg p-3 mt-3" id="yeast-tip">
+                    <p class="text-sm text-[var(--crust-brown)]">
+                      <span class="font-medium text-[var(--espresso)]">Tip:</span>
+                      <span id="yeast-tip-text">Feed your starter 4-8 hours before use. Use at peak activity when it's domed and bubbly.</span>
+                    </p>
+                  </div>
+
+                  <!-- Starter Contribution Info -->
+                  <div id="starter-contribution" class="bg-[var(--accent-gold)]/10 rounded-lg p-3 border border-[var(--accent-gold)]/20">
+                    <p class="text-sm font-medium text-[var(--espresso)] mb-1">Starter Contribution:</p>
+                    <p class="text-sm text-[var(--crust-brown)]">
+                      Your starter adds <span id="starter-flour-contrib" class="font-medium">0g</span> flour and <span id="starter-water-contrib" class="font-medium">0g</span> water to the dough.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Tab: Flour -->
+                <div class="advanced-tab-content hidden p-4 sm:p-6 space-y-4" id="tab-flour">
+                  <p class="text-sm text-[var(--crust-brown)] mb-2">
+                    Blend multiple flours for unique flavor and texture profiles.
+                  </p>
+
+                  <!-- Primary Flour -->
+                  <div class="flour-entry" data-flour-index="0">
+                    <div class="flex items-center gap-2 mb-2">
+                      <select class="flour-type-select input flex-1 py-2" data-flour="0">
+                        <option value="bread">Bread Flour (12-14% protein)</option>
+                        <option value="ap">All-Purpose (10-12% protein)</option>
+                        <option value="whole-wheat">Whole Wheat</option>
+                        <option value="rye-light">Light Rye</option>
+                        <option value="rye-dark">Dark Rye</option>
+                        <option value="spelt">Spelt</option>
+                        <option value="einkorn">Einkorn</option>
+                        <option value="semolina">Semolina/Durum</option>
+                        <option value="tipo-00">Tipo 00</option>
+                      </select>
+                      <div class="flex items-center gap-1">
+                        <input type="number" class="flour-percent-input input w-16 text-center py-2" value="100" min="0" max="100" data-flour="0" />
+                        <span class="text-sm text-[var(--crust-brown)]">%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Additional Flour Slots (hidden by default) -->
+                  <div id="flour-slot-1" class="flour-entry hidden" data-flour-index="1">
+                    <div class="flex items-center gap-2 mb-2">
+                      <select class="flour-type-select input flex-1 py-2" data-flour="1">
+                        <option value="bread">Bread Flour</option>
+                        <option value="ap">All-Purpose</option>
+                        <option value="whole-wheat" selected>Whole Wheat</option>
+                        <option value="rye-light">Light Rye</option>
+                        <option value="rye-dark">Dark Rye</option>
+                        <option value="spelt">Spelt</option>
+                        <option value="einkorn">Einkorn</option>
+                        <option value="semolina">Semolina/Durum</option>
+                        <option value="tipo-00">Tipo 00</option>
+                      </select>
+                      <div class="flex items-center gap-1">
+                        <input type="number" class="flour-percent-input input w-16 text-center py-2" value="0" min="0" max="100" data-flour="1" />
+                        <span class="text-sm text-[var(--crust-brown)]">%</span>
+                      </div>
+                      <button class="remove-flour-btn text-[var(--crust-brown)] hover:text-red-500 p-1" data-flour="1">
+                        <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div id="flour-slot-2" class="flour-entry hidden" data-flour-index="2">
+                    <div class="flex items-center gap-2 mb-2">
+                      <select class="flour-type-select input flex-1 py-2" data-flour="2">
+                        <option value="bread">Bread Flour</option>
+                        <option value="ap">All-Purpose</option>
+                        <option value="whole-wheat">Whole Wheat</option>
+                        <option value="rye-light" selected>Light Rye</option>
+                        <option value="rye-dark">Dark Rye</option>
+                        <option value="spelt">Spelt</option>
+                        <option value="einkorn">Einkorn</option>
+                        <option value="semolina">Semolina/Durum</option>
+                        <option value="tipo-00">Tipo 00</option>
+                      </select>
+                      <div class="flex items-center gap-1">
+                        <input type="number" class="flour-percent-input input w-16 text-center py-2" value="0" min="0" max="100" data-flour="2" />
+                        <span class="text-sm text-[var(--crust-brown)]">%</span>
+                      </div>
+                      <button class="remove-flour-btn text-[var(--crust-brown)] hover:text-red-500 p-1" data-flour="2">
+                        <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Add Flour Button -->
+                  <button id="add-flour-btn" class="btn btn-outline w-full text-sm py-2">
+                    <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                    Add Another Flour
+                  </button>
+
+                  <!-- Flour Percentage Validation -->
+                  <div id="flour-validation" class="hidden text-sm text-red-600 bg-red-50 p-2 rounded">
+                    Total flour must equal 100%
+                  </div>
+
+                  <!-- Whole Grain Summary -->
+                  <div class="bg-[var(--cream-warm)] rounded-lg p-3">
+                    <div class="flex items-center justify-between">
+                      <span class="text-sm text-[var(--crust-brown)]">Total Whole Grain:</span>
+                      <span class="font-medium text-[var(--espresso)]" id="total-whole-grain">10%</span>
+                    </div>
+                    <p class="text-xs text-[var(--crust-brown)] mt-1" id="whole-grain-tip">
+                      Consider adding 2-5% more hydration for whole grains.
+                    </p>
+                  </div>
+
+                  <!-- Suggested Blends -->
+                  <div>
+                    <p class="text-xs text-[var(--crust-brown)] mb-2">Quick Blends:</p>
+                    <div class="flex flex-wrap gap-2">
+                      <button class="flour-preset-btn preset-pill text-xs" data-blend="classic">Classic (100% Bread)</button>
+                      <button class="flour-preset-btn preset-pill text-xs" data-blend="country">Country (90/10 WW)</button>
+                      <button class="flour-preset-btn preset-pill text-xs" data-blend="multigrain">Multigrain</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tab: Enrichments -->
+                <div class="advanced-tab-content hidden p-4 sm:p-6 space-y-4" id="tab-enrichments">
+                  <p class="text-sm text-[var(--crust-brown)] mb-2">
+                    Add fats, eggs, dairy, or sweeteners for richer breads like brioche or challah.
+                  </p>
+
+                  <!-- Fat (Butter/Oil) -->
+                  <div class="enrichment-row">
+                    <div class="flex items-center justify-between py-3 px-4 bg-[var(--cream-warm)] rounded-lg">
+                      <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5 text-[var(--accent-gold)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                          <rect x="3" y="8" width="18" height="10" rx="2"/>
+                          <path d="M7 8V6a2 2 0 012-2h6a2 2 0 012 2v2"/>
+                        </svg>
+                        <div>
+                          <span class="font-medium text-[var(--espresso)]">Butter/Oil</span>
+                          <p class="text-xs text-[var(--crust-brown)]">Adds tenderness & flavor</p>
+                        </div>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="enrichment-fat-toggle" class="sr-only peer">
+                        <div class="w-11 h-6 bg-[var(--border-light)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--accent-gold)]"></div>
+                      </label>
+                    </div>
+                    <div id="fat-controls" class="hidden mt-2 pl-4 space-y-2">
+                      <div class="flex items-center gap-2">
+                        <select id="fat-type-select" class="input py-1 text-sm">
+                          <option value="butter">Butter (15% water)</option>
+                          <option value="oil">Oil (0% water)</option>
+                        </select>
+                        <input type="number" id="fat-percent" class="input w-16 text-center py-1" value="5" min="1" max="30" />
+                        <span class="text-sm text-[var(--crust-brown)]">%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Eggs -->
+                  <div class="enrichment-row">
+                    <div class="flex items-center justify-between py-3 px-4 bg-[var(--cream-warm)] rounded-lg">
+                      <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5 text-[var(--accent-gold)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                          <ellipse cx="12" cy="13" rx="7" ry="9"/>
+                        </svg>
+                        <div>
+                          <span class="font-medium text-[var(--espresso)]">Eggs</span>
+                          <p class="text-xs text-[var(--crust-brown)]">Rich color & structure</p>
+                        </div>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="enrichment-egg-toggle" class="sr-only peer">
+                        <div class="w-11 h-6 bg-[var(--border-light)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--accent-gold)]"></div>
+                      </label>
+                    </div>
+                    <div id="egg-controls" class="hidden mt-2 pl-4 space-y-2">
+                      <div class="flex items-center gap-2">
+                        <select id="egg-type-select" class="input py-1 text-sm">
+                          <option value="whole">Whole Eggs (75% water)</option>
+                          <option value="yolks">Yolks Only (50% water)</option>
+                          <option value="whites">Whites Only (90% water)</option>
+                        </select>
+                        <input type="number" id="egg-count" class="input w-16 text-center py-1" value="2" min="1" max="12" />
+                        <span class="text-sm text-[var(--crust-brown)]">eggs</span>
+                      </div>
+                      <p class="text-xs text-[var(--crust-brown)]">≈ <span id="egg-weight">100</span>g total</p>
+                    </div>
+                  </div>
+
+                  <!-- Dairy -->
+                  <div class="enrichment-row">
+                    <div class="flex items-center justify-between py-3 px-4 bg-[var(--cream-warm)] rounded-lg">
+                      <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5 text-[var(--accent-gold)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                          <path d="M8 2v4M16 2v4"/>
+                          <path d="M5 6h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z"/>
+                          <path d="M3 10h18"/>
+                        </svg>
+                        <div>
+                          <span class="font-medium text-[var(--espresso)]">Milk/Cream</span>
+                          <p class="text-xs text-[var(--crust-brown)]">Softer crust & crumb</p>
+                        </div>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="enrichment-dairy-toggle" class="sr-only peer">
+                        <div class="w-11 h-6 bg-[var(--border-light)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--accent-gold)]"></div>
+                      </label>
+                    </div>
+                    <div id="dairy-controls" class="hidden mt-2 pl-4 space-y-2">
+                      <div class="flex items-center gap-2">
+                        <select id="dairy-type-select" class="input py-1 text-sm">
+                          <option value="whole-milk">Whole Milk (87% water)</option>
+                          <option value="buttermilk">Buttermilk (90% water)</option>
+                          <option value="cream">Heavy Cream (58% water)</option>
+                        </select>
+                        <input type="number" id="dairy-percent" class="input w-16 text-center py-1" value="50" min="10" max="100" />
+                        <span class="text-sm text-[var(--crust-brown)]">% of liquid</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Sweetener -->
+                  <div class="enrichment-row">
+                    <div class="flex items-center justify-between py-3 px-4 bg-[var(--cream-warm)] rounded-lg">
+                      <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5 text-[var(--accent-gold)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                          <path d="M12 2L9 9h6l-3-7z"/>
+                          <rect x="6" y="9" width="12" height="12" rx="2"/>
+                        </svg>
+                        <div>
+                          <span class="font-medium text-[var(--espresso)]">Sugar/Honey</span>
+                          <p class="text-xs text-[var(--crust-brown)]">Browning & flavor</p>
+                        </div>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="enrichment-sweet-toggle" class="sr-only peer">
+                        <div class="w-11 h-6 bg-[var(--border-light)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--accent-gold)]"></div>
+                      </label>
+                    </div>
+                    <div id="sweet-controls" class="hidden mt-2 pl-4 space-y-2">
+                      <div class="flex items-center gap-2">
+                        <select id="sweet-type-select" class="input py-1 text-sm">
+                          <option value="sugar">Sugar (0% water)</option>
+                          <option value="honey">Honey (17% water)</option>
+                          <option value="maple">Maple Syrup (33% water)</option>
+                          <option value="malt">Malt Syrup (20% water)</option>
+                        </select>
+                        <input type="number" id="sweet-percent" class="input w-16 text-center py-1" value="5" min="1" max="20" />
+                        <span class="text-sm text-[var(--crust-brown)]">%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Effective Hydration Display -->
+                  <div id="effective-hydration-display" class="hidden bg-[var(--accent-gold)]/10 rounded-lg p-4 border border-[var(--accent-gold)]/20">
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-sm font-medium text-[var(--espresso)]">Effective Hydration:</span>
+                      <span class="text-lg font-display font-semibold text-[var(--accent-gold)]" id="effective-hydration">72%</span>
+                    </div>
+                    <p class="text-xs text-[var(--crust-brown)]">
+                      Target: <span id="target-hydration">75</span>% → Adjusted for enrichments
+                    </p>
+                    <div class="mt-2 text-xs text-[var(--crust-brown)]" id="enrichment-breakdown">
+                      <!-- Breakdown populated by JS -->
+                    </div>
+                  </div>
+
+                  <!-- Enrichment Tips -->
+                  <div class="bg-[var(--cream-warm)] rounded-lg p-3">
+                    <p class="text-sm text-[var(--crust-brown)]">
+                      <span class="font-medium text-[var(--espresso)]">Tip:</span>
+                      <span id="enrichment-tip">Add fats after initial gluten development for better dough structure.</span>
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Tab: Temperature -->
+                <div class="advanced-tab-content hidden p-4 sm:p-6 space-y-4" id="tab-temperature">
+                  <!-- Temperature Unit Toggle -->
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium">Temperature Unit</span>
+                    <div class="flex items-center gap-1 bg-[var(--cream-warm)] rounded-full p-1">
+                      <button class="px-3 py-1 rounded-full text-sm font-medium text-[var(--crust-brown)]" id="temp-unit-c">°C</button>
+                      <button class="px-3 py-1 rounded-full text-sm font-medium bg-[var(--espresso)] text-white" id="temp-unit-f">°F</button>
+                    </div>
+                  </div>
+
+                  <!-- DDT Input -->
+                  <div>
+                    <label for="ddt-input" class="flex justify-between text-sm mb-2">
+                      <span class="flex items-center gap-1">
+                        Desired Dough Temp (DDT)
+                        <button class="text-[var(--crust-brown)] hover:text-[var(--espresso)]" title="Target temperature for your dough after mixing">
+                          <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                          </svg>
+                        </button>
+                      </span>
+                      <span class="font-medium" id="ddt-value">75°F</span>
+                    </label>
+                    <input type="range" id="ddt-slider" min="68" max="86" value="75" class="w-full accent-[var(--accent-gold)]" />
+                  </div>
+
+                  <!-- Room Temperature -->
+                  <div>
+                    <label for="room-temp-input" class="flex justify-between text-sm mb-2">
+                      <span>Room Temperature</span>
+                      <span class="font-medium" id="room-temp-value">70°F</span>
+                    </label>
+                    <input type="range" id="room-temp-slider" min="60" max="90" value="70" class="w-full accent-[var(--accent-gold)]" />
+                  </div>
+
+                  <!-- Flour Temperature -->
+                  <div>
+                    <label for="flour-temp-input" class="flex justify-between text-sm mb-2">
+                      <span>Flour Temperature</span>
+                      <span class="font-medium" id="flour-temp-value">70°F</span>
+                    </label>
+                    <input type="range" id="flour-temp-slider" min="55" max="85" value="70" class="w-full accent-[var(--accent-gold)]" />
+                    <p class="text-xs text-[var(--crust-brown)] mt-1">Usually same as room temp, unless stored in a cool place</p>
+                  </div>
+
+                  <!-- Mixer Type -->
+                  <div>
+                    <label class="block text-sm mb-2">Mixing Method</label>
+                    <div class="grid grid-cols-3 gap-2" id="mixer-selector">
+                      <button class="mixer-btn mixer-btn-active" data-mixer="hand" data-friction="11">
+                        <span class="text-xs">Hand</span>
+                      </button>
+                      <button class="mixer-btn" data-mixer="stand" data-friction="22">
+                        <span class="text-xs">Stand Mixer</span>
+                      </button>
+                      <button class="mixer-btn" data-mixer="spiral" data-friction="32">
+                        <span class="text-xs">Spiral</span>
+                      </button>
+                    </div>
+                    <p class="text-xs text-[var(--crust-brown)] mt-1">Friction factor: <span id="friction-value">11°F</span></p>
+                  </div>
+
+                  <!-- Calculated Water Temperature -->
+                  <div class="bg-[var(--accent-gold)]/10 rounded-lg p-4 border border-[var(--accent-gold)]/20">
+                    <div class="flex items-center justify-between">
+                      <span class="text-sm font-medium text-[var(--espresso)]">Use Water At:</span>
+                      <span class="text-2xl font-display font-semibold text-[var(--accent-gold)]" id="calc-water-temp">84°F</span>
+                    </div>
+                    <p class="text-xs text-[var(--crust-brown)] mt-2" id="water-temp-formula">
+                      (75 × 3) - 70 - 70 - 11 = 74°F
+                    </p>
+                    <div id="water-temp-warning" class="hidden mt-2 text-xs text-red-600 font-medium">
+                      ⚠️ Water temperature is outside safe range
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tab: Timing -->
+                <div class="advanced-tab-content hidden p-4 sm:p-6 space-y-4" id="tab-timing">
+                  <p class="text-sm text-[var(--crust-brown)] mb-4">
+                    Estimated times based on your dough temperature and yeast type. Watch the dough, not the clock!
+                  </p>
+
+                  <!-- Bulk Fermentation -->
+                  <div class="bg-[var(--cream-warm)] rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="font-medium text-[var(--espresso)]">Bulk Fermentation</span>
+                      <span class="text-lg font-display font-semibold text-[var(--accent-gold)]" id="bulk-time">4-6 hrs</span>
+                    </div>
+                    <p class="text-xs text-[var(--crust-brown)]" id="bulk-description">
+                      Look for 50-75% rise with visible bubbles on the surface and sides.
+                    </p>
+                  </div>
+
+                  <!-- Final Proof -->
+                  <div class="bg-[var(--cream-warm)] rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="font-medium text-[var(--espresso)]">Final Proof</span>
+                      <span class="text-lg font-display font-semibold text-[var(--accent-gold)]" id="proof-time">1-2 hrs</span>
+                    </div>
+                    <p class="text-xs text-[var(--crust-brown)]" id="proof-description">
+                      Poke test: dough should spring back slowly but not completely.
+                    </p>
+                  </div>
+
+                  <!-- Cold Retard Option -->
+                  <div class="flex items-center justify-between py-3 px-4 bg-[var(--cream-warm)] rounded-lg">
+                    <div>
+                      <span class="font-medium text-[var(--espresso)]">Cold Retard</span>
+                      <p class="text-xs text-[var(--crust-brown)]">Overnight in refrigerator</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" id="cold-retard-toggle" class="sr-only peer">
+                      <div class="w-11 h-6 bg-[var(--border-light)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--accent-gold)]"></div>
+                    </label>
+                  </div>
+
+                  <div id="cold-retard-info" class="hidden bg-blue-50 rounded-lg p-3 border border-blue-200">
+                    <p class="text-sm text-blue-800">
+                      <span class="font-medium">Cold Retard:</span> 8-18 hours at 38-41°F (3-5°C). Develops complex flavors and fits your schedule.
+                    </p>
+                  </div>
+
+                  <!-- Total Time Estimate -->
+                  <div class="bg-[var(--accent-gold)]/10 rounded-lg p-4 border border-[var(--accent-gold)]/20 mt-4">
+                    <div class="flex items-center justify-between">
+                      <span class="text-sm font-medium text-[var(--espresso)]">Total Active Time:</span>
+                      <span class="text-lg font-display font-semibold text-[var(--accent-gold)]" id="total-time">6-9 hrs</span>
+                    </div>
+                    <p class="text-xs text-[var(--crust-brown)] mt-1" id="total-time-note">
+                      Excluding cold retard if enabled
+                    </p>
+                  </div>
+
+                  <!-- Plan My Bake Button -->
+                  <button id="plan-bake-btn" class="btn btn-outline w-full text-sm py-3 mt-4">
+                    <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+                    </svg>
+                    Plan My Bake Schedule
+                  </button>
+                </div>
+
+                <!-- Tab: Preferments -->
+                <div class="advanced-tab-content hidden p-4 sm:p-6 space-y-4" id="tab-preferments">
+                  <p class="text-sm text-[var(--crust-brown)] mb-2">
+                    Add a preferment for improved flavor, extensibility, and keeping quality.
+                  </p>
+
+                  <!-- Preferment Type Selection -->
+                  <div>
+                    <label class="block text-sm mb-2">Preferment Type</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="preferment-type-selector">
+                      <button class="preferment-type-btn preferment-type-active" data-preferment="none">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                          <circle cx="12" cy="12" r="9"/>
+                          <path d="M9 9l6 6M15 9l-6 6"/>
+                        </svg>
+                        <span>None</span>
+                      </button>
+                      <button class="preferment-type-btn" data-preferment="poolish">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                          <circle cx="12" cy="14" r="7"/>
+                          <circle cx="9" cy="12" r="1" fill="currentColor"/>
+                          <circle cx="15" cy="13" r="1.5" fill="currentColor"/>
+                          <circle cx="12" cy="16" r="1" fill="currentColor"/>
+                        </svg>
+                        <span>Poolish</span>
+                      </button>
+                      <button class="preferment-type-btn" data-preferment="biga">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                          <ellipse cx="12" cy="14" rx="8" ry="6"/>
+                          <path d="M8 14c0-2 2-4 4-4s4 2 4 4"/>
+                        </svg>
+                        <span>Biga</span>
+                      </button>
+                      <button class="preferment-type-btn" data-preferment="pate-fermentee">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                          <rect x="6" y="8" width="12" height="10" rx="2"/>
+                          <path d="M9 8V6a3 3 0 016 0v2"/>
+                        </svg>
+                        <span>Pâte Ferm.</span>
+                      </button>
+                      <button class="preferment-type-btn" data-preferment="levain">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                          <path d="M12 4c-4 0-7 3-7 7v6a2 2 0 002 2h10a2 2 0 002-2v-6c0-4-3-7-7-7z"/>
+                          <circle cx="9" cy="12" r="1" fill="currentColor"/>
+                          <circle cx="15" cy="11" r="1.5" fill="currentColor"/>
+                          <circle cx="12" cy="15" r="1" fill="currentColor"/>
+                        </svg>
+                        <span>Levain</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Preferment Controls (shown when preferment selected) -->
+                  <div id="preferment-controls" class="hidden space-y-4">
+                    <!-- Preferment Percentage -->
+                    <div>
+                      <label for="preferment-percent-slider" class="flex justify-between text-sm mb-2">
+                        <span>Flour in Preferment</span>
+                        <span class="font-medium" id="preferment-percent-value">20%</span>
+                      </label>
+                      <input type="range" id="preferment-percent-slider" min="15" max="40" value="20" class="w-full accent-[var(--accent-gold)]" />
+                      <p class="text-xs text-[var(--crust-brown)] mt-1">
+                        Higher % = more flavor, more extensible dough
+                      </p>
+                    </div>
+
+                    <!-- Preferment Info -->
+                    <div class="bg-[var(--cream-warm)] rounded-lg p-3" id="preferment-info">
+                      <p class="text-sm font-medium text-[var(--espresso)] mb-1" id="preferment-info-title">Poolish</p>
+                      <p class="text-xs text-[var(--crust-brown)]" id="preferment-info-desc">
+                        100% hydration, mild flavor, very extensible dough. Perfect for baguettes and ciabatta.
+                      </p>
+                    </div>
+
+                    <!-- Preferment Timing -->
+                    <div class="bg-[var(--accent-gold)]/10 rounded-lg p-4 border border-[var(--accent-gold)]/20">
+                      <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-[var(--espresso)]">Ferment Time:</span>
+                        <span class="text-lg font-display font-semibold text-[var(--accent-gold)]" id="preferment-time">8-12 hrs</span>
+                      </div>
+                      <p class="text-xs text-[var(--crust-brown)]" id="preferment-ready-signs">
+                        Ready when: domed, very bubbly, just starting to recede
+                      </p>
+                      <div class="mt-3 pt-3 border-t border-[var(--accent-gold)]/20">
+                        <p class="text-sm text-[var(--espresso)]">
+                          <span class="font-medium">Start preferment at:</span>
+                          <span id="preferment-start-time" class="ml-2">Evening before bake day</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <!-- Preferment Recipe Preview -->
+                    <div class="bg-white rounded-lg p-4 border border-[var(--border-light)]">
+                      <p class="text-sm font-medium text-[var(--espresso)] mb-2">Preferment Ingredients:</p>
+                      <div class="space-y-1 text-sm" id="preferment-ingredients">
+                        <div class="flex justify-between">
+                          <span class="text-[var(--crust-brown)]">Flour</span>
+                          <span class="font-medium" id="preferment-flour-weight">180g</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="text-[var(--crust-brown)]">Water</span>
+                          <span class="font-medium" id="preferment-water-weight">180g</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="text-[var(--crust-brown)]">Yeast</span>
+                          <span class="font-medium" id="preferment-yeast-weight">0.2g (tiny pinch)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Autolyse Option -->
+                  <div class="pt-4 border-t border-[var(--border-light)]">
+                    <div class="flex items-center justify-between py-3 px-4 bg-[var(--cream-warm)] rounded-lg">
+                      <div>
+                        <span class="font-medium text-[var(--espresso)]">Autolyse</span>
+                        <p class="text-xs text-[var(--crust-brown)]">Rest flour + water before mixing</p>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="autolyse-toggle" class="sr-only peer">
+                        <div class="w-11 h-6 bg-[var(--border-light)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--accent-gold)]"></div>
+                      </label>
+                    </div>
+
+                    <!-- Autolyse Duration (shown when enabled) -->
+                    <div id="autolyse-controls" class="hidden mt-2 pl-4">
+                      <label class="block text-sm mb-2">Duration</label>
+                      <div class="flex gap-2">
+                        <button class="autolyse-duration-btn autolyse-duration-active" data-duration="20">20 min</button>
+                        <button class="autolyse-duration-btn" data-duration="30">30 min</button>
+                        <button class="autolyse-duration-btn" data-duration="45">45 min</button>
+                        <button class="autolyse-duration-btn" data-duration="60">60 min</button>
+                      </div>
+                      <p class="text-xs text-[var(--crust-brown)] mt-2">
+                        Longer autolyse recommended for whole grain and high-hydration doughs.
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Preferment Tips -->
+                  <div class="bg-[var(--cream-warm)] rounded-lg p-3 mt-2">
+                    <p class="text-sm text-[var(--crust-brown)]">
+                      <span class="font-medium text-[var(--espresso)]">Tip:</span>
+                      <span id="preferment-tip">Preferments improve flavor complexity, dough extensibility, and shelf life.</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Recipe Card -->
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl font-display">Your Recipe</h2>
+            <div class="flex items-center gap-1 bg-[var(--cream-warm)] rounded-full p-1">
+              <button class="px-3 py-1 rounded-full text-sm font-medium bg-[var(--espresso)] text-white" id="unit-g">g</button>
+              <button class="px-3 py-1 rounded-full text-sm font-medium text-[var(--crust-brown)]" id="unit-oz">oz</button>
+            </div>
+          </div>
+
+          <div class="recipe-card" id="recipe-card">
+            <div class="recipe-card-header">
+              <h3 class="font-display text-2xl" id="recipe-title">Sourdough Bread</h3>
+              <p class="opacity-90 mt-1" id="recipe-yield">Makes 2 loaves at 900g each (1800g total)</p>
+            </div>
+
+            <div class="recipe-card-body space-y-6">
+              <!-- Preferment Section (hidden by default) -->
+              <div id="preferment-section" class="hidden">
+                <div class="flex items-center gap-2 mb-3">
+                  <h4 class="font-medium text-lg" id="preferment-title">POOLISH</h4>
+                  <span class="text-xs bg-[var(--accent-gold)] text-white px-2 py-0.5 rounded-full" id="preferment-timing-badge">Make 12-16 hrs before</span>
+                </div>
+                <div class="bg-[var(--cream-warm)] rounded-lg p-4 mb-4">
+                  <div class="space-y-2" id="preferment-ingredients-list">
+                    <!-- Populated by JS -->
+                  </div>
+                  <p class="text-xs text-[var(--crust-brown)] mt-3 pt-3 border-t border-[var(--border-light)]" id="preferment-ready-signs">
+                    Ready when: domed, very bubbly, just starting to recede
+                  </p>
+                </div>
+              </div>
+
+              <!-- Final Dough Ingredients -->
+              <div>
+                <h4 class="font-medium text-lg mb-3 flex items-center gap-2" id="ingredients-heading">
+                  <span id="ingredients-heading-text">Ingredients</span>
+                  <span class="text-sm font-normal text-[var(--crust-brown)]">(Baker's %)</span>
+                </h4>
+                <div class="space-y-2" id="ingredients-list">
+                  <!-- Populated by JS -->
+                </div>
+              </div>
+
+              <!-- Tips -->
+              <div class="bg-[var(--cream-warm)] rounded-lg p-4 space-y-2">
+                <p class="text-sm">
+                  <span class="font-medium">Water temperature:</span>
+                  <span id="water-temp" class="text-[var(--crust-brown)]">78-82°F / 26-28°C</span>
+                </p>
+                <p class="text-sm">
+                  <span class="font-medium">Recommended flour:</span>
+                  <span id="flour-rec" class="text-[var(--crust-brown)]">Bread Flour + Whole Wheat</span>
+                </p>
+              </div>
+
+              <!-- Instructions -->
+              <div>
+                <h4 class="font-medium text-lg mb-3">Instructions</h4>
+                <ol class="space-y-3" id="instructions-list">
+                  <!-- Populated by JS -->
+                </ol>
+              </div>
+
+              <!-- Actions -->
+              <div class="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-3 pt-4 border-t border-[var(--border-light)]">
+                <button class="btn btn-primary text-sm sm:text-base" id="btn-print">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" />
+                  </svg>
+                  <span class="hidden xs:inline sm:inline">Print</span>
+                </button>
+                <button class="btn btn-gold text-sm sm:text-base" id="btn-share">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                  </svg>
+                  <span class="hidden xs:inline sm:inline">Share</span>
+                </button>
+                <button class="btn btn-outline text-sm sm:text-base" id="btn-copy">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                    <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                  </svg>
+                  <span class="hidden xs:inline sm:inline">Copy</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Newsletter Section -->
+  <section class="section-dark py-16 mt-16">
+    <div class="container max-w-2xl text-center">
+      <h2 class="font-display text-2xl md:text-3xl mb-3">
+        Level Up Your <span class="text-[var(--wheat-gold)]" id="newsletter-style">Sourdough</span> Game
+      </h2>
+      <p class="text-[var(--cream-warm)] mb-8">
+        Get weekly tips, troubleshooting guides, and pro techniques for perfect bread.
+      </p>
+      <form class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto" id="newsletter-form">
+        <input
+          type="email"
+          placeholder="your@email.com"
+          class="input flex-1"
+          required
+        />
+        <button type="submit" class="btn btn-gold whitespace-nowrap">
+          Get Bread Tips
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </button>
+      </form>
+      <p class="text-sm text-[var(--crust-brown)] mt-4">
+        No spam, ever. Unsubscribe anytime.
+      </p>
+    </div>
+  </section>
+
+  <!-- Baker's Percentage Section -->
+  <section class="py-16 bg-[var(--cream-warm)]" id="bakers-percent">
+    <div class="container max-w-4xl">
+      <div class="text-center mb-12">
+        <p class="text-sm tracking-[0.2em] text-[var(--accent-gold)] font-medium mb-4">THE FOUNDATION</p>
+        <h2 class="font-display text-3xl md:text-4xl mb-4">Understanding Baker's Percentages</h2>
+        <p class="text-[var(--crust-brown)] max-w-2xl mx-auto">
+          The universal language of bread bakers. Once you understand this system, you can scale any recipe and compare formulas at a glance.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-8 mb-12">
+        <div class="card p-6">
+          <h3 class="font-display text-xl mb-4">How It Works</h3>
+          <p class="text-[var(--crust-brown)] mb-4">
+            In baker's percentages, <strong>flour is always 100%</strong>. Every other ingredient is expressed as a percentage of the flour weight.
+          </p>
+          <div class="bg-[var(--cream-warm)] rounded-lg p-4 space-y-2">
+            <div class="flex justify-between">
+              <span>Flour</span>
+              <span class="font-medium">1000g = 100%</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Water (75% hydration)</span>
+              <span class="font-medium">750g</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Salt (2%)</span>
+              <span class="font-medium">20g</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Yeast (1%)</span>
+              <span class="font-medium">10g</span>
+            </div>
+            <div class="flex justify-between border-t border-[var(--border-light)] pt-2 mt-2">
+              <span class="font-medium">Total Dough</span>
+              <span class="font-medium text-[var(--accent-gold)]">1780g</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card p-6">
+          <h3 class="font-display text-xl mb-4">Why Use It?</h3>
+          <ul class="space-y-3 text-[var(--crust-brown)]">
+            <li class="flex gap-3">
+              <span class="text-[var(--accent-gold)]">✓</span>
+              <span><strong>Scale easily</strong> – Double or halve recipes without math errors</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="text-[var(--accent-gold)]">✓</span>
+              <span><strong>Compare recipes</strong> – Instantly see hydration and ratios</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="text-[var(--accent-gold)]">✓</span>
+              <span><strong>Adjust confidently</strong> – Tweak one variable without affecting others</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="text-[var(--accent-gold)]">✓</span>
+              <span><strong>Learn faster</strong> – Understand what makes each bread unique</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="text-[var(--accent-gold)]">✓</span>
+              <span><strong>Professional standard</strong> – The system used by bakeries worldwide</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card p-6">
+        <h3 class="font-display text-xl mb-4">Common Hydration Levels</h3>
+        <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="text-center p-4 bg-[var(--cream-warm)] rounded-lg">
+            <div class="text-2xl font-display text-[var(--accent-gold)] mb-1">55-60%</div>
+            <div class="text-sm text-[var(--crust-brown)]">Bagels, Pretzels</div>
+            <div class="text-xs text-[var(--crust-brown)] mt-1">Stiff, easy to shape</div>
+          </div>
+          <div class="text-center p-4 bg-[var(--cream-warm)] rounded-lg">
+            <div class="text-2xl font-display text-[var(--accent-gold)] mb-1">62-68%</div>
+            <div class="text-sm text-[var(--crust-brown)]">Sandwich Bread</div>
+            <div class="text-xs text-[var(--crust-brown)] mt-1">Soft, tender crumb</div>
+          </div>
+          <div class="text-center p-4 bg-[var(--cream-warm)] rounded-lg">
+            <div class="text-2xl font-display text-[var(--accent-gold)] mb-1">70-75%</div>
+            <div class="text-sm text-[var(--crust-brown)]">Sourdough, Baguettes</div>
+            <div class="text-xs text-[var(--crust-brown)] mt-1">Open crumb, crisp crust</div>
+          </div>
+          <div class="text-center p-4 bg-[var(--cream-warm)] rounded-lg">
+            <div class="text-2xl font-display text-[var(--accent-gold)] mb-1">80-85%</div>
+            <div class="text-sm text-[var(--crust-brown)]">Ciabatta, Focaccia</div>
+            <div class="text-xs text-[var(--crust-brown)] mt-1">Very open, irregular holes</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section class="py-16" id="about">
+    <div class="container max-w-3xl">
+      <div class="text-center mb-10">
+        <p class="text-sm tracking-[0.2em] text-[var(--accent-gold)] font-medium mb-4">ABOUT</p>
+        <h2 class="font-display text-3xl md:text-4xl mb-4">The Dough Formula</h2>
+      </div>
+
+      <div class="prose prose-lg mx-auto text-[var(--crust-brown)]">
+        <p class="text-lg leading-relaxed mb-6">
+          The Dough Formula was created for home bakers who want to understand the science behind great bread.
+          Whether you're baking your first loaf or perfecting your sourdough, our calculator helps you
+          achieve consistent, delicious results every time.
+        </p>
+        <p class="text-lg leading-relaxed mb-6">
+          We believe that understanding baker's percentages is the key to becoming a confident bread baker.
+          Instead of following recipes blindly, you'll learn to read formulas, adjust for your environment,
+          and create your own signature loaves.
+        </p>
+        <p class="text-lg leading-relaxed">
+          This tool is free and always will be. We're passionate about bread and want to share that passion
+          with bakers everywhere. Happy baking! 🌾
+        </p>
+      </div>
+
+      <div class="scoring-divider mt-12">╱ ╱ ╱</div>
+    </div>
+  </section>
+
+  <!-- Equipment Section -->
+  <section class="py-16" id="equipment">
+    <div class="container">
+      <h2 class="font-display text-2xl md:text-3xl text-center mb-3">Essential Bread Equipment</h2>
+      <p class="text-center text-[var(--crust-brown)] mb-10">The right tools make all the difference</p>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="card p-5">
+          <h3 class="font-medium mb-1">Lodge Combo Cooker</h3>
+          <p class="text-sm text-[var(--crust-brown)] mb-3">The go-to choice for home bakers. Shallow lid makes loading dough safer and easier.</p>
+          <div class="flex items-center justify-between">
+            <span class="text-[var(--accent-gold)] font-medium">~$45</span>
+            <a href="https://www.amazon.com/Lodge-Cooker-Pre-seasoned-Skillet-Convertible/dp/B0009JKG9M?tag=probuild20-20" target="_blank" class="text-sm text-[var(--accent-gold)] hover:text-[var(--espresso)] font-medium" rel="noopener noreferrer sponsored" aria-label="View Lodge Combo Cooker on Amazon">View on Amazon →</a>
+          </div>
+        </div>
+        <div class="card p-5">
+          <h3 class="font-medium mb-1">Escali Primo Scale</h3>
+          <p class="text-sm text-[var(--crust-brown)] mb-3">NY Times recommended. 11 lb capacity, 1g accuracy, simple two-button operation.</p>
+          <div class="flex items-center justify-between">
+            <span class="text-[var(--accent-gold)] font-medium">~$27</span>
+            <a href="https://www.amazon.com/Escali-Digital-Multi-Functional-Kitchen-Measuring/dp/B0007GAWRS?tag=probuild20-20" target="_blank" class="text-sm text-[var(--accent-gold)] hover:text-[var(--espresso)] font-medium" rel="noopener noreferrer sponsored" aria-label="View Escali Primo Scale on Amazon">View on Amazon →</a>
+          </div>
+        </div>
+        <div class="card p-5">
+          <h3 class="font-medium mb-1">OXO Bench Scraper</h3>
+          <p class="text-sm text-[var(--crust-brown)] mb-3">Stainless steel blade with measurement markings. Comfortable non-slip grip.</p>
+          <div class="flex items-center justify-between">
+            <span class="text-[var(--accent-gold)] font-medium">~$10</span>
+            <a href="https://www.amazon.com/OXO-Multi-purpose-Stainless-Scraper-Chopper/dp/B00004OCNJ?tag=probuild20-20" target="_blank" class="text-sm text-[var(--accent-gold)] hover:text-[var(--espresso)] font-medium" rel="noopener noreferrer sponsored" aria-label="View OXO Bench Scraper on Amazon">View on Amazon →</a>
+          </div>
+        </div>
+        <div class="card p-5">
+          <h3 class="font-medium mb-1">Banneton Basket Set</h3>
+          <p class="text-sm text-[var(--crust-brown)] mb-3">Round & oval baskets with liners, lame, and scrapers. Premium Indonesian rattan.</p>
+          <div class="flex items-center justify-between">
+            <span class="text-[var(--accent-gold)] font-medium">~$26</span>
+            <a href="https://www.amazon.com/RORECAY-Proofing-Banneton-Sourdough-Fermentation/dp/B08G4ZPZBZ?tag=probuild20-20" target="_blank" class="text-sm text-[var(--accent-gold)] hover:text-[var(--espresso)] font-medium" rel="noopener noreferrer sponsored" aria-label="View Banneton Basket Set on Amazon">View on Amazon →</a>
+          </div>
+        </div>
+        <div class="card p-5">
+          <h3 class="font-medium mb-1">UFO Bread Lame</h3>
+          <p class="text-sm text-[var(--crust-brown)] mb-3">Handcrafted walnut wood handle with secure blade storage. Includes extra blades.</p>
+          <div class="flex items-center justify-between">
+            <span class="text-[var(--accent-gold)] font-medium">~$13</span>
+            <a href="https://www.amazon.com/VIROTEE-UFO-Bread-Lame-Sourdough/dp/B08CTCHYDT?tag=probuild20-20" target="_blank" class="text-sm text-[var(--accent-gold)] hover:text-[var(--espresso)] font-medium" rel="noopener noreferrer sponsored" aria-label="View UFO Bread Lame on Amazon">View on Amazon →</a>
+          </div>
+        </div>
+        <div class="card p-5">
+          <h3 class="font-medium mb-1">ThermoWorks Thermapen</h3>
+          <p class="text-sm text-[var(--crust-brown)] mb-3">Pro-grade accuracy in 1 second. Check water temp and bread doneness (190-210°F).</p>
+          <div class="flex items-center justify-between">
+            <span class="text-[var(--accent-gold)] font-medium">~$105</span>
+            <a href="https://www.amazon.com/ThermoWorks-Thermapen-Recommended-Instant-Read-Thermometer/dp/B0DG71Q1LZ?tag=probuild20-20" target="_blank" class="text-sm text-[var(--accent-gold)] hover:text-[var(--espresso)] font-medium" rel="noopener noreferrer sponsored" aria-label="View ThermoWorks Thermapen on Amazon">View on Amazon →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-10 p-5 bg-[var(--cream-flour)] rounded-lg border border-[var(--border-light)]">
+        <p class="text-sm text-[var(--crust-brown)] text-center">
+          <strong>Affiliate Disclosure:</strong> As an Amazon Associate, we earn from qualifying purchases. This means we may receive a small commission if you buy through our links, at no extra cost to you. We only recommend products we genuinely believe will help your bread baking journey. Thank you for supporting The Dough Formula!
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="py-16 bg-[var(--cream-warm)]" id="faq">
+    <div class="container max-w-3xl">
+      <h2 class="font-display text-2xl md:text-3xl text-center mb-10">Frequently Asked Questions</h2>
+
+      <div class="space-y-3" id="faq-list">
+        <div class="accordion-item">
+          <button class="accordion-trigger faq-trigger">
+            What hydration is best for beginners?
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform faq-chevron" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+          <div class="accordion-content hidden">
+            Start with 65-70% hydration. Lower hydration doughs are easier to handle and shape. As you gain experience, gradually increase to 75-80% for more open crumb.
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <button class="accordion-trigger faq-trigger">
+            Can I use all-purpose flour instead of bread flour?
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform faq-chevron" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+          <div class="accordion-content hidden">
+            Yes, but reduce hydration by 3-5%. All-purpose flour has less protein (10-12% vs 12-14% for bread flour), so it absorbs less water and produces a slightly softer crumb.
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <button class="accordion-trigger faq-trigger">
+            Why is my bread dense?
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform faq-chevron" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+          <div class="accordion-content hidden">
+            Common causes: underproofed dough (not enough fermentation time), weak/inactive starter, cold dough temperature, or not enough gluten development. Try longer bulk ferment and ensure your starter passes the float test.
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <button class="accordion-trigger faq-trigger">
+            Why use baker's percentages?
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform faq-chevron" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+          <div class="accordion-content hidden">
+            Baker's percentages make scaling recipes easy and allow you to compare recipes at a glance. All ingredients are expressed as a percentage of the flour weight (flour is always 100%), so you can instantly see hydration, salt level, and other ratios.
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <button class="accordion-trigger faq-trigger">
+            Do I need a Dutch oven?
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform faq-chevron" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+          <div class="accordion-content hidden">
+            Not required, but highly recommended for home ovens. It traps steam, giving you the crispy crust and oven spring that's hard to achieve otherwise. Alternatives: baking stone with steam pan, or inverted roasting pan.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="section-dark py-10 sm:py-12">
+    <div class="container">
+      <div class="grid gap-8 sm:grid-cols-2 md:grid-cols-3">
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <svg class="w-7 h-7 text-[var(--wheat-gold)]" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 28V12"/>
+              <path d="M16 12c-2-3-2-6 0-8 2 2 2 5 0 8z"/>
+              <path d="M16 16c-3-2-5-1-7 1 2 2 5 2 7-1z"/>
+              <path d="M16 16c3-2 5-1 7 1-2 2-5 2-7-1z"/>
+              <path d="M16 20c-3-2-5-1-7 1 2 2 5 2 7-1z"/>
+              <path d="M16 20c3-2 5-1 7 1-2 2-5 2-7-1z"/>
+              <path d="M16 24c-3-2-5-1-7 1 2 2 5 2 7-1z"/>
+              <path d="M16 24c3-2 5-1 7 1-2 2-5 2-7-1z"/>
+            </svg>
+            <span class="font-display text-xl font-semibold text-[var(--cream-flour)]">The Dough Formula</span>
+          </div>
+          <p class="text-[var(--cream-warm)] text-sm leading-relaxed">
+            Free bread dough calculator using baker's percentages. Perfect dough for sourdough, baguettes, focaccia, and more.
+          </p>
+        </div>
+
+        <div>
+          <h4 class="font-medium mb-4 text-[var(--cream-flour)]">Links</h4>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#about" class="text-[var(--cream-warm)] hover:text-[var(--wheat-gold)] transition-colors">About</a></li>
+            <li><a href="#bread-styles" class="text-[var(--cream-warm)] hover:text-[var(--wheat-gold)] transition-colors">Bread Styles</a></li>
+            <li><a href="#bakers-percent" class="text-[var(--cream-warm)] hover:text-[var(--wheat-gold)] transition-colors">Baker's Percentages</a></li>
+            <li><a href="#equipment" class="text-[var(--cream-warm)] hover:text-[var(--wheat-gold)] transition-colors">Equipment</a></li>
+            <li><a href="#faq" class="text-[var(--cream-warm)] hover:text-[var(--wheat-gold)] transition-colors">FAQ</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-medium mb-4 text-[var(--cream-flour)]">Stay Updated</h4>
+          <p class="text-[var(--cream-warm)] text-sm mb-3">
+            Get bread tips and new features delivered to your inbox.
+          </p>
+          <button class="btn btn-gold text-sm">Subscribe</button>
+        </div>
+      </div>
+
+      <div class="border-t border-[var(--cream-warm)]/20 mt-8 pt-8 text-center text-sm text-[var(--cream-warm)]">
+        © 2025 The Dough Formula. Made with care for home bakers everywhere.
+      </div>
+    </div>
+  </footer>
+
+  </main>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="alert" aria-live="polite"></div>
+
+  <!-- Baking Schedule Modal -->
+  <div id="schedule-modal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="schedule-modal-overlay"></div>
+    <div class="absolute inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:max-w-lg sm:w-full bg-[var(--cream-flour)] rounded-xl shadow-2xl overflow-hidden">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-display text-xl">Plan My Bake</h3>
+          <button id="schedule-modal-close" class="p-2 hover:bg-[var(--cream-warm)] rounded-lg transition-colors">
+            <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+
+        <p class="text-sm text-[var(--crust-brown)] mb-4">
+          When do you want fresh bread ready?
+        </p>
+
+        <div class="space-y-4">
+          <!-- Date/Time Input -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm text-[var(--crust-brown)] mb-1">Date</label>
+              <input type="date" id="schedule-date" class="input w-full py-2" />
+            </div>
+            <div>
+              <label class="block text-sm text-[var(--crust-brown)] mb-1">Time</label>
+              <input type="time" id="schedule-time" class="input w-full py-2" value="09:00" />
+            </div>
+          </div>
+
+          <!-- Quick Presets -->
+          <div>
+            <p class="text-xs text-[var(--crust-brown)] mb-2">Quick presets:</p>
+            <div class="flex flex-wrap gap-2">
+              <button class="schedule-preset-btn preset-pill text-xs" data-preset="morning">Tomorrow morning</button>
+              <button class="schedule-preset-btn preset-pill text-xs" data-preset="lunch">Tomorrow lunch</button>
+              <button class="schedule-preset-btn preset-pill text-xs" data-preset="dinner">Tomorrow dinner</button>
+            </div>
+          </div>
+
+          <!-- Generate Button -->
+          <button id="generate-schedule-btn" class="btn btn-primary w-full py-3">
+            Generate Schedule
+          </button>
+        </div>
+
+        <!-- Generated Schedule (hidden initially) -->
+        <div id="schedule-result" class="hidden mt-6 pt-6 border-t border-[var(--border-light)]">
+          <h4 class="font-medium text-[var(--espresso)] mb-3">Your Baking Timeline</h4>
+          <div class="space-y-2" id="schedule-timeline">
+            <!-- Timeline items populated by JS -->
+          </div>
+
+          <div class="mt-4 pt-4 border-t border-[var(--border-light)] flex gap-2">
+            <button id="copy-schedule-btn" class="btn btn-outline flex-1 text-sm py-2">
+              <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+              </svg>
+              Copy
+            </button>
+            <button id="download-ics-btn" class="btn btn-gold flex-1 text-sm py-2">
+              <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+              </svg>
+              Add to Calendar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  // ============================================
+  // Calculator State & Logic
+  // ============================================
+  interface RecipeState {
+    style: string;
+    numLoaves: number;
+    loafWeight: number;
+    hydration: number;
+    salt: number;
+    yeastType: 'starter' | 'instant' | 'active-dry' | 'fresh';
+    yeastPercent: number;
+    starterHydration: number;
+    wholeGrain: number;
+    flour: string;
+    waterTemp: string;
+    instructions: string[];
+    unit: 'g' | 'oz';
+    // Temperature state
+    tempUnit: 'F' | 'C';
+    ddt: number; // Desired Dough Temperature in Fahrenheit
+    roomTemp: number;
+    flourTemp: number;
+    mixerType: 'hand' | 'stand' | 'spiral';
+    frictionFactor: number;
+    // Timing state
+    coldRetard: boolean;
+    // Preferment state
+    prefermentType: 'none' | 'poolish' | 'biga' | 'pate-fermentee' | 'levain';
+    prefermentPercent: number; // % of flour in preferment
+    // Autolyse state
+    autolyse: boolean;
+    autolyseDuration: number; // minutes
+  }
+
+  const state: RecipeState = {
+    style: 'sourdough',
+    numLoaves: 2,
+    loafWeight: 900,
+    hydration: 75,
+    salt: 2,
+    yeastType: 'starter',
+    yeastPercent: 20,
+    starterHydration: 100,
+    wholeGrain: 10,
+    flour: 'Bread Flour + Whole Wheat',
+    waterTemp: '78-82°F / 26-28°C',
+    instructions: [],
+    unit: 'g',
+    // Temperature defaults
+    tempUnit: 'F',
+    ddt: 75,
+    roomTemp: 70,
+    flourTemp: 70,
+    mixerType: 'hand',
+    frictionFactor: 11,
+    // Timing
+    coldRetard: false,
+    // Preferment
+    prefermentType: 'none',
+    prefermentPercent: 20,
+    // Autolyse
+    autolyse: false,
+    autolyseDuration: 30
+  };
+
+  // Preferment data
+  interface PrefermentData {
+    name: string;
+    hydration: number; // % of preferment flour
+    yeastPercent: number; // % of preferment flour
+    fermentTimeMin: number; // hours
+    fermentTimeMax: number;
+    description: string;
+    readySigns: string;
+    tip: string;
+  }
+
+  const PREFERMENT_DATA: Record<string, PrefermentData> = {
+    'poolish': {
+      name: 'Poolish',
+      hydration: 100,
+      yeastPercent: 0.1,
+      fermentTimeMin: 8,
+      fermentTimeMax: 12,
+      description: '100% hydration, mild flavor, very extensible dough. Perfect for baguettes and ciabatta.',
+      readySigns: 'Ready when: domed, very bubbly, just starting to recede',
+      tip: 'Poolish creates an open crumb and mild, wheaty flavor. Use within 3 hours of peak.'
+    },
+    'biga': {
+      name: 'Biga',
+      hydration: 55,
+      yeastPercent: 0.5,
+      fermentTimeMin: 12,
+      fermentTimeMax: 16,
+      description: '55% hydration stiff preferment. Adds strength, nutty flavor, and keeping quality.',
+      readySigns: 'Ready when: doubled, domed, with cracks on surface',
+      tip: 'Biga creates a chewy texture and complex, slightly sweet flavor.'
+    },
+    'pate-fermentee': {
+      name: 'Pâte Fermentée',
+      hydration: -1, // Uses recipe hydration
+      yeastPercent: -1, // Uses recipe yeast
+      fermentTimeMin: 1,
+      fermentTimeMax: 3,
+      description: 'Old dough method. Uses leftover dough from previous batch for instant flavor.',
+      readySigns: 'Ready when: mature, slightly puffy, but not over-proofed',
+      tip: 'Keep old dough refrigerated 1-3 days. Bring to room temp before using.'
+    },
+    'levain': {
+      name: 'Levain',
+      hydration: 100,
+      yeastPercent: 0, // No commercial yeast - starter only
+      fermentTimeMin: 4,
+      fermentTimeMax: 8,
+      description: 'Starter-based preferment for enhanced sourdough flavor and strength.',
+      readySigns: 'Ready when: doubled, passes float test, domed with bubbles',
+      tip: 'Build levain from active starter. Use at peak for best results.'
+    }
+  };
+
+  // Yeast conversion ratios (relative to instant yeast)
+  const YEAST_CONVERSIONS = {
+    'instant': 1,
+    'active-dry': 1.25,
+    'fresh': 3,
+    'starter': 1 // Starter uses different calculation
+  };
+
+  // Yeast tips
+  const YEAST_TIPS = {
+    'starter': 'Feed your starter 4-8 hours before use. Use at peak activity when it\'s domed and bubbly.',
+    'instant': 'Add directly to flour. No blooming needed. Works great for quick breads.',
+    'active-dry': 'Bloom in warm water (100-110°F / 38-43°C) for 5-10 minutes before mixing.',
+    'fresh': 'Crumble into flour or dissolve in lukewarm water. Use within 2 weeks of purchase.'
+  };
+
+  // Default yeast percentages by type
+  const DEFAULT_YEAST_PERCENT = {
+    'starter': 20,
+    'instant': 1,
+    'active-dry': 1.25,
+    'fresh': 3
+  };
+
+  // Flour types with properties
+  const FLOUR_DATA: Record<string, { name: string; protein: string; absorption: number; wholeGrain: boolean }> = {
+    'bread': { name: 'Bread Flour', protein: '12-14%', absorption: 62, wholeGrain: false },
+    'ap': { name: 'All-Purpose', protein: '10-12%', absorption: 58, wholeGrain: false },
+    'whole-wheat': { name: 'Whole Wheat', protein: '13-14%', absorption: 75, wholeGrain: true },
+    'rye-light': { name: 'Light Rye', protein: '8-10%', absorption: 80, wholeGrain: true },
+    'rye-dark': { name: 'Dark Rye', protein: '10-12%', absorption: 85, wholeGrain: true },
+    'spelt': { name: 'Spelt', protein: '12-15%', absorption: 58, wholeGrain: true },
+    'einkorn': { name: 'Einkorn', protein: '12-16%', absorption: 55, wholeGrain: true },
+    'semolina': { name: 'Semolina', protein: '12-13%', absorption: 60, wholeGrain: false },
+    'tipo-00': { name: 'Tipo 00', protein: '11-12%', absorption: 55, wholeGrain: false }
+  };
+
+  // Enrichment water content percentages
+  const ENRICHMENT_WATER_CONTENT: Record<string, number> = {
+    // Fats
+    'butter': 0.15,
+    'oil': 0,
+    // Eggs (per 50g large egg)
+    'whole': 0.75,
+    'yolks': 0.50,
+    'whites': 0.90,
+    // Dairy
+    'whole-milk': 0.87,
+    'buttermilk': 0.90,
+    'cream': 0.58,
+    // Sweeteners
+    'sugar': 0,
+    'honey': 0.17,
+    'maple': 0.33,
+    'malt': 0.20
+  };
+
+  // Enrichment state
+  interface EnrichmentState {
+    fat: { enabled: boolean; type: string; percent: number };
+    eggs: { enabled: boolean; type: string; count: number };
+    dairy: { enabled: boolean; type: string; percentOfLiquid: number };
+    sweet: { enabled: boolean; type: string; percent: number };
+  }
+
+  const enrichmentState: EnrichmentState = {
+    fat: { enabled: false, type: 'butter', percent: 5 },
+    eggs: { enabled: false, type: 'whole', count: 2 },
+    dairy: { enabled: false, type: 'whole-milk', percentOfLiquid: 50 },
+    sweet: { enabled: false, type: 'sugar', percent: 5 }
+  };
+
+  // Multi-flour state
+  interface FlourEntry {
+    type: string;
+    percent: number;
+  }
+
+  const flourBlend: FlourEntry[] = [
+    { type: 'bread', percent: 100 }
+  ];
+
+  // Get initial instructions from first style card
+  const firstCard = document.querySelector('.style-card') as HTMLElement;
+  if (firstCard) {
+    state.instructions = JSON.parse(firstCard.dataset.instructions || '[]');
+  }
+
+  // Temperature conversion helpers
+  function celsiusToFahrenheit(c: number): number {
+    return Math.round((c * 9/5) + 32);
+  }
+
+  function fahrenheitToCelsius(f: number): number {
+    return Math.round((f - 32) * 5/9);
+  }
+
+  function formatTemp(tempF: number): string {
+    if (state.tempUnit === 'C') {
+      return `${fahrenheitToCelsius(tempF)}°C`;
+    }
+    return `${tempF}°F`;
+  }
+
+  // Calculate water temperature using DDT formula
+  function calculateWaterTemp(): number {
+    // Formula: Water = (DDT × 3) - Room - Flour - Friction
+    return (state.ddt * 3) - state.roomTemp - state.flourTemp - state.frictionFactor;
+  }
+
+  // Calculate starter contribution (flour and water from starter)
+  function calculateStarterContribution(starterWeight: number): { flour: number; water: number } {
+    // Starter hydration: 100% means equal flour and water
+    // e.g., 100g starter at 100% = 50g flour + 50g water
+    const starterFlour = Math.round(starterWeight / (1 + state.starterHydration / 100));
+    const starterWater = starterWeight - starterFlour;
+    return { flour: starterFlour, water: starterWater };
+  }
+
+  // Estimate fermentation times based on temperature and yeast type
+  function estimateFermentationTimes(): { bulk: string; proof: string; total: string } {
+    // Base times at 75°F (24°C)
+    let baseBulkMin = 1.5; // hours
+    let baseBulkMax = 2;
+    let baseProofMin = 0.75;
+    let baseProofMax = 1.5;
+
+    // Adjust for yeast type
+    if (state.yeastType === 'starter') {
+      baseBulkMin = 4;
+      baseBulkMax = 6;
+      baseProofMin = 1;
+      baseProofMax = 2;
+    } else if (state.yeastPercent < 0.5) {
+      // Low yeast (like no-knead)
+      baseBulkMin = 12;
+      baseBulkMax = 18;
+    }
+
+    // Temperature adjustment: ~10% change per degree F from 75°F
+    const tempDiff = state.ddt - 75;
+    const tempFactor = Math.pow(0.93, tempDiff / 5); // Warmer = faster
+
+    const adjustedBulkMin = baseBulkMin * tempFactor;
+    const adjustedBulkMax = baseBulkMax * tempFactor;
+    const adjustedProofMin = baseProofMin * tempFactor;
+    const adjustedProofMax = baseProofMax * tempFactor;
+
+    // Format times
+    const formatTime = (min: number, max: number): string => {
+      if (min >= 1) {
+        return `${min.toFixed(0)}-${max.toFixed(0)} hrs`;
+      } else {
+        return `${Math.round(min * 60)}-${Math.round(max * 60)} min`;
+      }
+    };
+
+    const totalMin = adjustedBulkMin + adjustedProofMin;
+    const totalMax = adjustedBulkMax + adjustedProofMax;
+
+    return {
+      bulk: formatTime(adjustedBulkMin, adjustedBulkMax),
+      proof: formatTime(adjustedProofMin, adjustedProofMax),
+      total: formatTime(totalMin, totalMax)
+    };
+  }
+
+  // Calculate total whole grain percentage from flour blend
+  function calculateWholeGrainPercent(): number {
+    return flourBlend.reduce((total, flour) => {
+      if (FLOUR_DATA[flour.type]?.wholeGrain) {
+        return total + flour.percent;
+      }
+      return total;
+    }, 0);
+  }
+
+  // Calculate preferment ingredients
+  function calculatePrefermentIngredients(totalFlourWeight: number): { flour: number; water: number; yeast: number; yeastNote: string } | null {
+    if (state.prefermentType === 'none') return null;
+
+    const prefData = PREFERMENT_DATA[state.prefermentType];
+    if (!prefData) return null;
+
+    const prefFlour = Math.round(totalFlourWeight * state.prefermentPercent / 100);
+
+    // Handle hydration
+    let prefWater: number;
+    if (prefData.hydration === -1) {
+      // Pâte Fermentée uses recipe hydration
+      prefWater = Math.round(prefFlour * state.hydration / 100);
+    } else {
+      prefWater = Math.round(prefFlour * prefData.hydration / 100);
+    }
+
+    // Handle yeast
+    let prefYeast: number;
+    let yeastNote: string;
+    if (state.prefermentType === 'levain') {
+      // Levain uses starter, not commercial yeast
+      prefYeast = Math.round(prefFlour * 0.2); // 20% starter
+      yeastNote = '(active starter)';
+    } else if (prefData.yeastPercent === -1) {
+      // Pâte Fermentée uses recipe yeast amount
+      prefYeast = Math.round(prefFlour * state.yeastPercent / 100);
+      yeastNote = '';
+    } else {
+      prefYeast = prefFlour * prefData.yeastPercent / 100;
+      // Format tiny yeast amounts
+      if (prefYeast < 1) {
+        yeastNote = '(tiny pinch)';
+        prefYeast = Math.round(prefYeast * 10) / 10; // Round to 1 decimal
+      } else {
+        yeastNote = '';
+        prefYeast = Math.round(prefYeast);
+      }
+    }
+
+    return { flour: prefFlour, water: prefWater, yeast: prefYeast, yeastNote };
+  }
+
+  // Estimate preferment timing based on room temperature
+  function estimatePrefermentTiming(): { fermentTime: string; startTime: string } {
+    if (state.prefermentType === 'none') {
+      return { fermentTime: '-', startTime: '-' };
+    }
+
+    const prefData = PREFERMENT_DATA[state.prefermentType];
+    if (!prefData) return { fermentTime: '-', startTime: '-' };
+
+    // Adjust timing based on room temperature
+    const tempDiff = state.roomTemp - 70; // Base temp 70°F
+    const tempFactor = Math.pow(0.93, tempDiff / 5); // Warmer = faster
+
+    const minTime = Math.round(prefData.fermentTimeMin * tempFactor);
+    const maxTime = Math.round(prefData.fermentTimeMax * tempFactor);
+
+    const fermentTime = `${minTime}-${maxTime} hrs`;
+
+    // Calculate when to start (average of min/max from a 9am bake)
+    const avgTime = (minTime + maxTime) / 2;
+    let startTime: string;
+    if (avgTime <= 4) {
+      startTime = 'Early morning of bake day';
+    } else if (avgTime <= 8) {
+      startTime = 'Evening before bake day';
+    } else if (avgTime <= 14) {
+      startTime = 'Night before (before bed)';
+    } else {
+      startTime = 'Previous afternoon';
+    }
+
+    return { fermentTime, startTime };
+  }
+
+  // Generate baking schedule
+  function generateBakingSchedule(targetDateTime: Date): Array<{ time: string; task: string; duration: string }> {
+    const schedule: Array<{ time: string; task: string; duration: string }> = [];
+
+    // Work backwards from target time
+    let currentTime = new Date(targetDateTime);
+
+    // Cooling time (1 hour)
+    currentTime.setHours(currentTime.getHours() - 1);
+    schedule.unshift({
+      time: formatScheduleTime(currentTime),
+      task: 'Cool on wire rack',
+      duration: '1 hr'
+    });
+
+    // Baking time (depends on style, but average 45 min)
+    currentTime.setMinutes(currentTime.getMinutes() - 45);
+    schedule.unshift({
+      time: formatScheduleTime(currentTime),
+      task: 'Bake bread',
+      duration: '35-45 min'
+    });
+
+    // Preheat (30-45 min for Dutch oven)
+    currentTime.setMinutes(currentTime.getMinutes() - 45);
+    schedule.unshift({
+      time: formatScheduleTime(currentTime),
+      task: 'Preheat oven (with Dutch oven)',
+      duration: '45 min'
+    });
+
+    // Final proof
+    const fermentTimes = estimateFermentationTimes();
+    const proofHours = state.coldRetard ? 0.5 : 1.5; // If cold retard, just warmup
+    currentTime.setMinutes(currentTime.getMinutes() - proofHours * 60);
+
+    if (state.coldRetard) {
+      schedule.unshift({
+        time: formatScheduleTime(currentTime),
+        task: 'Remove from fridge, let warm',
+        duration: '30 min'
+      });
+      // Cold retard overnight
+      const coldRetardTime = new Date(currentTime);
+      coldRetardTime.setHours(coldRetardTime.getHours() - 12);
+      schedule.unshift({
+        time: formatScheduleTime(coldRetardTime),
+        task: 'Shape & refrigerate overnight',
+        duration: '8-12 hrs'
+      });
+      currentTime = coldRetardTime;
+    } else {
+      schedule.unshift({
+        time: formatScheduleTime(currentTime),
+        task: 'Shape and final proof',
+        duration: fermentTimes.proof
+      });
+    }
+
+    // Bulk fermentation
+    const bulkHours = state.yeastType === 'starter' ? 5 : (state.yeastPercent < 0.5 ? 15 : 2);
+    currentTime.setMinutes(currentTime.getMinutes() - bulkHours * 60);
+    schedule.unshift({
+      time: formatScheduleTime(currentTime),
+      task: 'Bulk fermentation (stretch & fold)',
+      duration: fermentTimes.bulk
+    });
+
+    // Autolyse (if enabled)
+    if (state.autolyse) {
+      currentTime.setMinutes(currentTime.getMinutes() - state.autolyseDuration);
+      schedule.unshift({
+        time: formatScheduleTime(currentTime),
+        task: 'Autolyse (flour + water rest)',
+        duration: `${state.autolyseDuration} min`
+      });
+    }
+
+    // Mix dough
+    currentTime.setMinutes(currentTime.getMinutes() - 15);
+    schedule.unshift({
+      time: formatScheduleTime(currentTime),
+      task: 'Mix final dough',
+      duration: '10-15 min'
+    });
+
+    // Preferment (if enabled)
+    if (state.prefermentType !== 'none') {
+      const prefTiming = estimatePrefermentTiming();
+      const prefData = PREFERMENT_DATA[state.prefermentType];
+      if (prefData) {
+        const prefHours = (prefData.fermentTimeMin + prefData.fermentTimeMax) / 2;
+        currentTime.setMinutes(currentTime.getMinutes() - prefHours * 60);
+        schedule.unshift({
+          time: formatScheduleTime(currentTime),
+          task: `Mix ${prefData.name}`,
+          duration: prefTiming.fermentTime
+        });
+      }
+    }
+
+    return schedule;
+  }
+
+  function formatScheduleTime(date: Date): string {
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  }
+
+  // Calculate water contribution from enrichments
+  function calculateEnrichmentWaterContribution(flourWeight: number): { totalWater: number; breakdown: string[] } {
+    let totalWater = 0;
+    const breakdown: string[] = [];
+
+    // Fat contribution
+    if (enrichmentState.fat.enabled) {
+      const fatWeight = flourWeight * enrichmentState.fat.percent / 100;
+      const waterFromFat = fatWeight * ENRICHMENT_WATER_CONTENT[enrichmentState.fat.type];
+      totalWater += waterFromFat;
+      if (waterFromFat > 0) {
+        breakdown.push(`${enrichmentState.fat.type}: ${Math.round(waterFromFat)}g water`);
+      }
+    }
+
+    // Egg contribution
+    if (enrichmentState.eggs.enabled) {
+      const eggWeight = enrichmentState.eggs.count * 50; // 50g per large egg
+      const waterFromEggs = eggWeight * ENRICHMENT_WATER_CONTENT[enrichmentState.eggs.type];
+      totalWater += waterFromEggs;
+      breakdown.push(`Eggs: ${Math.round(waterFromEggs)}g water`);
+    }
+
+    // Dairy contribution (replaces portion of water)
+    if (enrichmentState.dairy.enabled) {
+      // Dairy replaces water, so the net water change is based on dairy water content
+      // If using 50% milk at 87% water, and rest is 100% water, net effect is small
+      const baseWater = flourWeight * state.hydration / 100;
+      const dairyPortion = baseWater * enrichmentState.dairy.percentOfLiquid / 100;
+      const waterFromDairy = dairyPortion * ENRICHMENT_WATER_CONTENT[enrichmentState.dairy.type];
+      const waterReplaced = dairyPortion; // This was water
+      const netChange = waterFromDairy - waterReplaced;
+      totalWater += netChange;
+      if (Math.abs(netChange) > 1) {
+        breakdown.push(`Dairy: ${netChange > 0 ? '+' : ''}${Math.round(netChange)}g net`);
+      }
+    }
+
+    // Sweetener contribution
+    if (enrichmentState.sweet.enabled) {
+      const sweetWeight = flourWeight * enrichmentState.sweet.percent / 100;
+      const waterFromSweet = sweetWeight * ENRICHMENT_WATER_CONTENT[enrichmentState.sweet.type];
+      totalWater += waterFromSweet;
+      if (waterFromSweet > 0) {
+        breakdown.push(`${enrichmentState.sweet.type}: ${Math.round(waterFromSweet)}g water`);
+      }
+    }
+
+    return { totalWater, breakdown };
+  }
+
+  // Calculate effective hydration considering enrichments
+  function calculateEffectiveHydration(flourWeight: number, baseWater: number): number {
+    const { totalWater } = calculateEnrichmentWaterContribution(flourWeight);
+    const effectiveWater = baseWater + totalWater;
+    return Math.round((effectiveWater / flourWeight) * 100);
+  }
+
+  function calculateRecipe() {
+    const totalDough = state.numLoaves * state.loafWeight;
+
+    // Calculate base flour weight
+    let yeastContribution = state.yeastPercent / 100;
+    if (state.yeastType !== 'starter') {
+      // Commercial yeast is much smaller percentage
+      yeastContribution = state.yeastPercent / 100;
+    }
+
+    const flourWeight = Math.round(totalDough / (1 + state.hydration / 100 + state.salt / 100 + yeastContribution));
+    let waterWeight = Math.round(flourWeight * state.hydration / 100);
+    const saltWeight = Math.round(flourWeight * state.salt / 100);
+    const yeastWeight = Math.round(flourWeight * state.yeastPercent / 100);
+
+    // For starter, calculate flour/water contribution
+    let starterFlourContrib = 0;
+    let starterWaterContrib = 0;
+    if (state.yeastType === 'starter') {
+      const starterContrib = calculateStarterContribution(yeastWeight);
+      starterFlourContrib = starterContrib.flour;
+      starterWaterContrib = starterContrib.water;
+    }
+
+    // Calculate whole grain from flour blend
+    const wholeGrainPercent = calculateWholeGrainPercent();
+    const wholeGrainWeight = Math.round(flourWeight * wholeGrainPercent / 100);
+    const whiteFlourWeight = flourWeight - wholeGrainWeight;
+
+    // Calculate water temperature
+    const calculatedWaterTemp = calculateWaterTemp();
+
+    // Calculate enrichment contributions
+    const enrichmentWater = calculateEnrichmentWaterContribution(flourWeight);
+    const effectiveHydration = calculateEffectiveHydration(flourWeight, waterWeight);
+
+    // Calculate enrichment weights
+    const enrichments = {
+      fat: enrichmentState.fat.enabled ? Math.round(flourWeight * enrichmentState.fat.percent / 100) : 0,
+      eggs: enrichmentState.eggs.enabled ? enrichmentState.eggs.count * 50 : 0,
+      sweet: enrichmentState.sweet.enabled ? Math.round(flourWeight * enrichmentState.sweet.percent / 100) : 0
+    };
+
+    return {
+      totalDough,
+      flourWeight,
+      whiteFlourWeight,
+      wholeGrainWeight,
+      wholeGrainPercent,
+      waterWeight,
+      saltWeight,
+      yeastWeight,
+      starterFlourContrib,
+      starterWaterContrib,
+      calculatedWaterTemp,
+      enrichmentWater,
+      effectiveHydration,
+      enrichments
+    };
+  }
+
+  function convertToOz(grams: number): string {
+    return (grams / 28.35).toFixed(1);
+  }
+
+  function formatWeight(grams: number): string {
+    if (state.unit === 'oz') {
+      return `${convertToOz(grams)}oz`;
+    }
+    return `${grams}g`;
+  }
+
+  function updateUI() {
+    const recipe = calculateRecipe();
+
+    // Update total weight display
+    const totalWeightEl = document.getElementById('total-weight');
+    if (totalWeightEl) {
+      totalWeightEl.textContent = formatWeight(recipe.totalDough);
+    }
+
+    // Update recipe card title
+    const titleEl = document.getElementById('recipe-title');
+    if (titleEl) {
+      const styleName = state.style.charAt(0).toUpperCase() + state.style.slice(1).replace('-', ' ');
+      titleEl.textContent = `${styleName} Bread`;
+    }
+
+    // Update recipe yield
+    const yieldEl = document.getElementById('recipe-yield');
+    if (yieldEl) {
+      yieldEl.textContent = `Makes ${state.numLoaves} ${state.numLoaves === 1 ? 'loaf' : 'loaves'} at ${formatWeight(state.loafWeight)} each (${formatWeight(recipe.totalDough)} total)`;
+    }
+
+    // Update preferment section visibility and content
+    const prefermentSection = document.getElementById('preferment-section');
+    const ingredientsHeading = document.getElementById('ingredients-heading-text');
+    const prefIngredients = calculatePrefermentIngredients(recipe.flourWeight);
+
+    if (prefermentSection && ingredientsHeading) {
+      if (state.prefermentType !== 'none' && prefIngredients) {
+        prefermentSection.classList.remove('hidden');
+        ingredientsHeading.textContent = 'Final Dough';
+
+        // Update preferment section details
+        const prefData = PREFERMENT_DATA[state.prefermentType];
+        const prefTitle = document.getElementById('preferment-title');
+        const prefTimingBadge = document.getElementById('preferment-timing-badge');
+        const prefReadySigns = document.getElementById('preferment-ready-signs');
+        const prefIngList = document.getElementById('preferment-ingredients-list');
+
+        if (prefTitle) prefTitle.textContent = prefData.name.toUpperCase();
+        if (prefTimingBadge) prefTimingBadge.textContent = `Make ${prefData.fermentTimeMin}-${prefData.fermentTimeMax} hrs before`;
+        if (prefReadySigns) prefReadySigns.textContent = prefData.readySigns;
+
+        // Build preferment ingredients list
+        if (prefIngList) {
+          const prefIngs = [];
+          prefIngs.push({ name: 'Bread Flour', weight: prefIngredients.flour, note: `(${state.prefermentPercent}% of total)` });
+          prefIngs.push({ name: 'Water', weight: prefIngredients.water, note: prefData.hydration === -1 ? '(recipe hydration)' : `(${prefData.hydration}% hydration)` });
+
+          if (state.prefermentType === 'levain') {
+            prefIngs.push({ name: 'Active Starter', weight: prefIngredients.yeast, note: prefIngredients.yeastNote });
+          } else if (prefIngredients.yeast > 0) {
+            prefIngs.push({ name: 'Instant Yeast', weight: prefIngredients.yeast, note: prefIngredients.yeastNote });
+          }
+
+          prefIngList.innerHTML = prefIngs.map(ing => `
+            <div class="flex justify-between py-1.5 border-b border-[var(--border-light)] last:border-0">
+              <span class="font-medium">${ing.name}</span>
+              <span class="flex gap-2">
+                <span>${typeof ing.weight === 'number' && ing.weight < 1 ? ing.weight.toFixed(1) : Math.round(ing.weight)}g</span>
+                ${ing.note ? `<span class="text-xs text-[var(--crust-brown)]">${ing.note}</span>` : ''}
+              </span>
+            </div>
+          `).join('');
+        }
+      } else {
+        prefermentSection.classList.add('hidden');
+        ingredientsHeading.textContent = 'Ingredients';
+      }
+    }
+
+    // Update ingredients list (Final Dough when preferment active)
+    const ingredientsList = document.getElementById('ingredients-list');
+    if (ingredientsList) {
+      const ingredients = [];
+
+      // Calculate remaining flour and water after preferment
+      let finalFlour = recipe.flourWeight;
+      let finalWater = recipe.waterWeight;
+
+      if (state.prefermentType !== 'none' && prefIngredients) {
+        finalFlour = recipe.flourWeight - prefIngredients.flour;
+        finalWater = recipe.waterWeight - prefIngredients.water;
+      }
+
+      if (state.wholeGrain > 0) {
+        // When using preferment, apply percentage to final flour
+        const whiteFlourFinal = Math.round(finalFlour * (100 - state.wholeGrain) / 100);
+        const wholeGrainFinal = finalFlour - whiteFlourFinal;
+        ingredients.push({
+          name: 'Bread Flour',
+          weight: whiteFlourFinal,
+          percent: 100 - state.wholeGrain,
+          note: state.prefermentType !== 'none' ? '(remaining)' : ''
+        });
+        ingredients.push({
+          name: 'Whole Wheat Flour',
+          weight: wholeGrainFinal,
+          percent: state.wholeGrain,
+          note: ''
+        });
+      } else {
+        ingredients.push({
+          name: 'Flour',
+          weight: finalFlour,
+          percent: 100,
+          note: state.prefermentType !== 'none' ? '(remaining)' : ''
+        });
+      }
+
+      ingredients.push({
+        name: 'Water',
+        weight: finalWater,
+        percent: state.hydration,
+        note: state.prefermentType !== 'none' ? '(adjust for preferment)' : ''
+      });
+
+      ingredients.push({
+        name: 'Salt',
+        weight: recipe.saltWeight,
+        percent: state.salt,
+        note: ''
+      });
+
+      // Add preferment as ingredient if active
+      if (state.prefermentType !== 'none' && prefIngredients) {
+        const prefData = PREFERMENT_DATA[state.prefermentType];
+        ingredients.push({
+          name: `All of the ${prefData.name}`,
+          weight: prefIngredients.flour + prefIngredients.water,
+          percent: -1, // Special marker for no percentage
+          note: ''
+        });
+      } else {
+        // Yeast/Starter with appropriate naming (only when no preferment)
+        const yeastNames: Record<string, string> = {
+          'starter': 'Sourdough Starter',
+          'instant': 'Instant Yeast',
+          'active-dry': 'Active Dry Yeast',
+          'fresh': 'Fresh Yeast'
+        };
+        ingredients.push({
+          name: yeastNames[state.yeastType] || 'Yeast',
+          weight: recipe.yeastWeight,
+          percent: state.yeastPercent,
+          note: ''
+        });
+      }
+
+      // Add enrichments if enabled
+      if (enrichmentState.fat.enabled) {
+        const fatName = enrichmentState.fat.type === 'butter' ? 'Butter' : 'Oil';
+        ingredients.push({
+          name: fatName,
+          weight: recipe.enrichments.fat,
+          percent: enrichmentState.fat.percent,
+          note: ''
+        });
+      }
+
+      if (enrichmentState.eggs.enabled) {
+        const eggName = enrichmentState.eggs.type === 'whole' ? 'Eggs' :
+                       enrichmentState.eggs.type === 'yolks' ? 'Egg Yolks' : 'Egg Whites';
+        ingredients.push({
+          name: `${eggName} (${enrichmentState.eggs.count})`,
+          weight: recipe.enrichments.eggs,
+          percent: Math.round((recipe.enrichments.eggs / recipe.flourWeight) * 100),
+          note: ''
+        });
+      }
+
+      if (enrichmentState.sweet.enabled) {
+        const sweetName = enrichmentState.sweet.type.charAt(0).toUpperCase() + enrichmentState.sweet.type.slice(1);
+        ingredients.push({
+          name: sweetName,
+          weight: recipe.enrichments.sweet,
+          percent: enrichmentState.sweet.percent,
+          note: ''
+        });
+      }
+
+      ingredientsList.innerHTML = ingredients.map(ing => `
+        <div class="flex justify-between py-2 border-b border-[var(--border-light)]">
+          <span>${ing.name}${ing.note ? ` <span class="text-xs text-[var(--crust-brown)]">${ing.note}</span>` : ''}</span>
+          <span class="flex gap-4">
+            <span class="font-medium">${formatWeight(ing.weight)}</span>
+            ${ing.percent >= 0 ? `<span class="text-[var(--crust-brown)] w-16 text-right">(${ing.percent}%)</span>` : '<span class="w-16"></span>'}
+          </span>
+        </div>
+      `).join('');
+    }
+
+    // Update tips - now show calculated water temperature
+    const waterTempEl = document.getElementById('water-temp');
+    if (waterTempEl) {
+      const calcTemp = recipe.calculatedWaterTemp;
+      if (calcTemp < 40 || calcTemp > 110) {
+        waterTempEl.textContent = `${formatTemp(calcTemp)} (adjust needed)`;
+      } else {
+        waterTempEl.textContent = formatTemp(calcTemp);
+      }
+    }
+
+    const flourRecEl = document.getElementById('flour-rec');
+    if (flourRecEl) {
+      flourRecEl.textContent = state.flour;
+    }
+
+    // Update instructions
+    const instructionsList = document.getElementById('instructions-list');
+    if (instructionsList && state.instructions.length > 0) {
+      instructionsList.innerHTML = state.instructions.map((inst, i) => `
+        <li class="flex gap-3">
+          <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--accent-gold)] text-white text-sm flex items-center justify-center">${i + 1}</span>
+          <span class="text-[var(--crust-brown)]">${inst}</span>
+        </li>
+      `).join('');
+    }
+
+    // Update slider displays - Basics tab
+    const hydrationValue = document.getElementById('hydration-value');
+    if (hydrationValue) hydrationValue.textContent = `${state.hydration}%`;
+
+    const wholeGrainValue = document.getElementById('whole-grain-value');
+    if (wholeGrainValue) wholeGrainValue.textContent = `${state.wholeGrain}%`;
+
+    const saltValue = document.getElementById('salt-value');
+    if (saltValue) saltValue.textContent = `${state.salt}%`;
+
+    // Update Yeast tab
+    const yeastPercentValue = document.getElementById('yeast-percent-value');
+    if (yeastPercentValue) yeastPercentValue.textContent = `${state.yeastPercent}%`;
+
+    const yeastPercentLabel = document.getElementById('yeast-percent-label');
+    if (yeastPercentLabel) {
+      yeastPercentLabel.textContent = state.yeastType === 'starter' ? 'Starter Amount' : 'Yeast Amount';
+    }
+
+    // Update yeast percent slider range based on type
+    const yeastPercentSlider = document.getElementById('yeast-percent-slider') as HTMLInputElement;
+    if (yeastPercentSlider) {
+      if (state.yeastType === 'starter') {
+        yeastPercentSlider.min = '10';
+        yeastPercentSlider.max = '40';
+        yeastPercentSlider.step = '1';
+      } else {
+        yeastPercentSlider.min = '0.1';
+        yeastPercentSlider.max = '3';
+        yeastPercentSlider.step = '0.1';
+      }
+      yeastPercentSlider.value = String(state.yeastPercent);
+    }
+
+    // Show/hide starter-specific controls
+    const starterHydrationControl = document.getElementById('starter-hydration-control');
+    const starterContributionEl = document.getElementById('starter-contribution');
+    if (starterHydrationControl && starterContributionEl) {
+      if (state.yeastType === 'starter') {
+        starterHydrationControl.classList.remove('hidden');
+        starterContributionEl.classList.remove('hidden');
+        // Update starter contribution display
+        const flourContrib = document.getElementById('starter-flour-contrib');
+        const waterContrib = document.getElementById('starter-water-contrib');
+        if (flourContrib) flourContrib.textContent = `${recipe.starterFlourContrib}g`;
+        if (waterContrib) waterContrib.textContent = `${recipe.starterWaterContrib}g`;
+      } else {
+        starterHydrationControl.classList.add('hidden');
+        starterContributionEl.classList.add('hidden');
+      }
+    }
+
+    const starterHydrationValue = document.getElementById('starter-hydration-value');
+    if (starterHydrationValue) starterHydrationValue.textContent = `${state.starterHydration}%`;
+
+    // Update yeast tip
+    const yeastTipText = document.getElementById('yeast-tip-text');
+    if (yeastTipText) {
+      yeastTipText.textContent = YEAST_TIPS[state.yeastType] || YEAST_TIPS['instant'];
+    }
+
+    // Update Temperature tab
+    const ddtValue = document.getElementById('ddt-value');
+    if (ddtValue) ddtValue.textContent = formatTemp(state.ddt);
+
+    const roomTempValue = document.getElementById('room-temp-value');
+    if (roomTempValue) roomTempValue.textContent = formatTemp(state.roomTemp);
+
+    const flourTempValue = document.getElementById('flour-temp-value');
+    if (flourTempValue) flourTempValue.textContent = formatTemp(state.flourTemp);
+
+    const frictionValue = document.getElementById('friction-value');
+    if (frictionValue) frictionValue.textContent = formatTemp(state.frictionFactor).replace('°', '°');
+
+    // Update calculated water temperature
+    const calcWaterTemp = document.getElementById('calc-water-temp');
+    if (calcWaterTemp) {
+      calcWaterTemp.textContent = formatTemp(recipe.calculatedWaterTemp);
+    }
+
+    // Update water temp formula display
+    const waterTempFormula = document.getElementById('water-temp-formula');
+    if (waterTempFormula) {
+      const unit = state.tempUnit === 'C' ? '°C' : '°F';
+      const ddt = state.tempUnit === 'C' ? fahrenheitToCelsius(state.ddt) : state.ddt;
+      const room = state.tempUnit === 'C' ? fahrenheitToCelsius(state.roomTemp) : state.roomTemp;
+      const flour = state.tempUnit === 'C' ? fahrenheitToCelsius(state.flourTemp) : state.flourTemp;
+      const friction = state.tempUnit === 'C' ? fahrenheitToCelsius(state.frictionFactor) : state.frictionFactor;
+      const result = state.tempUnit === 'C' ? fahrenheitToCelsius(recipe.calculatedWaterTemp) : recipe.calculatedWaterTemp;
+      waterTempFormula.textContent = `(${ddt} × 3) - ${room} - ${flour} - ${friction} = ${result}${unit}`;
+    }
+
+    // Show/hide water temp warning
+    const waterTempWarning = document.getElementById('water-temp-warning');
+    if (waterTempWarning) {
+      if (recipe.calculatedWaterTemp < 40) {
+        waterTempWarning.textContent = '⚠️ Water too cold! Add ice or use cold water.';
+        waterTempWarning.classList.remove('hidden');
+      } else if (recipe.calculatedWaterTemp > 110) {
+        waterTempWarning.textContent = '⚠️ Water too hot! May kill yeast. Cool your environment.';
+        waterTempWarning.classList.remove('hidden');
+      } else {
+        waterTempWarning.classList.add('hidden');
+      }
+    }
+
+    // Update Timing tab
+    const fermentTimes = estimateFermentationTimes();
+
+    const bulkTime = document.getElementById('bulk-time');
+    if (bulkTime) bulkTime.textContent = fermentTimes.bulk;
+
+    const proofTime = document.getElementById('proof-time');
+    if (proofTime) proofTime.textContent = fermentTimes.proof;
+
+    const totalTime = document.getElementById('total-time');
+    if (totalTime) totalTime.textContent = fermentTimes.total;
+
+    // Update timing descriptions based on yeast type
+    const bulkDescription = document.getElementById('bulk-description');
+    if (bulkDescription) {
+      if (state.yeastType === 'starter') {
+        bulkDescription.textContent = 'Look for 50-75% rise with visible bubbles. Dough should be airy and jiggly.';
+      } else if (state.yeastPercent < 0.5) {
+        bulkDescription.textContent = 'Long, slow ferment develops flavor. Dough should be bubbly and doubled.';
+      } else {
+        bulkDescription.textContent = 'Look for doubled volume with a domed surface.';
+      }
+    }
+
+    const proofDescription = document.getElementById('proof-description');
+    if (proofDescription) {
+      if (state.coldRetard) {
+        proofDescription.textContent = 'Cold proof in refrigerator. Bake straight from cold or let warm 30 min.';
+      } else {
+        proofDescription.textContent = 'Poke test: dough should spring back slowly but not completely.';
+      }
+    }
+
+    // Update total time note
+    const totalTimeNote = document.getElementById('total-time-note');
+    if (totalTimeNote) {
+      if (state.coldRetard) {
+        totalTimeNote.textContent = 'Plus 8-18 hours cold retard in refrigerator';
+      } else {
+        totalTimeNote.textContent = 'Active time from mixing to baking';
+      }
+    }
+
+    // Show/hide cold retard info
+    const coldRetardInfo = document.getElementById('cold-retard-info');
+    if (coldRetardInfo) {
+      if (state.coldRetard) {
+        coldRetardInfo.classList.remove('hidden');
+      } else {
+        coldRetardInfo.classList.add('hidden');
+      }
+    }
+
+    // Update newsletter style
+    const newsletterStyle = document.getElementById('newsletter-style');
+    if (newsletterStyle) {
+      newsletterStyle.textContent = state.style.charAt(0).toUpperCase() + state.style.slice(1).replace('-', ' ');
+    }
+
+    // Update preferment UI if the function is defined
+    if (typeof updatePrefermentUI === 'function') {
+      updatePrefermentUI();
+    }
+  }
+
+  // Update yeast type button active states
+  function updateYeastTypeButtons() {
+    document.querySelectorAll('.yeast-type-btn').forEach(btn => {
+      const el = btn as HTMLElement;
+      if (el.dataset.yeast === state.yeastType) {
+        el.classList.add('yeast-type-active');
+      } else {
+        el.classList.remove('yeast-type-active');
+      }
+    });
+  }
+
+  // Update mixer button active states
+  function updateMixerButtons() {
+    document.querySelectorAll('.mixer-btn').forEach(btn => {
+      const el = btn as HTMLElement;
+      if (el.dataset.mixer === state.mixerType) {
+        el.classList.add('mixer-btn-active');
+      } else {
+        el.classList.remove('mixer-btn-active');
+      }
+    });
+  }
+
+  // Update temperature unit toggle
+  function updateTempUnitToggle() {
+    const celsiusBtn = document.getElementById('temp-unit-c');
+    const fahrenheitBtn = document.getElementById('temp-unit-f');
+    if (celsiusBtn && fahrenheitBtn) {
+      if (state.tempUnit === 'C') {
+        celsiusBtn.classList.add('bg-[var(--espresso)]', 'text-white');
+        celsiusBtn.classList.remove('text-[var(--crust-brown)]');
+        fahrenheitBtn.classList.remove('bg-[var(--espresso)]', 'text-white');
+        fahrenheitBtn.classList.add('text-[var(--crust-brown)]');
+      } else {
+        fahrenheitBtn.classList.add('bg-[var(--espresso)]', 'text-white');
+        fahrenheitBtn.classList.remove('text-[var(--crust-brown)]');
+        celsiusBtn.classList.remove('bg-[var(--espresso)]', 'text-white');
+        celsiusBtn.classList.add('text-[var(--crust-brown)]');
+      }
+    }
+  }
+
+  // ============================================
+  // Event Listeners
+  // ============================================
+
+  // Style selection
+  document.querySelectorAll('.style-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.style-card').forEach(c => c.classList.remove('card-selected'));
+      card.classList.add('card-selected');
+
+      const el = card as HTMLElement;
+      state.style = el.dataset.style || 'sourdough';
+      state.hydration = parseFloat(el.dataset.hydration || '75');
+      state.salt = parseFloat(el.dataset.salt || '2');
+      state.yeastType = (el.dataset.yeastType || 'starter') as 'starter' | 'instant' | 'active-dry' | 'fresh';
+      state.yeastPercent = parseFloat(el.dataset.yeastPercent || '20');
+      state.wholeGrain = parseFloat(el.dataset.wholeGrain || '10');
+      state.flour = el.dataset.flour || 'Bread Flour';
+      state.waterTemp = el.dataset.waterTemp || '78-82°F';
+      state.instructions = JSON.parse(el.dataset.instructions || '[]');
+
+      // Update DDT based on bread style
+      const ddtDefaults: Record<string, number> = {
+        'sourdough': 76,
+        'baguette': 74,
+        'focaccia': 78,
+        'sandwich': 78,
+        'ciabatta': 73,
+        'brioche': 77,
+        'no-knead': 70,
+        'custom': 75
+      };
+      state.ddt = ddtDefaults[state.style] || 75;
+
+      // Update sliders
+      (document.getElementById('hydration-slider') as HTMLInputElement).value = String(state.hydration);
+      (document.getElementById('whole-grain-slider') as HTMLInputElement).value = String(state.wholeGrain);
+      (document.getElementById('salt-slider') as HTMLInputElement).value = String(state.salt);
+      (document.getElementById('ddt-slider') as HTMLInputElement).value = String(state.ddt);
+
+      // Update yeast type buttons
+      updateYeastTypeButtons();
+
+      updateUI();
+    });
+  });
+
+  // Number inputs
+  document.getElementById('num-loaves')?.addEventListener('input', (e) => {
+    state.numLoaves = parseInt((e.target as HTMLInputElement).value) || 1;
+    updateUI();
+  });
+
+  document.getElementById('loaf-weight')?.addEventListener('input', (e) => {
+    state.loafWeight = parseInt((e.target as HTMLInputElement).value) || 500;
+    updateUI();
+  });
+
+  // Presets
+  document.querySelectorAll('.preset-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.preset-pill').forEach(p => p.classList.remove('preset-pill-active'));
+      pill.classList.add('preset-pill-active');
+
+      const el = pill as HTMLElement;
+      state.numLoaves = parseInt(el.dataset.loaves || '2');
+      state.loafWeight = parseInt(el.dataset.weight || '900');
+
+      (document.getElementById('num-loaves') as HTMLInputElement).value = String(state.numLoaves);
+      (document.getElementById('loaf-weight') as HTMLInputElement).value = String(state.loafWeight);
+
+      updateUI();
+    });
+  });
+
+  // Advanced options toggle
+  document.getElementById('advanced-trigger')?.addEventListener('click', () => {
+    const content = document.getElementById('advanced-content');
+    const chevron = document.getElementById('advanced-chevron');
+    if (content && chevron) {
+      content.classList.toggle('hidden');
+      chevron.style.transform = content.classList.contains('hidden') ? '' : 'rotate(180deg)';
+    }
+  });
+
+  // Tab switching
+  document.querySelectorAll('.advanced-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const tabName = (tab as HTMLElement).dataset.tab;
+      if (!tabName) return;
+
+      // Update tab active state
+      document.querySelectorAll('.advanced-tab').forEach(t => t.classList.remove('advanced-tab-active'));
+      tab.classList.add('advanced-tab-active');
+
+      // Show/hide tab content
+      document.querySelectorAll('.advanced-tab-content').forEach(content => {
+        content.classList.add('hidden');
+      });
+      const targetContent = document.getElementById(`tab-${tabName}`);
+      if (targetContent) {
+        targetContent.classList.remove('hidden');
+      }
+    });
+  });
+
+  // Yeast type selection
+  document.querySelectorAll('.yeast-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const el = btn as HTMLElement;
+      const yeastType = el.dataset.yeast as 'starter' | 'instant' | 'active-dry' | 'fresh';
+      if (yeastType) {
+        state.yeastType = yeastType;
+        state.yeastPercent = DEFAULT_YEAST_PERCENT[yeastType];
+        updateYeastTypeButtons();
+        updateUI();
+      }
+    });
+  });
+
+  // Yeast percent slider
+  document.getElementById('yeast-percent-slider')?.addEventListener('input', (e) => {
+    state.yeastPercent = parseFloat((e.target as HTMLInputElement).value);
+    updateUI();
+  });
+
+  // Starter hydration slider
+  document.getElementById('starter-hydration-slider')?.addEventListener('input', (e) => {
+    state.starterHydration = parseFloat((e.target as HTMLInputElement).value);
+    updateUI();
+  });
+
+  // Temperature unit toggle
+  document.getElementById('temp-unit-c')?.addEventListener('click', () => {
+    state.tempUnit = 'C';
+    updateTempUnitToggle();
+    updateUI();
+  });
+
+  document.getElementById('temp-unit-f')?.addEventListener('click', () => {
+    state.tempUnit = 'F';
+    updateTempUnitToggle();
+    updateUI();
+  });
+
+  // DDT slider
+  document.getElementById('ddt-slider')?.addEventListener('input', (e) => {
+    state.ddt = parseInt((e.target as HTMLInputElement).value);
+    updateUI();
+  });
+
+  // Room temp slider
+  document.getElementById('room-temp-slider')?.addEventListener('input', (e) => {
+    state.roomTemp = parseInt((e.target as HTMLInputElement).value);
+    updateUI();
+  });
+
+  // Flour temp slider
+  document.getElementById('flour-temp-slider')?.addEventListener('input', (e) => {
+    state.flourTemp = parseInt((e.target as HTMLInputElement).value);
+    updateUI();
+  });
+
+  // Mixer type selection
+  document.querySelectorAll('.mixer-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const el = btn as HTMLElement;
+      const mixerType = el.dataset.mixer as 'hand' | 'stand' | 'spiral';
+      const friction = parseInt(el.dataset.friction || '11');
+      if (mixerType) {
+        state.mixerType = mixerType;
+        state.frictionFactor = friction;
+        updateMixerButtons();
+        updateUI();
+      }
+    });
+  });
+
+  // Cold retard toggle
+  document.getElementById('cold-retard-toggle')?.addEventListener('change', (e) => {
+    state.coldRetard = (e.target as HTMLInputElement).checked;
+    updateUI();
+  });
+
+  // ============================================
+  // Preferment Event Listeners
+  // ============================================
+
+  // Preferment type selection
+  document.querySelectorAll('.preferment-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const el = btn as HTMLElement;
+      const prefType = el.dataset.preferment as 'none' | 'poolish' | 'biga' | 'pate-fermentee' | 'levain';
+      if (prefType) {
+        state.prefermentType = prefType;
+        updatePrefermentTypeButtons();
+        updatePrefermentUI();
+        updateUI();
+      }
+    });
+  });
+
+  // Preferment percentage slider
+  document.getElementById('preferment-percent-slider')?.addEventListener('input', (e) => {
+    state.prefermentPercent = parseInt((e.target as HTMLInputElement).value);
+    updatePrefermentUI();
+    updateUI();
+  });
+
+  // Autolyse toggle
+  document.getElementById('autolyse-toggle')?.addEventListener('change', (e) => {
+    state.autolyse = (e.target as HTMLInputElement).checked;
+    const autolyseControls = document.getElementById('autolyse-controls');
+    if (autolyseControls) {
+      autolyseControls.classList.toggle('hidden', !state.autolyse);
+    }
+    updateUI();
+  });
+
+  // Autolyse duration buttons
+  document.querySelectorAll('.autolyse-duration-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const el = btn as HTMLElement;
+      const duration = parseInt(el.dataset.duration || '30');
+      state.autolyseDuration = duration;
+      document.querySelectorAll('.autolyse-duration-btn').forEach(b => b.classList.remove('autolyse-duration-active'));
+      el.classList.add('autolyse-duration-active');
+      updateUI();
+    });
+  });
+
+  // Update preferment type button active states
+  function updatePrefermentTypeButtons() {
+    document.querySelectorAll('.preferment-type-btn').forEach(btn => {
+      const el = btn as HTMLElement;
+      if (el.dataset.preferment === state.prefermentType) {
+        el.classList.add('preferment-type-active');
+      } else {
+        el.classList.remove('preferment-type-active');
+      }
+    });
+  }
+
+  // Update preferment UI elements
+  function updatePrefermentUI() {
+    const controls = document.getElementById('preferment-controls');
+    const percentValue = document.getElementById('preferment-percent-value');
+    const infoTitle = document.getElementById('preferment-info-title');
+    const infoDesc = document.getElementById('preferment-info-desc');
+    const prefTime = document.getElementById('preferment-time');
+    const readySigns = document.getElementById('preferment-ready-signs');
+    const startTime = document.getElementById('preferment-start-time');
+    const prefTip = document.getElementById('preferment-tip');
+    const prefFlourWeight = document.getElementById('preferment-flour-weight');
+    const prefWaterWeight = document.getElementById('preferment-water-weight');
+    const prefYeastWeight = document.getElementById('preferment-yeast-weight');
+
+    if (state.prefermentType === 'none') {
+      controls?.classList.add('hidden');
+      return;
+    }
+
+    controls?.classList.remove('hidden');
+
+    const prefData = PREFERMENT_DATA[state.prefermentType];
+    if (!prefData) return;
+
+    // Update percentage display
+    if (percentValue) percentValue.textContent = `${state.prefermentPercent}%`;
+
+    // Update info
+    if (infoTitle) infoTitle.textContent = prefData.name;
+    if (infoDesc) infoDesc.textContent = prefData.description;
+
+    // Update timing
+    const timing = estimatePrefermentTiming();
+    if (prefTime) prefTime.textContent = timing.fermentTime;
+    if (readySigns) readySigns.textContent = prefData.readySigns;
+    if (startTime) startTime.textContent = timing.startTime;
+    if (prefTip) prefTip.textContent = prefData.tip;
+
+    // Calculate and update preferment ingredients
+    const recipe = calculateRecipe();
+    const prefIngredients = calculatePrefermentIngredients(recipe.flourWeight);
+    if (prefIngredients) {
+      if (prefFlourWeight) prefFlourWeight.textContent = `${prefIngredients.flour}g`;
+      if (prefWaterWeight) prefWaterWeight.textContent = `${prefIngredients.water}g`;
+      if (prefYeastWeight) {
+        const yeastText = state.prefermentType === 'levain'
+          ? `${prefIngredients.yeast}g ${prefIngredients.yeastNote}`
+          : prefIngredients.yeast < 1
+            ? `${prefIngredients.yeast}g ${prefIngredients.yeastNote}`
+            : `${prefIngredients.yeast}g`;
+        prefYeastWeight.textContent = yeastText;
+      }
+    }
+  }
+
+  // ============================================
+  // Schedule Modal Event Listeners
+  // ============================================
+
+  // Open schedule modal
+  document.getElementById('plan-bake-btn')?.addEventListener('click', () => {
+    const modal = document.getElementById('schedule-modal');
+    const dateInput = document.getElementById('schedule-date') as HTMLInputElement;
+
+    // Set default date to tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    if (dateInput) {
+      dateInput.value = tomorrow.toISOString().split('T')[0];
+    }
+
+    modal?.classList.remove('hidden');
+  });
+
+  // Close schedule modal
+  document.getElementById('schedule-modal-close')?.addEventListener('click', () => {
+    document.getElementById('schedule-modal')?.classList.add('hidden');
+  });
+
+  document.getElementById('schedule-modal-overlay')?.addEventListener('click', () => {
+    document.getElementById('schedule-modal')?.classList.add('hidden');
+  });
+
+  // Schedule presets
+  document.querySelectorAll('.schedule-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const el = btn as HTMLElement;
+      const preset = el.dataset.preset;
+      const dateInput = document.getElementById('schedule-date') as HTMLInputElement;
+      const timeInput = document.getElementById('schedule-time') as HTMLInputElement;
+
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      if (dateInput) {
+        dateInput.value = tomorrow.toISOString().split('T')[0];
+      }
+
+      if (timeInput) {
+        switch (preset) {
+          case 'morning':
+            timeInput.value = '09:00';
+            break;
+          case 'lunch':
+            timeInput.value = '12:00';
+            break;
+          case 'dinner':
+            timeInput.value = '18:00';
+            break;
+        }
+      }
+    });
+  });
+
+  // Generate schedule
+  document.getElementById('generate-schedule-btn')?.addEventListener('click', () => {
+    const dateInput = document.getElementById('schedule-date') as HTMLInputElement;
+    const timeInput = document.getElementById('schedule-time') as HTMLInputElement;
+    const resultDiv = document.getElementById('schedule-result');
+    const timeline = document.getElementById('schedule-timeline');
+
+    if (!dateInput?.value || !timeInput?.value) return;
+
+    const targetDate = new Date(`${dateInput.value}T${timeInput.value}`);
+    const schedule = generateBakingSchedule(targetDate);
+
+    if (timeline) {
+      timeline.innerHTML = schedule.map(item => `
+        <div class="schedule-item">
+          <span class="schedule-item-time">${item.time}</span>
+          <span class="schedule-item-task">${item.task}</span>
+          <span class="schedule-item-duration">${item.duration}</span>
+        </div>
+      `).join('');
+    }
+
+    resultDiv?.classList.remove('hidden');
+  });
+
+  // Copy schedule
+  document.getElementById('copy-schedule-btn')?.addEventListener('click', () => {
+    const timeline = document.getElementById('schedule-timeline');
+    if (timeline) {
+      const text = Array.from(timeline.querySelectorAll('.schedule-item'))
+        .map(item => {
+          const time = item.querySelector('.schedule-item-time')?.textContent || '';
+          const task = item.querySelector('.schedule-item-task')?.textContent || '';
+          const duration = item.querySelector('.schedule-item-duration')?.textContent || '';
+          return `${time} - ${task} (${duration})`;
+        })
+        .join('\n');
+
+      navigator.clipboard.writeText(`Baking Schedule for ${state.style}:\n\n${text}`);
+      showToast('Schedule copied to clipboard!');
+    }
+  });
+
+  // Download ICS calendar file
+  document.getElementById('download-ics-btn')?.addEventListener('click', () => {
+    const dateInput = document.getElementById('schedule-date') as HTMLInputElement;
+    const timeInput = document.getElementById('schedule-time') as HTMLInputElement;
+
+    if (!dateInput?.value || !timeInput?.value) return;
+
+    const targetDate = new Date(`${dateInput.value}T${timeInput.value}`);
+    const schedule = generateBakingSchedule(targetDate);
+
+    // Generate ICS file content
+    let icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//The Dough Formula//Baking Schedule//EN
+`;
+
+    schedule.forEach((item, index) => {
+      const eventStart = new Date(targetDate);
+      // Rough time calculation (this is simplified)
+      eventStart.setMinutes(eventStart.getMinutes() - (schedule.length - index) * 30);
+
+      const dtStart = eventStart.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      const dtEnd = new Date(eventStart.getTime() + 30 * 60000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+      icsContent += `BEGIN:VEVENT
+DTSTART:${dtStart}
+DTEND:${dtEnd}
+SUMMARY:${item.task}
+DESCRIPTION:Duration: ${item.duration}
+END:VEVENT
+`;
+    });
+
+    icsContent += 'END:VCALENDAR';
+
+    // Download file
+    const blob = new Blob([icsContent], { type: 'text/calendar' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `baking-schedule-${state.style}.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    showToast('Calendar file downloaded!');
+  });
+
+  // ============================================
+  // Enrichment Event Listeners
+  // ============================================
+
+  // Fat toggle
+  document.getElementById('enrichment-fat-toggle')?.addEventListener('change', (e) => {
+    enrichmentState.fat.enabled = (e.target as HTMLInputElement).checked;
+    const controls = document.getElementById('fat-controls');
+    if (controls) {
+      controls.classList.toggle('hidden', !enrichmentState.fat.enabled);
+    }
+    updateEnrichmentDisplay();
+    updateUI();
+  });
+
+  document.getElementById('fat-type-select')?.addEventListener('change', (e) => {
+    enrichmentState.fat.type = (e.target as HTMLSelectElement).value;
+    updateEnrichmentDisplay();
+    updateUI();
+  });
+
+  document.getElementById('fat-percent')?.addEventListener('input', (e) => {
+    enrichmentState.fat.percent = parseFloat((e.target as HTMLInputElement).value) || 5;
+    updateEnrichmentDisplay();
+    updateUI();
+  });
+
+  // Egg toggle
+  document.getElementById('enrichment-egg-toggle')?.addEventListener('change', (e) => {
+    enrichmentState.eggs.enabled = (e.target as HTMLInputElement).checked;
+    const controls = document.getElementById('egg-controls');
+    if (controls) {
+      controls.classList.toggle('hidden', !enrichmentState.eggs.enabled);
+    }
+    updateEnrichmentDisplay();
+    updateUI();
+  });
+
+  document.getElementById('egg-type-select')?.addEventListener('change', (e) => {
+    enrichmentState.eggs.type = (e.target as HTMLSelectElement).value;
+    updateEnrichmentDisplay();
+    updateUI();
+  });
+
+  document.getElementById('egg-count')?.addEventListener('input', (e) => {
+    enrichmentState.eggs.count = parseInt((e.target as HTMLInputElement).value) || 2;
+    const weightEl = document.getElementById('egg-weight');
+    if (weightEl) {
+      weightEl.textContent = String(enrichmentState.eggs.count * 50);
+    }
+    updateEnrichmentDisplay();
+    updateUI();
+  });
+
+  // Dairy toggle
+  document.getElementById('enrichment-dairy-toggle')?.addEventListener('change', (e) => {
+    enrichmentState.dairy.enabled = (e.target as HTMLInputElement).checked;
+    const controls = document.getElementById('dairy-controls');
+    if (controls) {
+      controls.classList.toggle('hidden', !enrichmentState.dairy.enabled);
+    }
+    updateEnrichmentDisplay();
+    updateUI();
+  });
+
+  document.getElementById('dairy-type-select')?.addEventListener('change', (e) => {
+    enrichmentState.dairy.type = (e.target as HTMLSelectElement).value;
+    updateEnrichmentDisplay();
+    updateUI();
+  });
+
+  document.getElementById('dairy-percent')?.addEventListener('input', (e) => {
+    enrichmentState.dairy.percentOfLiquid = parseInt((e.target as HTMLInputElement).value) || 50;
+    updateEnrichmentDisplay();
+    updateUI();
+  });
+
+  // Sweetener toggle
+  document.getElementById('enrichment-sweet-toggle')?.addEventListener('change', (e) => {
+    enrichmentState.sweet.enabled = (e.target as HTMLInputElement).checked;
+    const controls = document.getElementById('sweet-controls');
+    if (controls) {
+      controls.classList.toggle('hidden', !enrichmentState.sweet.enabled);
+    }
+    updateEnrichmentDisplay();
+    updateUI();
+  });
+
+  document.getElementById('sweet-type-select')?.addEventListener('change', (e) => {
+    enrichmentState.sweet.type = (e.target as HTMLSelectElement).value;
+    updateEnrichmentDisplay();
+    updateUI();
+  });
+
+  document.getElementById('sweet-percent')?.addEventListener('input', (e) => {
+    enrichmentState.sweet.percent = parseFloat((e.target as HTMLInputElement).value) || 5;
+    updateEnrichmentDisplay();
+    updateUI();
+  });
+
+  // Update enrichment display
+  function updateEnrichmentDisplay() {
+    const hasEnrichments = enrichmentState.fat.enabled || enrichmentState.eggs.enabled ||
+                          enrichmentState.dairy.enabled || enrichmentState.sweet.enabled;
+
+    const displayEl = document.getElementById('effective-hydration-display');
+    if (displayEl) {
+      displayEl.classList.toggle('hidden', !hasEnrichments);
+    }
+
+    if (hasEnrichments) {
+      const recipe = calculateRecipe();
+      const effectiveHydrationEl = document.getElementById('effective-hydration');
+      if (effectiveHydrationEl) {
+        effectiveHydrationEl.textContent = `${recipe.effectiveHydration}%`;
+      }
+
+      const targetHydrationEl = document.getElementById('target-hydration');
+      if (targetHydrationEl) {
+        targetHydrationEl.textContent = String(state.hydration);
+      }
+
+      const breakdownEl = document.getElementById('enrichment-breakdown');
+      if (breakdownEl && recipe.enrichmentWater.breakdown.length > 0) {
+        breakdownEl.innerHTML = recipe.enrichmentWater.breakdown.join(' · ');
+      }
+    }
+
+    // Update enrichment tip based on what's enabled
+    const tipEl = document.getElementById('enrichment-tip');
+    if (tipEl) {
+      if (enrichmentState.fat.enabled && enrichmentState.fat.percent > 15) {
+        tipEl.textContent = 'High fat content: Add butter in stages after initial gluten development.';
+      } else if (enrichmentState.sweet.enabled && enrichmentState.sweet.percent > 10) {
+        tipEl.textContent = 'High sugar may slow yeast. Consider using osmotolerant yeast for very sweet doughs.';
+      } else if (enrichmentState.eggs.enabled) {
+        tipEl.textContent = 'Eggs add richness and help with browning. Room temperature eggs incorporate better.';
+      } else {
+        tipEl.textContent = 'Add fats after initial gluten development for better dough structure.';
+      }
+    }
+  }
+
+  // ============================================
+  // Flour Management Event Listeners
+  // ============================================
+
+  let activeFlourSlots = 1;
+
+  // Add flour button
+  document.getElementById('add-flour-btn')?.addEventListener('click', () => {
+    if (activeFlourSlots < 3) {
+      activeFlourSlots++;
+      const slot = document.getElementById(`flour-slot-${activeFlourSlots - 1}`);
+      if (slot) {
+        slot.classList.remove('hidden');
+        // Set default percent
+        const input = slot.querySelector('.flour-percent-input') as HTMLInputElement;
+        if (input) {
+          input.value = '0';
+          flourBlend[activeFlourSlots - 1] = {
+            type: (slot.querySelector('.flour-type-select') as HTMLSelectElement)?.value || 'whole-wheat',
+            percent: 0
+          };
+        }
+      }
+      // Hide add button if at max
+      if (activeFlourSlots >= 3) {
+        document.getElementById('add-flour-btn')?.classList.add('hidden');
+      }
+      validateFlourPercents();
+    }
+  });
+
+  // Remove flour buttons
+  document.querySelectorAll('.remove-flour-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const index = parseInt((btn as HTMLElement).dataset.flour || '0');
+      const slot = document.getElementById(`flour-slot-${index}`);
+      if (slot) {
+        slot.classList.add('hidden');
+        // Reset this flour entry
+        flourBlend[index] = { type: 'bread', percent: 0 };
+        // Reset input
+        const input = slot.querySelector('.flour-percent-input') as HTMLInputElement;
+        if (input) input.value = '0';
+      }
+      activeFlourSlots--;
+      document.getElementById('add-flour-btn')?.classList.remove('hidden');
+      validateFlourPercents();
+      updateUI();
+    });
+  });
+
+  // Flour type selects
+  document.querySelectorAll('.flour-type-select').forEach(select => {
+    select.addEventListener('change', (e) => {
+      const index = parseInt((e.target as HTMLSelectElement).dataset.flour || '0');
+      flourBlend[index] = flourBlend[index] || { type: 'bread', percent: 0 };
+      flourBlend[index].type = (e.target as HTMLSelectElement).value;
+      updateFlourDisplay();
+      updateUI();
+    });
+  });
+
+  // Flour percent inputs
+  document.querySelectorAll('.flour-percent-input').forEach(input => {
+    input.addEventListener('input', (e) => {
+      const index = parseInt((e.target as HTMLInputElement).dataset.flour || '0');
+      flourBlend[index] = flourBlend[index] || { type: 'bread', percent: 0 };
+      flourBlend[index].percent = parseInt((e.target as HTMLInputElement).value) || 0;
+      validateFlourPercents();
+      updateFlourDisplay();
+      updateUI();
+    });
+  });
+
+  // Validate flour percentages sum to 100
+  function validateFlourPercents() {
+    const total = flourBlend.reduce((sum, f) => sum + (f?.percent || 0), 0);
+    const validationEl = document.getElementById('flour-validation');
+    if (validationEl) {
+      if (total !== 100) {
+        validationEl.classList.remove('hidden');
+        validationEl.textContent = `Total flour must equal 100% (currently ${total}%)`;
+      } else {
+        validationEl.classList.add('hidden');
+      }
+    }
+  }
+
+  // Update flour display (whole grain calculation)
+  function updateFlourDisplay() {
+    const wholeGrainPercent = calculateWholeGrainPercent();
+    const totalWholeGrainEl = document.getElementById('total-whole-grain');
+    if (totalWholeGrainEl) {
+      totalWholeGrainEl.textContent = `${wholeGrainPercent}%`;
+    }
+
+    const tipEl = document.getElementById('whole-grain-tip');
+    if (tipEl) {
+      if (wholeGrainPercent > 30) {
+        tipEl.textContent = 'High whole grain: Add 5-10% more water and consider a longer autolyse.';
+      } else if (wholeGrainPercent > 10) {
+        tipEl.textContent = 'Consider adding 2-5% more hydration for whole grains.';
+      } else {
+        tipEl.textContent = 'Mostly white flour: Standard hydration should work well.';
+      }
+    }
+
+    // Update state.wholeGrain for recipe calculations
+    state.wholeGrain = wholeGrainPercent;
+  }
+
+  // Flour preset blends
+  document.querySelectorAll('.flour-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const blend = (btn as HTMLElement).dataset.blend;
+
+      // Reset all flour slots
+      document.querySelectorAll('.flour-entry').forEach((entry, i) => {
+        if (i > 0) entry.classList.add('hidden');
+      });
+      activeFlourSlots = 1;
+
+      if (blend === 'classic') {
+        flourBlend[0] = { type: 'bread', percent: 100 };
+        flourBlend[1] = { type: 'whole-wheat', percent: 0 };
+      } else if (blend === 'country') {
+        flourBlend[0] = { type: 'bread', percent: 90 };
+        flourBlend[1] = { type: 'whole-wheat', percent: 10 };
+        document.getElementById('flour-slot-1')?.classList.remove('hidden');
+        activeFlourSlots = 2;
+      } else if (blend === 'multigrain') {
+        flourBlend[0] = { type: 'bread', percent: 70 };
+        flourBlend[1] = { type: 'whole-wheat', percent: 20 };
+        flourBlend[2] = { type: 'rye-light', percent: 10 };
+        document.getElementById('flour-slot-1')?.classList.remove('hidden');
+        document.getElementById('flour-slot-2')?.classList.remove('hidden');
+        activeFlourSlots = 3;
+      }
+
+      // Update UI inputs
+      flourBlend.forEach((flour, i) => {
+        const typeSelect = document.querySelector(`.flour-type-select[data-flour="${i}"]`) as HTMLSelectElement;
+        const percentInput = document.querySelector(`.flour-percent-input[data-flour="${i}"]`) as HTMLInputElement;
+        if (typeSelect) typeSelect.value = flour.type;
+        if (percentInput) percentInput.value = String(flour.percent);
+      });
+
+      document.getElementById('add-flour-btn')?.classList.toggle('hidden', activeFlourSlots >= 3);
+      validateFlourPercents();
+      updateFlourDisplay();
+      updateUI();
+    });
+  });
+
+  // Sliders
+  document.getElementById('hydration-slider')?.addEventListener('input', (e) => {
+    state.hydration = parseFloat((e.target as HTMLInputElement).value);
+    updateUI();
+  });
+
+  document.getElementById('whole-grain-slider')?.addEventListener('input', (e) => {
+    state.wholeGrain = parseFloat((e.target as HTMLInputElement).value);
+    updateUI();
+  });
+
+  document.getElementById('salt-slider')?.addEventListener('input', (e) => {
+    state.salt = parseFloat((e.target as HTMLInputElement).value);
+    updateUI();
+  });
+
+  // Unit toggle
+  document.getElementById('unit-g')?.addEventListener('click', () => {
+    state.unit = 'g';
+    document.getElementById('unit-g')?.classList.add('bg-[var(--espresso)]', 'text-white');
+    document.getElementById('unit-g')?.classList.remove('text-[var(--crust-brown)]');
+    document.getElementById('unit-oz')?.classList.remove('bg-[var(--espresso)]', 'text-white');
+    document.getElementById('unit-oz')?.classList.add('text-[var(--crust-brown)]');
+    updateUI();
+  });
+
+  document.getElementById('unit-oz')?.addEventListener('click', () => {
+    state.unit = 'oz';
+    document.getElementById('unit-oz')?.classList.add('bg-[var(--espresso)]', 'text-white');
+    document.getElementById('unit-oz')?.classList.remove('text-[var(--crust-brown)]');
+    document.getElementById('unit-g')?.classList.remove('bg-[var(--espresso)]', 'text-white');
+    document.getElementById('unit-g')?.classList.add('text-[var(--crust-brown)]');
+    updateUI();
+  });
+
+  // Toast helper
+  function showToast(message: string) {
+    const toast = document.getElementById('toast');
+    if (toast) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+  }
+
+  // Action buttons
+  document.getElementById('btn-print')?.addEventListener('click', () => {
+    window.print();
+  });
+
+  document.getElementById('btn-copy')?.addEventListener('click', async () => {
+    const recipe = calculateRecipe();
+    const styleName = state.style.charAt(0).toUpperCase() + state.style.slice(1);
+    const text = `${styleName} Bread Recipe\n\nMakes ${state.numLoaves} loaves\n\nIngredients:\n- Flour: ${recipe.flourWeight}g (100%)\n- Water: ${recipe.waterWeight}g (${state.hydration}%)\n- Salt: ${recipe.saltWeight}g (${state.salt}%)\n- ${state.yeastType === 'starter' ? 'Starter' : 'Yeast'}: ${recipe.yeastWeight}g (${state.yeastPercent}%)\n\nInstructions:\n${state.instructions.map((inst, i) => `${i + 1}. ${inst}`).join('\n')}\n\nGenerated by The Dough Formula - thedoughformula.com`;
+
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('Recipe copied to clipboard!');
+    } catch {
+      showToast('Could not copy recipe');
+    }
+  });
+
+  document.getElementById('btn-share')?.addEventListener('click', async () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('style', state.style);
+    url.searchParams.set('loaves', String(state.numLoaves));
+    url.searchParams.set('weight', String(state.loafWeight));
+    url.searchParams.set('hydration', String(state.hydration));
+
+    try {
+      await navigator.clipboard.writeText(url.toString());
+      showToast('Recipe link copied!');
+    } catch {
+      showToast('Could not copy link');
+    }
+  });
+
+  // FAQ toggles
+  document.querySelectorAll('.faq-trigger').forEach(trigger => {
+    trigger.addEventListener('click', () => {
+      const content = trigger.nextElementSibling;
+      const chevron = trigger.querySelector('.faq-chevron') as HTMLElement;
+      if (content && chevron) {
+        content.classList.toggle('hidden');
+        chevron.style.transform = content.classList.contains('hidden') ? '' : 'rotate(180deg)';
+      }
+    });
+  });
+
+  // Mobile menu
+  document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
+    document.getElementById('mobile-menu')?.classList.remove('translate-x-full');
+  });
+
+  document.getElementById('mobile-menu-close')?.addEventListener('click', () => {
+    document.getElementById('mobile-menu')?.classList.add('translate-x-full');
+  });
+
+  document.querySelectorAll('.mobile-menu-link').forEach(link => {
+    link.addEventListener('click', () => {
+      document.getElementById('mobile-menu')?.classList.add('translate-x-full');
+    });
+  });
+
+  // Newsletter form
+  document.getElementById('newsletter-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    showToast("You're in! Check your inbox.");
+  });
+
+  // Load recipe from URL params
+  function loadFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('style')) {
+      const styleCard = document.querySelector(`[data-style="${params.get('style')}"]`) as HTMLElement;
+      if (styleCard) {
+        styleCard.click();
+      }
+    }
+    if (params.has('loaves')) {
+      state.numLoaves = parseInt(params.get('loaves') || '2');
+      (document.getElementById('num-loaves') as HTMLInputElement).value = String(state.numLoaves);
+    }
+    if (params.has('weight')) {
+      state.loafWeight = parseInt(params.get('weight') || '900');
+      (document.getElementById('loaf-weight') as HTMLInputElement).value = String(state.loafWeight);
+    }
+    if (params.has('hydration')) {
+      state.hydration = parseFloat(params.get('hydration') || '75');
+      (document.getElementById('hydration-slider') as HTMLInputElement).value = String(state.hydration);
+    }
+    updateUI();
+  }
+
+  // Initialize
+  loadFromURL();
+  updateYeastTypeButtons();
+  updateMixerButtons();
+  updateTempUnitToggle();
+  updateUI();
+</script>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="wheat" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#D4A84B"/>
+      <stop offset="100%" style="stop-color:#B38B4D"/>
+    </linearGradient>
+  </defs>
+  <!-- Wheat stalk -->
+  <path d="M16 28 L16 12" stroke="url(#wheat)" stroke-width="2" stroke-linecap="round"/>
+  <!-- Wheat grains - left -->
+  <ellipse cx="13" cy="10" rx="2.5" ry="4" fill="url(#wheat)" transform="rotate(-20 13 10)"/>
+  <ellipse cx="12" cy="14" rx="2.5" ry="4" fill="url(#wheat)" transform="rotate(-25 12 14)"/>
+  <ellipse cx="13" cy="18" rx="2.5" ry="4" fill="url(#wheat)" transform="rotate(-15 13 18)"/>
+  <!-- Wheat grains - right -->
+  <ellipse cx="19" cy="10" rx="2.5" ry="4" fill="url(#wheat)" transform="rotate(20 19 10)"/>
+  <ellipse cx="20" cy="14" rx="2.5" ry="4" fill="url(#wheat)" transform="rotate(25 20 14)"/>
+  <ellipse cx="19" cy="18" rx="2.5" ry="4" fill="url(#wheat)" transform="rotate(15 19 18)"/>
+  <!-- Top grain -->
+  <ellipse cx="16" cy="6" rx="2" ry="3.5" fill="url(#wheat)"/>
+</svg>

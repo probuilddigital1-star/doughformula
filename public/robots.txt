@@ -1,0 +1,11 @@
+# Robots.txt for The Dough Formula
+# https://thedoughformula.com
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://thedoughformula.com/sitemap-index.xml
+
+# Crawl-delay (optional, for politeness)
+Crawl-delay: 1
