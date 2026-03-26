@@ -65,10 +65,9 @@
 /* ============================================
    Base Styles
    ============================================ */
-html, body {
-  overflow: hidden;
-  height: 100%;
-  margin: 0;
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
@@ -77,20 +76,8 @@ body {
   color: var(--espresso);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-#page-scroll {
-  height: 100%;
-  overflow-y: auto;
   overflow-x: hidden;
-  scroll-behavior: smooth;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-#page-scroll::-webkit-scrollbar {
-  display: none;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* ============================================
@@ -688,7 +675,7 @@ section:not(.hero-editorial) {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1rem;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 @media (min-width: 640px) {
