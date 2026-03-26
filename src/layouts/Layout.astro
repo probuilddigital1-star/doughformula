@@ -50,7 +50,7 @@ const jsonLd = {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <style is:inline>html{overflow:hidden;height:100%}body{height:100%;overflow-y:auto;-ms-overflow-style:none;scrollbar-width:none}body::-webkit-scrollbar{display:none}</style>
+    <style is:inline>html,body{overflow:hidden;height:100%;margin:0}#page-scroll{height:100%;overflow-y:auto;overflow-x:hidden;-ms-overflow-style:none;scrollbar-width:none}#page-scroll::-webkit-scrollbar{display:none}</style>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
     <!-- Mobile Theme -->
@@ -118,11 +118,13 @@ const jsonLd = {
 
     <meta name="generator" content={Astro.generator} />
   </head>
-  <body class="flour-dusted min-h-screen">
-    <!-- Skip to main content link for accessibility -->
-    <a href="#calculator" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-[var(--espresso)] focus:text-white focus:px-4 focus:py-2 focus:rounded-md">
-      Skip to calculator
-    </a>
-    <slot />
+  <body class="flour-dusted">
+    <div id="page-scroll">
+      <!-- Skip to main content link for accessibility -->
+      <a href="#calculator" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-[var(--espresso)] focus:text-white focus:px-4 focus:py-2 focus:rounded-md">
+        Skip to calculator
+      </a>
+      <slot />
+    </div>
   </body>
 </html>

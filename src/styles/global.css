@@ -65,9 +65,10 @@
 /* ============================================
    Base Styles
    ============================================ */
-html {
+html, body {
   overflow: hidden;
   height: 100%;
+  margin: 0;
 }
 
 body {
@@ -77,15 +78,18 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+#page-scroll {
   height: 100%;
-  overflow-x: hidden;
   overflow-y: auto;
+  overflow-x: hidden;
   scroll-behavior: smooth;
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
-body::-webkit-scrollbar {
+#page-scroll::-webkit-scrollbar {
   display: none;
 }
 
