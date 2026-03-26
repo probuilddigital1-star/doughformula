@@ -247,10 +247,10 @@ const breadStyles = [
         alt="Freshly baked artisan sourdough bread with beautiful open crumb, sliced and displayed with rosemary"
         loading="eager"
         fetchpriority="high"
-        decoding="async"
-        width={1920}
-        height={1280}
-        quality={80}
+        decoding="sync"
+        widths={[640, 1024, 1440, 1920]}
+        sizes="100vw"
+        quality={70}
         format="webp"
       />
     </div>
