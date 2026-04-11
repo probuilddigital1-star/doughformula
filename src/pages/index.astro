@@ -1,7 +1,17 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import heroImage from '../assets/hero-bread.jpg';
+
+const heroWidths = [480, 768, 1200, 1600];
+const heroVariants = await Promise.all(
+  heroWidths.map((w) =>
+    getImage({ src: heroImage, width: w, quality: 70, format: 'webp' })
+  )
+);
+const heroPreloadSrcset = heroVariants
+  .map((v, i) => `${v.src} ${heroWidths[i]}w`)
+  .join(', ');
 
 // Bread style icons (SVG paths)
 const icons = {
@@ -195,6 +205,15 @@ const breadStyles = [
 ---
 
 <Layout>
+  <Fragment slot="head">
+    <link
+      rel="preload"
+      as="image"
+      imagesrcset={heroPreloadSrcset}
+      imagesizes="100vw"
+      fetchpriority="high"
+    />
+  </Fragment>
   <main id="main-content">
   <nav class="sticky top-0 z-50 bg-[var(--cream-flour)]/95 backdrop-blur-sm border-b border-[var(--border-light)]">
     <div class="container flex items-center justify-between py-4">
@@ -248,7 +267,9 @@ const breadStyles = [
         loading="eager"
         fetchpriority="high"
         decoding="sync"
-        widths={[640, 1024, 1440, 1920]}
+        width={1600}
+        height={2400}
+        widths={heroWidths}
         sizes="100vw"
         quality={70}
         format="webp"
