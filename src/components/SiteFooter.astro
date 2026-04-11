@@ -1,0 +1,54 @@
+---
+const year = new Date().getFullYear();
+---
+
+<footer class="border-t border-[var(--border-light)] bg-[var(--cream-warm)] mt-20">
+  <div class="container py-14">
+    <div class="grid md:grid-cols-4 gap-10">
+      <div class="md:col-span-1">
+        <a href="/" class="flex items-center gap-2 mb-4">
+          <svg class="w-7 h-7 text-[var(--accent-gold)]" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 28V12"/>
+            <path d="M16 12c-2-3-2-6 0-8 2 2 2 5 0 8z"/>
+          </svg>
+          <span class="font-display text-lg">The Dough Formula</span>
+        </a>
+        <p class="text-sm text-[var(--crust-brown)] leading-relaxed">
+          A bread calculator and guide library for home bakers who want real numbers, not guesses.
+        </p>
+      </div>
+
+      <div>
+        <h3 class="text-xs uppercase tracking-[0.2em] font-medium mb-4 text-[var(--accent-gold)]">Guides</h3>
+        <ul class="space-y-2 text-sm">
+          <li><a href="/fundamentals/" class="hover:text-[var(--accent-gold)]">Fundamentals</a></li>
+          <li><a href="/techniques/" class="hover:text-[var(--accent-gold)]">Techniques</a></li>
+          <li><a href="/ingredients/" class="hover:text-[var(--accent-gold)]">Ingredients</a></li>
+          <li><a href="/styles/" class="hover:text-[var(--accent-gold)]">Bread Styles</a></li>
+          <li><a href="/troubleshooting/" class="hover:text-[var(--accent-gold)]">Troubleshooting</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="text-xs uppercase tracking-[0.2em] font-medium mb-4 text-[var(--accent-gold)]">Company</h3>
+        <ul class="space-y-2 text-sm">
+          <li><a href="/about/" class="hover:text-[var(--accent-gold)]">About</a></li>
+          <li><a href="/contact/" class="hover:text-[var(--accent-gold)]">Contact</a></li>
+          <li><a href="/privacy/" class="hover:text-[var(--accent-gold)]">Privacy Policy</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="text-xs uppercase tracking-[0.2em] font-medium mb-4 text-[var(--accent-gold)]">Built For</h3>
+        <p class="text-sm text-[var(--crust-brown)]">
+          Home bakers chasing better bread, one formula at a time.
+        </p>
+      </div>
+    </div>
+
+    <div class="border-t border-[var(--border-light)] mt-10 pt-6 flex flex-col md:flex-row justify-between gap-4 text-xs text-[var(--crust-brown)]">
+      <p>&copy; {year} The Dough Formula. All rights reserved.</p>
+      <p>Made for bakers who measure.</p>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,59 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const categories = [
+    { slug: 'fundamentals', name: 'Fundamentals', description: 'The core ideas every home baker should understand: percentages, hydration, fermentation, and dough temperature.' },
+    { slug: 'techniques', name: 'Techniques', description: 'The hands-on methods that turn flour and water into bread with structure, flavor, and an open crumb.' },
+    { slug: 'ingredients', name: 'Ingredients', description: 'What each ingredient in your dough is actually doing, and how to choose the right one for the bread you want.' },
+    { slug: 'styles', name: 'Bread Styles', description: 'Deep dives into classic bread styles, from sourdough and baguettes to focaccia and ciabatta.' },
+    { slug: 'troubleshooting', name: 'Troubleshooting', description: 'Diagnose what went wrong with your last bake and fix it on the next one.' },
+  ];
+
+  return Promise.all(
+    categories.map(async (cat) => {
+      const articles = await getCollection(cat.slug as any, ({ data }) => !data.draft);
+      const sorted = articles.sort(
+        (a, b) => +b.data.publishedDate - +a.data.publishedDate
+      );
+      return {
+        params: { category: cat.slug },
+        props: { name: cat.name, description: cat.description, articles: sorted },
+      };
+    })
+  );
+}
+
+const { name, description, articles } = Astro.props;
+
+const articlesWithReading = articles.map((a: any) => ({
+  article: a,
+  readingMinutes: Math.max(1, Math.ceil(a.body.trim().split(/\s+/).length / 200)),
+}));
+---
+
+<Layout title={`${name} | The Dough Formula`} description={description}>
+  <main id="main-content" class="py-16">
+    <div class="container">
+      <header class="text-center mb-14 max-w-2xl mx-auto">
+        <p class="text-xs uppercase tracking-[0.25em] text-[var(--accent-gold)] font-medium mb-4">
+          The Dough Formula Guides
+        </p>
+        <h1 class="font-display text-4xl md:text-5xl mb-5">{name}</h1>
+        <p class="text-[var(--crust-brown)] leading-relaxed">{description}</p>
+      </header>
+
+      {articles.length === 0 ? (
+        <p class="text-center text-[var(--crust-brown)]">No articles yet. Check back soon.</p>
+      ) : (
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-6xl mx-auto">
+          {articlesWithReading.map(({ article, readingMinutes }: any) => (
+            <ArticleCard article={article} readingMinutes={readingMinutes} />
+          ))}
+        </div>
+      )}
+    </div>
+  </main>
+</Layout>

@@ -1,0 +1,34 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+
+type AnyArticle =
+  | CollectionEntry<'fundamentals'>
+  | CollectionEntry<'techniques'>
+  | CollectionEntry<'ingredients'>
+  | CollectionEntry<'styles'>
+  | CollectionEntry<'troubleshooting'>;
+
+export async function getStaticPaths() {
+  const collections = ['fundamentals', 'techniques', 'ingredients', 'styles', 'troubleshooting'] as const;
+  const paths: { params: { category: string; slug: string }; props: { article: AnyArticle } }[] = [];
+
+  for (const col of collections) {
+    const articles = await getCollection(col, ({ data }) => !data.draft);
+    for (const article of articles) {
+      paths.push({
+        params: { category: col, slug: article.slug },
+        props: { article },
+      });
+    }
+  }
+  return paths;
+}
+
+const { article } = Astro.props;
+const { Content } = await article.render();
+---
+
+<ArticleLayout article={article} rawBody={article.body}>
+  <Content />
+</ArticleLayout>

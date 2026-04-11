@@ -215,48 +215,6 @@ const breadStyles = [
     />
   </Fragment>
   <main id="main-content">
-  <nav class="sticky top-0 z-50 bg-[var(--cream-flour)]/95 backdrop-blur-sm border-b border-[var(--border-light)]">
-    <div class="container flex items-center justify-between py-4">
-      <a href="/" class="flex items-center gap-2">
-        <svg class="w-7 h-7 text-[var(--accent-gold)]" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M16 28V12"/>
-          <path d="M16 12c-2-3-2-6 0-8 2 2 2 5 0 8z"/>
-          <path d="M16 16c-3-2-5-1-7 1 2 2 5 2 7-1z"/>
-          <path d="M16 16c3-2 5-1 7 1-2 2-5 2-7-1z"/>
-          <path d="M16 20c-3-2-5-1-7 1 2 2 5 2 7-1z"/>
-          <path d="M16 20c3-2 5-1 7 1-2 2-5 2-7-1z"/>
-          <path d="M16 24c-3-2-5-1-7 1 2 2 5 2 7-1z"/>
-          <path d="M16 24c3-2 5-1 7 1-2 2-5 2-7-1z"/>
-        </svg>
-        <span class="font-display text-xl font-semibold">
-          The Dough <span class="text-[var(--accent-gold)]">Formula</span>
-        </span>
-      </a>
-      <div class="hidden md:flex items-center gap-8">
-        <a href="#calculator" class="text-[var(--accent-gold)] font-medium">Calculator</a>
-        <a href="#bread-styles" class="text-[var(--crust-brown)] hover:text-[var(--espresso)] transition-colors">Bread Styles</a>
-        <a href="#bakers-percent" class="text-[var(--crust-brown)] hover:text-[var(--espresso)] transition-colors">Baker's %</a>
-        <a href="#about" class="text-[var(--crust-brown)] hover:text-[var(--espresso)] transition-colors">About</a>
-      </div>
-      <button id="mobile-menu-btn" class="md:hidden p-2" aria-label="Menu">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-    </div>
-  </nav>
-
-  <!-- Mobile Menu -->
-  <div id="mobile-menu" class="fixed inset-0 z-40 bg-[var(--cream-flour)] transform translate-x-full transition-transform md:hidden">
-    <div class="flex flex-col items-center justify-center h-full gap-8 text-xl">
-      <a href="#calculator" class="text-[var(--accent-gold)] font-medium mobile-menu-link">Calculator</a>
-      <a href="#bread-styles" class="text-[var(--crust-brown)] mobile-menu-link">Bread Styles</a>
-      <a href="#bakers-percent" class="text-[var(--crust-brown)] mobile-menu-link">Baker's %</a>
-      <a href="#about" class="text-[var(--crust-brown)] mobile-menu-link">About</a>
-      <button id="mobile-menu-close" class="mt-8 btn btn-outline">Close</button>
-    </div>
-  </div>
-
   <!-- Hero Section - Full Bleed Editorial -->
   <section class="hero-editorial">
     <!-- Background Image with Ken Burns -->
@@ -360,7 +318,7 @@ const breadStyles = [
                   <div class="pizza-cta-text">
                     <span class="pizza-cta-label">Making Pizza?</span>
                     <span class="pizza-cta-headline">Discover <em>The Pizza Dough Formula</em></span>
-                    <span class="pizza-cta-subtext">Neapolitan, New York, Detroit & more — precision-crafted for the perfect pie</span>
+                    <span class="pizza-cta-subtext">Neapolitan, New York, Detroit, and more. Precision-crafted for the perfect pie.</span>
                   </div>
                   <div class="pizza-cta-arrow">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 transition-transform group-hover:translate-x-1">
@@ -1276,23 +1234,23 @@ const breadStyles = [
           <ul class="space-y-3 text-[var(--crust-brown)]">
             <li class="flex gap-3">
               <span class="text-[var(--accent-gold)]">✓</span>
-              <span><strong>Scale easily</strong> – Double or halve recipes without math errors</span>
+              <span><strong>Scale easily.</strong> Double or halve recipes without math errors</span>
             </li>
             <li class="flex gap-3">
               <span class="text-[var(--accent-gold)]">✓</span>
-              <span><strong>Compare recipes</strong> – Instantly see hydration and ratios</span>
+              <span><strong>Compare recipes.</strong> Instantly see hydration and ratios</span>
             </li>
             <li class="flex gap-3">
               <span class="text-[var(--accent-gold)]">✓</span>
-              <span><strong>Adjust confidently</strong> – Tweak one variable without affecting others</span>
+              <span><strong>Adjust confidently.</strong> Tweak one variable without affecting others</span>
             </li>
             <li class="flex gap-3">
               <span class="text-[var(--accent-gold)]">✓</span>
-              <span><strong>Learn faster</strong> – Understand what makes each bread unique</span>
+              <span><strong>Learn faster.</strong> Understand what makes each bread unique</span>
             </li>
             <li class="flex gap-3">
               <span class="text-[var(--accent-gold)]">✓</span>
-              <span><strong>Professional standard</strong> – The system used by bakeries worldwide</span>
+              <span><strong>Professional standard.</strong> The system used by bakeries worldwide</span>
             </li>
           </ul>
         </div>
@@ -1322,6 +1280,46 @@ const breadStyles = [
             <div class="text-xs text-[var(--crust-brown)] mt-1">Very open, irregular holes</div>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Explore Guides Section -->
+  <section class="py-16 md:py-20">
+    <div class="container">
+      <div class="text-center max-w-2xl mx-auto mb-12">
+        <p class="text-xs uppercase tracking-[0.25em] text-[var(--accent-gold)] font-medium mb-4">The Guide Library</p>
+        <h2 class="font-display text-3xl md:text-4xl mb-4">Explore The Guides</h2>
+        <p class="text-[var(--crust-brown)]">
+          Articles on the techniques, ingredients, and styles behind good bread. Pick a category to dive in.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-6xl mx-auto">
+        <a href="/fundamentals/" class="card block p-6 hover:shadow-md transition-all">
+          <h3 class="font-display text-xl mb-2">Fundamentals</h3>
+          <p class="text-[var(--crust-brown)] text-sm leading-relaxed">Percentages, hydration, fermentation, and the core ideas every baker should understand.</p>
+        </a>
+        <a href="/techniques/" class="card block p-6 hover:shadow-md transition-all">
+          <h3 class="font-display text-xl mb-2">Techniques</h3>
+          <p class="text-[var(--crust-brown)] text-sm leading-relaxed">Shaping, folding, scoring, and the hands-on methods that make good bread.</p>
+        </a>
+        <a href="/ingredients/" class="card block p-6 hover:shadow-md transition-all">
+          <h3 class="font-display text-xl mb-2">Ingredients</h3>
+          <p class="text-[var(--crust-brown)] text-sm leading-relaxed">Flour, salt, yeast, water. What each one does and how to choose well.</p>
+        </a>
+        <a href="/styles/" class="card block p-6 hover:shadow-md transition-all">
+          <h3 class="font-display text-xl mb-2">Bread Styles</h3>
+          <p class="text-[var(--crust-brown)] text-sm leading-relaxed">Sourdough, baguettes, focaccia, ciabatta. Deep dives into classic loaves.</p>
+        </a>
+        <a href="/troubleshooting/" class="card block p-6 hover:shadow-md transition-all">
+          <h3 class="font-display text-xl mb-2">Troubleshooting</h3>
+          <p class="text-[var(--crust-brown)] text-sm leading-relaxed">Diagnose gummy crumb, flat loaves, overproofed dough, and more.</p>
+        </a>
+        <a href="/guides/" class="card block p-6 hover:shadow-md transition-all bg-[var(--cream-warm)]">
+          <h3 class="font-display text-xl mb-2">All Guides</h3>
+          <p class="text-[var(--crust-brown)] text-sm leading-relaxed">Browse the full library of articles in one place.</p>
+        </a>
       </div>
     </div>
   </section>

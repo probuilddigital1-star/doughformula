@@ -1,0 +1,101 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import CategoryCard from '../../components/CategoryCard.astro';
+import { getCollection } from 'astro:content';
+
+const categories = [
+  {
+    slug: 'fundamentals',
+    name: 'Fundamentals',
+    description: 'The core ideas every baker should know.',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg>`,
+  },
+  {
+    slug: 'techniques',
+    name: 'Techniques',
+    description: 'Hands-on methods that shape good bread.',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 18c3-6 13-6 16 0"/><path d="M8 10c1-2 3-3 4-3s3 1 4 3"/></svg>`,
+  },
+  {
+    slug: 'ingredients',
+    name: 'Ingredients',
+    description: 'What goes into dough, and why it matters.',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 10c0-3 3-6 7-6s7 3 7 6-3 6-7 6-7-3-7-6z"/><path d="M7 16l-2 4M17 16l2 4"/></svg>`,
+  },
+  {
+    slug: 'styles',
+    name: 'Bread Styles',
+    description: 'Deep dives into classic loaves.',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="14" rx="9" ry="6"/><path d="M6 11c2-3 5-4 6-4s4 1 6 4"/></svg>`,
+  },
+  {
+    slug: 'troubleshooting',
+    name: 'Troubleshooting',
+    description: 'Diagnose and fix common bake failures.',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h0"/></svg>`,
+  },
+];
+
+const allCollections = await Promise.all([
+  getCollection('fundamentals', ({ data }) => !data.draft),
+  getCollection('techniques', ({ data }) => !data.draft),
+  getCollection('ingredients', ({ data }) => !data.draft),
+  getCollection('styles', ({ data }) => !data.draft),
+  getCollection('troubleshooting', ({ data }) => !data.draft),
+]);
+const allArticles = allCollections.flat();
+const recent = allArticles
+  .sort((a, b) => +b.data.publishedDate - +a.data.publishedDate)
+  .slice(0, 6);
+const recentWithReading = recent.map((a) => ({
+  article: a,
+  readingMinutes: Math.max(1, Math.ceil(a.body.trim().split(/\s+/).length / 200)),
+}));
+
+const countsBySlug: Record<string, number> = Object.fromEntries(
+  allCollections.map((col, i) => [categories[i].slug, col.length])
+);
+---
+
+<Layout title="Guides | The Dough Formula" description="Articles, techniques, and troubleshooting for home bread bakers. Learn baker's percentages, shaping, hydration, and more.">
+  <main id="main-content" class="py-16">
+    <div class="container">
+      <header class="text-center max-w-2xl mx-auto mb-14">
+        <p class="text-xs uppercase tracking-[0.25em] text-[var(--accent-gold)] font-medium mb-4">
+          The Guide Library
+        </p>
+        <h1 class="font-display text-4xl md:text-5xl mb-5">Learn The Craft</h1>
+        <p class="text-[var(--crust-brown)] leading-relaxed">
+          Practical articles on the techniques, ingredients, and styles that make good bread. Browse by category or start with the most recent guides below.
+        </p>
+      </header>
+
+      <section class="mb-20">
+        <h2 class="font-display text-2xl mb-6 text-center">Browse By Category</h2>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-6xl mx-auto">
+          {categories.map((cat) => (
+            <CategoryCard
+              slug={cat.slug}
+              name={cat.name}
+              description={cat.description}
+              count={countsBySlug[cat.slug] ?? 0}
+              icon={cat.icon}
+            />
+          ))}
+        </div>
+      </section>
+
+      {recent.length > 0 && (
+        <section>
+          <h2 class="font-display text-2xl mb-6 text-center">Most Recent</h2>
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-6xl mx-auto">
+            {recentWithReading.map(({ article, readingMinutes }) => (
+              <ArticleCard article={article} readingMinutes={readingMinutes} />
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  </main>
+</Layout>

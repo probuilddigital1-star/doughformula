@@ -1,0 +1,120 @@
+---
+import Layout from './Layout.astro';
+import type { CollectionEntry } from 'astro:content';
+import { getCollection } from 'astro:content';
+import ArticleCard from '../components/ArticleCard.astro';
+
+type AnyArticle =
+  | CollectionEntry<'fundamentals'>
+  | CollectionEntry<'techniques'>
+  | CollectionEntry<'ingredients'>
+  | CollectionEntry<'styles'>
+  | CollectionEntry<'troubleshooting'>;
+
+interface Props {
+  article: AnyArticle;
+  rawBody: string;
+}
+
+const { article, rawBody } = Astro.props;
+const category = article.data.category;
+
+const words = rawBody.trim().split(/\s+/).length;
+const readingMinutes = Math.max(1, Math.ceil(words / 200));
+
+const dateLabel = article.data.publishedDate.toLocaleDateString('en-US', {
+  year: 'numeric', month: 'long', day: 'numeric',
+});
+
+const categoryCollections = {
+  fundamentals: await getCollection('fundamentals'),
+  techniques: await getCollection('techniques'),
+  ingredients: await getCollection('ingredients'),
+  styles: await getCollection('styles'),
+  troubleshooting: await getCollection('troubleshooting'),
+};
+const sameCategory = categoryCollections[category].filter(
+  (a) => a.slug !== article.slug && !a.data.draft
+);
+const related = sameCategory
+  .sort((a, b) => +b.data.publishedDate - +a.data.publishedDate)
+  .slice(0, 3);
+
+const relatedWordCounts = related.map((r) => r.body.trim().split(/\s+/).length);
+const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
+
+const breadcrumbJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://thedoughformula.com/' },
+    { '@type': 'ListItem', position: 2, name: categoryLabel, item: `https://thedoughformula.com/${category}/` },
+    { '@type': 'ListItem', position: 3, name: article.data.title, item: `https://thedoughformula.com/${category}/${article.slug}/` },
+  ],
+};
+
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: article.data.title,
+  description: article.data.description,
+  datePublished: article.data.publishedDate.toISOString(),
+  dateModified: (article.data.updatedDate ?? article.data.publishedDate).toISOString(),
+  author: { '@type': 'Organization', name: 'The Dough Formula' },
+  publisher: {
+    '@type': 'Organization',
+    name: 'The Dough Formula',
+    url: 'https://thedoughformula.com/',
+  },
+  mainEntityOfPage: `https://thedoughformula.com/${category}/${article.slug}/`,
+};
+---
+
+<Layout title={`${article.data.title} | The Dough Formula`} description={article.data.description}>
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd)} />
+    <script type="application/ld+json" set:html={JSON.stringify(articleJsonLd)} />
+  </Fragment>
+
+  <main id="main-content" class="py-10 md:py-16">
+    <article class="container">
+      <nav aria-label="Breadcrumb" class="text-sm text-[var(--crust-brown)] mb-8 max-w-[680px] mx-auto">
+        <a href="/" class="hover:text-[var(--espresso)]">Home</a>
+        <span class="mx-2">/</span>
+        <a href={`/${category}/`} class="hover:text-[var(--espresso)]">{categoryLabel}</a>
+        <span class="mx-2">/</span>
+        <span class="text-[var(--espresso)]">{article.data.title}</span>
+      </nav>
+
+      <header class="max-w-[680px] mx-auto mb-10">
+        <p class="text-xs uppercase tracking-[0.25em] text-[var(--accent-gold)] font-medium mb-4">
+          {categoryLabel}
+        </p>
+        <h1 class="font-display text-4xl md:text-5xl leading-tight mb-5">
+          {article.data.title}
+        </h1>
+        <p class="font-editorial text-lg text-[var(--crust-brown)] leading-relaxed mb-6">
+          {article.data.description}
+        </p>
+        <p class="text-sm text-[var(--crust-brown)]">
+          {dateLabel} · {readingMinutes} min read
+        </p>
+      </header>
+
+      <div class="prose">
+        <slot />
+      </div>
+
+      {related.length > 0 && (
+        <section class="mt-20 max-w-5xl mx-auto">
+          <h2 class="font-display text-2xl md:text-3xl mb-6 text-center">Keep Reading</h2>
+          <div class="grid md:grid-cols-3 gap-4">
+            {related.map((r, i) => (
+              <ArticleCard article={r} readingMinutes={Math.max(1, Math.ceil(relatedWordCounts[i] / 200))} />
+            ))}
+          </div>
+        </section>
+      )}
+    </article>
+  </main>
+</Layout>
