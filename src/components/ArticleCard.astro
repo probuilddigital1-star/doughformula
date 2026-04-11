@@ -1,0 +1,37 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+type AnyArticle =
+  | CollectionEntry<'fundamentals'>
+  | CollectionEntry<'techniques'>
+  | CollectionEntry<'ingredients'>
+  | CollectionEntry<'styles'>
+  | CollectionEntry<'troubleshooting'>;
+
+interface Props {
+  article: AnyArticle;
+  readingMinutes: number;
+}
+
+const { article, readingMinutes } = Astro.props;
+const href = `/${article.data.category}/${article.slug}/`;
+const dateLabel = article.data.publishedDate.toLocaleDateString('en-US', {
+  year: 'numeric', month: 'short', day: 'numeric',
+});
+---
+
+<a href={href} class="card block p-6 hover:shadow-md transition-all">
+  <div class="flex items-center gap-3 mb-3">
+    <span class="text-xs uppercase tracking-[0.2em] text-[var(--accent-gold)] font-medium">
+      {article.data.category}
+    </span>
+    <span class="text-xs text-[var(--crust-brown)]">
+      {readingMinutes} min read
+    </span>
+  </div>
+  <h3 class="font-display text-xl mb-2 leading-snug">{article.data.title}</h3>
+  <p class="text-[var(--crust-brown)] text-sm leading-relaxed mb-3">
+    {article.data.description}
+  </p>
+  <p class="text-xs text-[var(--crust-brown)]">{dateLabel}</p>
+</a>
