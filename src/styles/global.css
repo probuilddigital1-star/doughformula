@@ -1314,3 +1314,101 @@ input[type="range"]::-moz-range-thumb {
     font-size: 0.6875rem;
   }
 }
+
+/* ============================================
+   ARTICLE PROSE STYLES
+   ============================================ */
+
+.prose {
+  max-width: 680px;
+  margin-left: auto;
+  margin-right: auto;
+  color: var(--espresso);
+  font-family: var(--font-editorial, Georgia, serif);
+  font-size: 1.0625rem;
+  line-height: 1.75;
+}
+
+.prose > * + * {
+  margin-top: 1.25em;
+}
+
+.prose h2 {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 1.875rem;
+  line-height: 1.2;
+  margin-top: 2em;
+  margin-bottom: 0.5em;
+  color: var(--espresso);
+}
+
+.prose h3 {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 1.375rem;
+  line-height: 1.25;
+  margin-top: 1.6em;
+  margin-bottom: 0.4em;
+  color: var(--espresso);
+}
+
+.prose p {
+  margin: 1.25em 0;
+}
+
+.prose a {
+  color: var(--accent-gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.prose a:hover {
+  text-decoration-thickness: 2px;
+}
+
+.prose strong {
+  font-weight: 600;
+  color: var(--espresso);
+}
+
+.prose em {
+  font-style: italic;
+}
+
+.prose ul, .prose ol {
+  margin: 1.25em 0;
+  padding-left: 1.5em;
+}
+
+.prose ul { list-style: disc; }
+.prose ol { list-style: decimal; }
+
+.prose li {
+  margin: 0.5em 0;
+}
+
+.prose li > p {
+  margin: 0.25em 0;
+}
+
+.prose blockquote {
+  border-left: 3px solid var(--accent-gold);
+  padding: 0.5em 1.25em;
+  margin: 1.5em 0;
+  font-family: var(--font-editorial, Georgia, serif);
+  font-style: italic;
+  color: var(--crust-brown);
+}
+
+.prose code {
+  background: var(--cream-warm);
+  padding: 0.125em 0.375em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.prose hr {
+  border: 0;
+  border-top: 1px solid var(--border-light);
+  margin: 2.5em 0;
+}
