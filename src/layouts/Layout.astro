@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+import SiteNav from '../components/SiteNav.astro';
+import SiteFooter from '../components/SiteFooter.astro';
 
 interface Props {
   title?: string;
@@ -123,10 +125,11 @@ const jsonLd = {
     <slot name="head" />
   </head>
   <body class="flour-dusted min-h-screen">
-    <!-- Skip to main content link for accessibility -->
-    <a href="#calculator" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-[var(--espresso)] focus:text-white focus:px-4 focus:py-2 focus:rounded-md">
-      Skip to calculator
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-[var(--espresso)] focus:text-white focus:px-4 focus:py-2 focus:rounded-md">
+      Skip to main content
     </a>
+    <SiteNav />
     <slot />
+    <SiteFooter />
   </body>
 </html>
