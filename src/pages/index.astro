@@ -3582,8 +3582,11 @@ END:VEVENT
       (document.getElementById('loaf-weight') as HTMLInputElement).value = String(state.loafWeight);
     }
     if (params.has('hydration')) {
-      state.hydration = parseFloat(params.get('hydration') || '75');
-      (document.getElementById('hydration-slider') as HTMLInputElement).value = String(state.hydration);
+      const h = parseFloat(params.get('hydration') || '75');
+      if (!isNaN(h) && h >= 50 && h <= 95) {
+        state.hydration = h;
+        (document.getElementById('hydration-slider') as HTMLInputElement).value = String(h);
+      }
     }
     updateUI();
   }
