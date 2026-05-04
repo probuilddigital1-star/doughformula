@@ -108,6 +108,10 @@ function yeastPercentForStyleAndSchedule(c: Combo): number {
     case 'same-day': return 0.8;
     case 'overnight': return 0.3;
     case 'slow': return 0.15;
+    default: {
+      const _exhaustive: never = c.schedule;
+      throw new Error(`Unhandled schedule in yeastPercentForStyleAndSchedule: ${_exhaustive}`);
+    }
   }
 }
 
@@ -177,6 +181,10 @@ export function recipeMeta(c: Combo): RecipeMeta {
       totalHours = 36;
       activeMinutes = 90;
       break;
+    default: {
+      const _exhaustive: never = c.schedule;
+      throw new Error(`Unhandled schedule in recipeMeta: ${_exhaustive}`);
+    }
   }
 
   return {
