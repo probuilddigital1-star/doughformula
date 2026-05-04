@@ -15,16 +15,16 @@ The site has a deliberate premium-editorial visual language (Fraunces, cream pal
 
 ## Strategy
 
-**Balanced — solid revenue, still tasteful.** Two ads on the homepage in content sections below the calculator, two ads in articles, one in-feed ad on category index pages. No ads in the calculator UI itself, no ads above the calculator, no anchor/sticky ads, no ads on policy pages. Auto-placement (no per-article author work).
+**Balanced — solid revenue, still tasteful.** Two ads on the homepage in content sections below the calculator and below the newsletter signup, two ads in articles, one in-feed ad on category index pages. No ads in the calculator UI, no ads above the calculator, no ads adjacent to the newsletter signup, no anchor/sticky ads, no ads on policy pages. Auto-placement for the mid-article slot (no per-article author work).
 
-The calculator is the site's conversion magnet and LCP element. It stays pristine. Ads live only where the user is reading or browsing, not where they're using the tool.
+The calculator is the site's conversion magnet and LCP element. The newsletter signup is the secondary conversion. Both stay pristine — ads sit only in pure content sections (educational copy, equipment, FAQ) where the user is reading rather than acting.
 
 ## Ad Slot Inventory
 
 | # | ID | Page type | Position | Format |
 |---|----|-----------|----------|--------|
-| 1 | `homepage-post-calculator` | Homepage | Between `#calculator` section and the dark feature section (around `src/pages/index.astro:1162`) | Responsive display |
-| 2 | `homepage-mid-content` | Homepage | Between baker's percent explainer (`#bakers-percent`) and the methodology section (around `src/pages/index.astro:1287`) | Responsive display |
+| 1 | `homepage-post-newsletter` | Homepage | Between the newsletter section (`section.section-dark`, ends ~line 1189) and the baker's percent explainer (`#bakers-percent`, line 1192) | Responsive display |
+| 2 | `homepage-pre-faq` | Homepage | Between the equipment section (`#equipment`, ends ~line 1421) and the FAQ section (`#faq`, line 1422) | Responsive display |
 | 3 | `article-mid` | Article pages | Auto-injected before the first `<h2>` inside `.prose` | Responsive display |
 | 4 | `article-end` | Article pages | Between the article body and the "Keep Reading" related-articles section | Responsive display |
 | 5 | `category-in-feed` | Category index pages | After the third article card in the grid (only renders on categories with 4+ articles) | In-feed (fluid) |
