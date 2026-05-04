@@ -32,10 +32,14 @@ const { combo, ingredients, schedule, method, meta, intro, hydrationFraming, sch
 const styleMeta = STYLE_META[combo.style];
 const scheduleLabel = SCHEDULE_LABELS[combo.schedule];
 const title = comboTitle(combo, styleMeta.displayName, scheduleLabel);
-const description = `${intro.split('. ')[0]}.`;
+// Unique-per-combo meta description composed from the matrix dimensions.
+// Avoids the duplicate-meta-description SEO penalty that intro-substring sharing produced.
+const description = `${combo.hydration}% hydration ${scheduleLabel.toLowerCase()} ${styleMeta.displayName.toLowerCase()} recipe with real gram weights, fermentation schedule, and method.`;
 
-// Calculator deep-link
-const calcStyleParam = combo.style === 'no-knead' ? 'noknead' : combo.style === 'country-loaf' ? 'custom' : combo.style;
+// Calculator deep-link. Calculator's data-style values are 'no-knead' (with hyphen) and 'custom'
+// for the catch-all preset. Recipe matrix uses 'no-knead' as-is (passes through), and maps
+// 'country-loaf' to the calculator's 'custom' preset since there's no dedicated country-loaf card.
+const calcStyleParam = combo.style === 'country-loaf' ? 'custom' : combo.style;
 const calculatorHref = `/?style=${calcStyleParam}&hydration=${combo.hydration}#calculator`;
 
 // Related recipes: same style different schedule, same schedule different style, same style different hydration.
@@ -100,6 +104,11 @@ const bodyWords = (intro + ' ' + hydrationFraming + ' ' + scheduleFraming + ' ' 
   .trim()
   .split(/\s+/)
   .filter(Boolean).length;
+// Word-count floor protects against thin-content regression (e.g., an empty variant block).
+// Set at 150 because typical pages compose ~155-225 words of unique-by-combo prose, and the
+// page also renders an ingredient table (~10 rows), schedule timeline (~7-9 steps), method
+// section, calculator CTA, related sections, and Recipe schema markup. The prose is one
+// component of substantial total page content, not the only signal of substance.
 if (bodyWords < 150) {
   throw new Error(`Recipe page ${comboToSlug(combo)} has only ${bodyWords} words of unique prose (minimum 150). Expand variant copy.`);
 }
