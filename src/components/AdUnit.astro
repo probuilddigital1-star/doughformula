@@ -20,7 +20,7 @@ const {
 } = Astro.props;
 
 const reservedHeight = minHeight ?? (format === 'fluid' ? '200px' : '260px');
-const hasSlot = slot.length > 0;
+const hasSlot = slot.length > 0 && (format !== 'fluid' || (layoutKey?.length ?? 0) > 0);
 const layoutKeyAttr = format === 'fluid' ? layoutKey : undefined;
 const responsiveAttr = format === 'auto' ? (fullWidth ? 'true' : 'false') : undefined;
 ---
