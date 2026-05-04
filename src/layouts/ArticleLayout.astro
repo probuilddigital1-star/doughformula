@@ -3,6 +3,8 @@ import Layout from './Layout.astro';
 import type { CollectionEntry } from 'astro:content';
 import { getCollection } from 'astro:content';
 import ArticleCard from '../components/ArticleCard.astro';
+import AdUnit from '../components/AdUnit.astro';
+import { AD_SLOTS } from '../config/ads';
 
 type AnyArticle =
   | CollectionEntry<'fundamentals'>
@@ -103,6 +105,10 @@ const articleJsonLd = {
 
       <div class="prose">
         <slot />
+      </div>
+
+      <div class="max-w-3xl mx-auto">
+        <AdUnit slot={AD_SLOTS.articleEnd} />
       </div>
 
       {related.length > 0 && (
