@@ -5,6 +5,9 @@ import { getCollection } from 'astro:content';
 import ArticleCard from '../components/ArticleCard.astro';
 import AdUnit from '../components/AdUnit.astro';
 import { AD_SLOTS, ADSENSE_CLIENT } from '../config/ads';
+import RecipeCard from '../components/RecipeCard.astro';
+import { allCombos } from '../data/recipes';
+import { recipeMeta } from '../lib/recipe-formula';
 
 type AnyArticle =
   | CollectionEntry<'fundamentals'>
@@ -44,6 +47,46 @@ const related = sameCategory
 
 const relatedWordCounts = related.map((r) => r.body.trim().split(/\s+/).length);
 const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
+
+// Map article slugs to (style, hydration, schedule) tuples that should appear as "related recipes".
+// Two combos per mapped article. Articles not in the map get an empty list (no Related Recipes section rendered).
+const ARTICLE_TO_RECIPES: Record<string, Array<{ style: string; hydration: number; schedule: string }>> = {
+  'sourdough-for-beginners': [
+    { style: 'sourdough', hydration: 75, schedule: 'overnight' },
+    { style: 'sourdough', hydration: 65, schedule: 'overnight' },
+  ],
+  'classic-french-baguette': [
+    { style: 'baguette', hydration: 65, schedule: 'overnight' },
+    { style: 'baguette', hydration: 75, schedule: 'overnight' },
+  ],
+  'ciabatta-explained': [
+    { style: 'ciabatta', hydration: 82, schedule: 'overnight' },
+    { style: 'ciabatta', hydration: 75, schedule: 'overnight' },
+  ],
+  'country-loaf-pain-de-campagne': [
+    { style: 'country-loaf', hydration: 75, schedule: 'overnight' },
+    { style: 'country-loaf', hydration: 82, schedule: 'slow' },
+  ],
+  'high-hydration-focaccia': [
+    { style: 'focaccia', hydration: 82, schedule: 'overnight' },
+    { style: 'focaccia', hydration: 75, schedule: 'same-day' },
+  ],
+  'bakers-percentages-explained': [
+    { style: 'sourdough', hydration: 75, schedule: 'overnight' },
+    { style: 'baguette', hydration: 65, schedule: 'overnight' },
+  ],
+  'hydration-60-to-90': [
+    { style: 'sourdough', hydration: 65, schedule: 'overnight' },
+    { style: 'sourdough', hydration: 82, schedule: 'overnight' },
+  ],
+};
+
+const relatedRecipeKeys = ARTICLE_TO_RECIPES[article.slug] ?? [];
+const allCombosList = allCombos();
+const relatedRecipes = relatedRecipeKeys
+  .map((k) => allCombosList.find((c) => c.style === k.style && c.hydration === k.hydration && c.schedule === k.schedule))
+  .filter((c): c is NonNullable<typeof c> => Boolean(c));
+const relatedRecipeMetas = relatedRecipes.map((c) => recipeMeta(c));
 
 const breadcrumbJsonLd = {
   '@context': 'https://schema.org',
@@ -106,6 +149,17 @@ const articleJsonLd = {
       <div class="prose">
         <slot />
       </div>
+
+      {relatedRecipes.length > 0 && (
+        <section class="mt-16 max-w-5xl mx-auto">
+          <h2 class="font-display text-2xl md:text-3xl mb-6 text-center">Related Recipes</h2>
+          <div class="grid md:grid-cols-2 gap-4">
+            {relatedRecipes.map((c, i) => (
+              <RecipeCard combo={c} meta={relatedRecipeMetas[i]} />
+            ))}
+          </div>
+        </section>
+      )}
 
       <div class="max-w-3xl mx-auto">
         <AdUnit slot={AD_SLOTS.articleEnd} />
