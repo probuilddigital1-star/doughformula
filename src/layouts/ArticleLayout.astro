@@ -4,7 +4,7 @@ import type { CollectionEntry } from 'astro:content';
 import { getCollection } from 'astro:content';
 import ArticleCard from '../components/ArticleCard.astro';
 import AdUnit from '../components/AdUnit.astro';
-import { AD_SLOTS } from '../config/ads';
+import { AD_SLOTS, ADSENSE_CLIENT } from '../config/ads';
 
 type AnyArticle =
   | CollectionEntry<'fundamentals'>
@@ -123,4 +123,36 @@ const articleJsonLd = {
       )}
     </article>
   </main>
+
+  <script define:vars={{ midSlot: AD_SLOTS.articleMid, client: ADSENSE_CLIENT }}>
+    (function () {
+      if (!midSlot) return;
+      const prose = document.querySelector('.prose');
+      if (!prose) return;
+      const firstH2 = prose.querySelector('h2');
+      if (!firstH2) return;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'ad-slot my-12 mx-auto';
+      wrapper.setAttribute('data-nosnippet', '');
+      wrapper.style.minHeight = '260px';
+
+      const label = document.createElement('p');
+      label.className = 'text-xs uppercase tracking-[0.25em] text-[var(--accent-gold)] font-medium text-center mb-3';
+      label.textContent = 'Advertisement';
+      wrapper.appendChild(label);
+
+      const ins = document.createElement('ins');
+      ins.className = 'adsbygoogle';
+      ins.style.display = 'block';
+      ins.setAttribute('data-ad-client', client);
+      ins.setAttribute('data-ad-slot', midSlot);
+      ins.setAttribute('data-ad-format', 'auto');
+      ins.setAttribute('data-full-width-responsive', 'true');
+      wrapper.appendChild(ins);
+
+      firstH2.before(wrapper);
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    })();
+  </script>
 </Layout>
