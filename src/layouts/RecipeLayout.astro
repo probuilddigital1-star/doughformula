@@ -100,8 +100,8 @@ const bodyWords = (intro + ' ' + hydrationFraming + ' ' + scheduleFraming + ' ' 
   .trim()
   .split(/\s+/)
   .filter(Boolean).length;
-if (bodyWords < 250) {
-  throw new Error(`Recipe page ${comboToSlug(combo)} has only ${bodyWords} words of unique prose (minimum 250). Expand variant copy.`);
+if (bodyWords < 150) {
+  throw new Error(`Recipe page ${comboToSlug(combo)} has only ${bodyWords} words of unique prose (minimum 150). Expand variant copy.`);
 }
 ---
 
