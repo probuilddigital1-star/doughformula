@@ -1,0 +1,99 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import RecipeCard from '../../components/RecipeCard.astro';
+import AdUnit from '../../components/AdUnit.astro';
+import { AD_SLOTS } from '../../config/ads';
+import { allCombos, STYLES, HYDRATIONS, SCHEDULES, STYLE_META } from '../../data/recipes';
+import { recipeMeta } from '../../lib/recipe-formula';
+import { SCHEDULE_LABELS } from '../../lib/recipe-slug';
+
+const combos = allCombos();
+const combosWithMeta = combos.map((c) => ({ combo: c, meta: recipeMeta(c) }));
+---
+
+<Layout
+  title="Bread Recipes | The Dough Formula"
+  description="Filterable bread recipes by style, hydration, and schedule. Each recipe links to the live baker's percentage calculator."
+>
+  <main id="main-content" class="py-16">
+    <div class="container">
+      <header class="text-center mb-14 max-w-2xl mx-auto">
+        <p class="text-xs uppercase tracking-[0.25em] text-[var(--accent-gold)] font-medium mb-4">
+          The Dough Formula Recipes
+        </p>
+        <h1 class="font-display text-4xl md:text-5xl mb-5">Bread Recipes</h1>
+        <p class="text-[var(--crust-brown)] leading-relaxed">
+          Pick a bread style, a hydration level, and a schedule. Every recipe shows real gram weights, a real timeline, and a button to open the live calculator with these settings preloaded.
+        </p>
+      </header>
+
+      <div class="max-w-6xl mx-auto mb-10">
+        <div class="flex flex-wrap gap-6 items-start text-sm">
+          <fieldset class="space-y-2">
+            <legend class="font-medium text-[var(--accent-gold)] uppercase tracking-wider text-xs mb-2">Style</legend>
+            {STYLES.map((s) => (
+              <label class="flex items-center gap-2 mr-4">
+                <input type="checkbox" class="filter-input" data-filter-style={s} />
+                <span>{STYLE_META[s].displayName}</span>
+              </label>
+            ))}
+          </fieldset>
+          <fieldset class="space-y-2">
+            <legend class="font-medium text-[var(--accent-gold)] uppercase tracking-wider text-xs mb-2">Hydration</legend>
+            {HYDRATIONS.map((h) => (
+              <label class="flex items-center gap-2 mr-4">
+                <input type="checkbox" class="filter-input" data-filter-hydration={h} />
+                <span>{h}%</span>
+              </label>
+            ))}
+          </fieldset>
+          <fieldset class="space-y-2">
+            <legend class="font-medium text-[var(--accent-gold)] uppercase tracking-wider text-xs mb-2">Schedule</legend>
+            {SCHEDULES.map((s) => (
+              <label class="flex items-center gap-2 mr-4">
+                <input type="checkbox" class="filter-input" data-filter-schedule={s} />
+                <span>{SCHEDULE_LABELS[s]}</span>
+              </label>
+            ))}
+          </fieldset>
+        </div>
+      </div>
+
+      <div id="recipe-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-6xl mx-auto">
+        {combosWithMeta.map(({ combo, meta }, i) => {
+          return [
+            <RecipeCard combo={combo} meta={meta} />,
+            i === 2 && combosWithMeta.length >= 4 ? (
+              <AdUnit slot={AD_SLOTS.categoryInFeed} class="card !p-6 !my-0" minHeight="200px" />
+            ) : null,
+          ];
+        })}
+      </div>
+    </div>
+  </main>
+
+  <script is:inline>
+    (() => {
+      const grid = document.getElementById('recipe-grid');
+      if (!grid) return;
+      const inputs = document.querySelectorAll('.filter-input');
+      function apply() {
+        const styleSel = new Set(Array.from(document.querySelectorAll('[data-filter-style]:checked')).map((el) => el.dataset.filterStyle));
+        const hydSel = new Set(Array.from(document.querySelectorAll('[data-filter-hydration]:checked')).map((el) => el.dataset.filterHydration));
+        const schedSel = new Set(Array.from(document.querySelectorAll('[data-filter-schedule]:checked')).map((el) => el.dataset.filterSchedule));
+        const cards = grid.querySelectorAll('a.card');
+        cards.forEach((card) => {
+          const s = card.dataset.style;
+          const h = card.dataset.hydration;
+          const sc = card.dataset.schedule;
+          const visible =
+            (styleSel.size === 0 || styleSel.has(s)) &&
+            (hydSel.size === 0 || hydSel.has(h)) &&
+            (schedSel.size === 0 || schedSel.has(sc));
+          card.style.display = visible ? '' : 'none';
+        });
+      }
+      inputs.forEach((i) => i.addEventListener('change', apply));
+    })();
+  </script>
+</Layout>
