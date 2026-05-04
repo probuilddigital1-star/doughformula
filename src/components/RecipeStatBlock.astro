@@ -1,0 +1,32 @@
+---
+import type { RecipeMeta } from '../lib/recipe-formula';
+
+interface Props {
+  meta: RecipeMeta;
+  hydrationPercent: number;
+}
+
+const { meta, hydrationPercent } = Astro.props;
+
+const difficultyLabel = ['Beginner', 'Intermediate', 'Advanced'][meta.difficulty - 1];
+const difficultyMarks = '⌬'.repeat(meta.difficulty) + '○'.repeat(3 - meta.difficulty);
+---
+
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 my-10 p-6 rounded-xl bg-[var(--cream-warm)] border border-[var(--border-light)]">
+  <div>
+    <p class="text-xs uppercase tracking-[0.2em] text-[var(--accent-gold)] font-medium mb-1">Total time</p>
+    <p class="font-display text-lg">{meta.totalTimeLabel}</p>
+  </div>
+  <div>
+    <p class="text-xs uppercase tracking-[0.2em] text-[var(--accent-gold)] font-medium mb-1">Active</p>
+    <p class="font-display text-lg">{meta.activeTimeLabel}</p>
+  </div>
+  <div>
+    <p class="text-xs uppercase tracking-[0.2em] text-[var(--accent-gold)] font-medium mb-1">Hydration</p>
+    <p class="font-display text-lg">{hydrationPercent}%</p>
+  </div>
+  <div>
+    <p class="text-xs uppercase tracking-[0.2em] text-[var(--accent-gold)] font-medium mb-1">Difficulty</p>
+    <p class="font-display text-lg" title={difficultyLabel}>{difficultyMarks}</p>
+  </div>
+</div>
