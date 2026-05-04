@@ -1,0 +1,52 @@
+---
+import { ADSENSE_CLIENT } from '../config/ads';
+
+interface Props {
+  slot: string;
+  format?: 'auto' | 'fluid';
+  layoutKey?: string;
+  fullWidth?: boolean;
+  minHeight?: string;
+  class?: string;
+}
+
+const {
+  slot,
+  format = 'auto',
+  layoutKey,
+  fullWidth = true,
+  minHeight,
+  class: className = '',
+} = Astro.props;
+
+const reservedHeight = minHeight ?? (format === 'fluid' ? '200px' : '260px');
+const hasSlot = slot.length > 0;
+const layoutKeyAttr = format === 'fluid' ? layoutKey : undefined;
+const responsiveAttr = format === 'auto' ? (fullWidth ? 'true' : 'false') : undefined;
+---
+
+<div
+  class:list={['ad-slot my-12 mx-auto', className]}
+  data-nosnippet
+  style={`min-height:${reservedHeight};`}
+>
+  <p class="text-xs uppercase tracking-[0.25em] text-[var(--accent-gold)] font-medium text-center mb-3">
+    Advertisement
+  </p>
+  {hasSlot && (
+    <ins
+      class="adsbygoogle"
+      style="display:block;"
+      data-ad-client={ADSENSE_CLIENT}
+      data-ad-slot={slot}
+      data-ad-format={format}
+      data-ad-layout-key={layoutKeyAttr}
+      data-full-width-responsive={responsiveAttr}
+    />
+  )}
+  {hasSlot && (
+    <script is:inline>
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+  )}
+</div>
