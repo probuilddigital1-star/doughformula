@@ -1,0 +1,32 @@
+---
+import type { Ingredient } from '../lib/recipe-formula';
+
+interface Props {
+  ingredients: Ingredient[];
+}
+
+const { ingredients } = Astro.props;
+---
+
+<section class="my-10 max-w-2xl mx-auto">
+  <h2 class="font-display text-2xl mb-6">Ingredients</h2>
+  <p class="text-sm text-[var(--crust-brown)] mb-4">For approximately 1 kg total dough weight.</p>
+  <table class="w-full text-left">
+    <thead>
+      <tr class="border-b border-[var(--border-light)]">
+        <th class="py-2 font-medium text-sm uppercase tracking-wider text-[var(--accent-gold)]">Ingredient</th>
+        <th class="py-2 font-medium text-sm uppercase tracking-wider text-[var(--accent-gold)] text-right">Grams</th>
+        <th class="py-2 font-medium text-sm uppercase tracking-wider text-[var(--accent-gold)] text-right">Baker's %</th>
+      </tr>
+    </thead>
+    <tbody>
+      {ingredients.map((i) => (
+        <tr class="border-b border-[var(--border-light)]">
+          <td class="py-3">{i.name}</td>
+          <td class="py-3 text-right font-mono">{i.grams} g</td>
+          <td class="py-3 text-right font-mono text-[var(--crust-brown)]">{i.bakerPercent}%</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</section>
