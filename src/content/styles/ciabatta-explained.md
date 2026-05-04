@@ -88,6 +88,8 @@ Slide the parchment onto the hot surface and pour boiling water into the floor p
 
 **Rough handling during shaping.** Every fold and press during the divide and shape step compresses the gas structure you built during bulk. The goal is to move the dough as little as possible. Slide the bench knife; do not press or deflate.
 
+For a measured recipe with real gram weights, see the [82% hydration overnight ciabatta recipe](/recipes/ciabatta-82-overnight/).
+
 ## After the Bake
 
 Ciabatta cools quickly because of its shape. Let it rest at least 30 minutes before cutting. The crumb continues to set as it cools; cutting early produces a gummy interior.

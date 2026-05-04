@@ -82,6 +82,8 @@ The poolish can be adjusted to fit your schedule. A shorter ferment (six to eigh
 
 For a deeper look at how preferments work, including poolish, biga, and levain comparisons, see the [preferments guide](/fundamentals/preferments-101/).
 
+For a complete recipe with measured ingredients and timing, see the [65% hydration overnight baguette recipe](/recipes/baguette-65-overnight/).
+
 ## Reading the Finished Loaf
 
 Once the baguette has cooled, break one open and look at the crumb. The holes should be irregular, distributed throughout, and the walls around them should be thin and slightly translucent. If the crumb is uniform and dense, bulk fermentation was likely too short or the dough was degassed during shaping. If the holes are large near the top and tight at the bottom, shaping was too loose and the dough sagged.
