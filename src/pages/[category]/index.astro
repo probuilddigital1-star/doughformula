@@ -3,7 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import ArticleCard from '../../components/ArticleCard.astro';
 import AdUnit from '../../components/AdUnit.astro';
 import { getCollection } from 'astro:content';
-import { AD_SLOTS, AD_LAYOUT_KEYS } from '../../config/ads';
+import { AD_SLOTS } from '../../config/ads';
 
 export async function getStaticPaths() {
   const categories = [
@@ -57,8 +57,6 @@ const articlesWithReading = articles.map((a: any) => ({
               i === 2 && articlesWithReading.length >= 4 ? (
                 <AdUnit
                   slot={AD_SLOTS.categoryInFeed}
-                  format="fluid"
-                  layoutKey={AD_LAYOUT_KEYS.categoryInFeed}
                   class="card !p-6 !my-0"
                   minHeight="200px"
                 />
