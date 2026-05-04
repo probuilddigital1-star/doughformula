@@ -1,0 +1,217 @@
+---
+import Layout from './Layout.astro';
+import AdUnit from '../components/AdUnit.astro';
+import ArticleCard from '../components/ArticleCard.astro';
+import RecipeCard from '../components/RecipeCard.astro';
+import RecipeStatBlock from '../components/RecipeStatBlock.astro';
+import RecipeIngredients from '../components/RecipeIngredients.astro';
+import RecipeSchedule from '../components/RecipeSchedule.astro';
+import { AD_SLOTS, ADSENSE_CLIENT } from '../config/ads';
+import type { Combo } from '../data/recipes';
+import { STYLE_META, allCombos } from '../data/recipes';
+import type { Ingredient, ScheduleStep, MethodStep, RecipeMeta } from '../lib/recipe-formula';
+import { recipeMeta as computeMeta } from '../lib/recipe-formula';
+import { comboToSlug, comboTitle, SCHEDULE_LABELS } from '../lib/recipe-slug';
+import { getCollection } from 'astro:content';
+
+interface Props {
+  combo: Combo;
+  ingredients: Ingredient[];
+  schedule: ScheduleStep[];
+  method: MethodStep[];
+  meta: RecipeMeta;
+  intro: string;
+  hydrationFraming: string;
+  scheduleFraming: string;
+  resultDescriptor: string;
+  styleTweak: string;
+}
+
+const { combo, ingredients, schedule, method, meta, intro, hydrationFraming, scheduleFraming, resultDescriptor, styleTweak } = Astro.props;
+
+const styleMeta = STYLE_META[combo.style];
+const scheduleLabel = SCHEDULE_LABELS[combo.schedule];
+const title = comboTitle(combo, styleMeta.displayName, scheduleLabel);
+const description = `${intro.split('. ')[0]}.`;
+
+// Calculator deep-link
+const calcStyleParam = combo.style === 'no-knead' ? 'noknead' : combo.style === 'country-loaf' ? 'custom' : combo.style;
+const calculatorHref = `/?style=${calcStyleParam}&hydration=${combo.hydration}#calculator`;
+
+// Related recipes: same style different schedule, same schedule different style, same style different hydration.
+const all = allCombos();
+const sameStyleDiffSched = all.find(
+  (x) => x.style === combo.style && x.schedule !== combo.schedule && x.hydration === combo.hydration,
+);
+const sameSchedDiffStyle = all.find(
+  (x) => x.schedule === combo.schedule && x.style !== combo.style && x.hydration === combo.hydration,
+);
+const sameStyleDiffHyd = all.find(
+  (x) => x.style === combo.style && x.hydration !== combo.hydration && x.schedule === combo.schedule,
+);
+const relatedCombos = [sameStyleDiffSched, sameSchedDiffStyle, sameStyleDiffHyd].filter((x): x is Combo => Boolean(x));
+const relatedMetas: RecipeMeta[] = relatedCombos.map((c) => computeMeta(c));
+
+// Related articles
+type AnyArticle = Awaited<ReturnType<typeof getCollection>>[number];
+const stylesArticles = await getCollection('styles');
+const fundamentalsArticles = await getCollection('fundamentals');
+const relatedArticleSlugs = styleMeta.relatedArticles;
+const relatedArticles: AnyArticle[] = stylesArticles.filter((a) => relatedArticleSlugs.includes(a.slug));
+// Pad with general fundamentals if we don't have enough style-specific articles.
+if (relatedArticles.length < 2) {
+  const padding = fundamentalsArticles
+    .filter((a) => ['bakers-percentages-explained', 'hydration-60-to-90', 'what-fermentation-actually-does'].includes(a.slug))
+    .slice(0, 2 - relatedArticles.length);
+  relatedArticles.push(...padding);
+}
+const relatedArticleWordCounts = relatedArticles.map((a) => a.body.trim().split(/\s+/).length);
+
+// JSON-LD
+const breadcrumbJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://thedoughformula.com/' },
+    { '@type': 'ListItem', position: 2, name: 'Recipes', item: 'https://thedoughformula.com/recipes/' },
+    { '@type': 'ListItem', position: 3, name: title, item: `https://thedoughformula.com/recipes/${comboToSlug(combo)}/` },
+  ],
+};
+
+const recipeJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Recipe',
+  name: title,
+  description,
+  image: 'https://thedoughformula.com/og-image.jpg',
+  recipeIngredient: ingredients.map((i) => `${i.grams} g ${i.name}`),
+  recipeInstructions: method.map((s) => ({ '@type': 'HowToStep', text: s.text })),
+  totalTime: meta.totalTimeISO,
+  prepTime: meta.activeTimeISO,
+  cookTime: `PT${styleMeta.bakeMinutes}M`,
+  recipeYield: '1 loaf, ~900g baked',
+  recipeCategory: 'Bread',
+  recipeCuisine: styleMeta.cuisine,
+  keywords: `${styleMeta.displayName.toLowerCase()}, ${combo.hydration}% hydration, ${combo.schedule} schedule`,
+};
+
+// Compose the body for the word-count floor check (~250 word minimum).
+const bodyWords = (intro + ' ' + hydrationFraming + ' ' + scheduleFraming + ' ' + resultDescriptor + ' ' + styleTweak)
+  .trim()
+  .split(/\s+/)
+  .filter(Boolean).length;
+if (bodyWords < 250) {
+  throw new Error(`Recipe page ${comboToSlug(combo)} has only ${bodyWords} words of unique prose (minimum 250). Expand variant copy.`);
+}
+---
+
+<Layout title={`${title} Recipe | The Dough Formula`} description={description}>
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd)} />
+    <script type="application/ld+json" set:html={JSON.stringify(recipeJsonLd)} />
+  </Fragment>
+
+  <main id="main-content" class="py-10 md:py-16">
+    <article class="container">
+      <nav aria-label="Breadcrumb" class="text-sm text-[var(--crust-brown)] mb-8 max-w-3xl mx-auto">
+        <a href="/" class="hover:text-[var(--espresso)]">Home</a>
+        <span class="mx-2">/</span>
+        <a href="/recipes/" class="hover:text-[var(--espresso)]">Recipes</a>
+        <span class="mx-2">/</span>
+        <span class="text-[var(--espresso)]">{title}</span>
+      </nav>
+
+      <header class="max-w-3xl mx-auto mb-8">
+        <p class="text-xs uppercase tracking-[0.25em] text-[var(--accent-gold)] font-medium mb-4">
+          Recipe · {styleMeta.displayName} · {scheduleLabel}
+        </p>
+        <h1 class="font-display text-4xl md:text-5xl leading-tight mb-5">
+          {title}
+        </h1>
+        <p class="font-editorial text-lg text-[var(--crust-brown)] leading-relaxed">
+          {intro}
+        </p>
+      </header>
+
+      <div class="prose">
+        <RecipeStatBlock meta={meta} hydrationPercent={combo.hydration} />
+
+        <p>{hydrationFraming}</p>
+        <p>{scheduleFraming}</p>
+
+        <RecipeIngredients ingredients={ingredients} />
+        <RecipeSchedule schedule={schedule} />
+
+        <h2>Method tips for this style</h2>
+        <p>{styleTweak}</p>
+
+        <h2>What to expect</h2>
+        <p>{resultDescriptor}</p>
+      </div>
+
+      <div class="max-w-3xl mx-auto my-10 text-center">
+        <a href={calculatorHref} class="btn btn-primary inline-block">
+          Open in calculator with these settings
+        </a>
+      </div>
+
+      <div class="max-w-3xl mx-auto">
+        <AdUnit slot={AD_SLOTS.articleEnd} />
+      </div>
+
+      {relatedCombos.length > 0 && (
+        <section class="mt-20 max-w-5xl mx-auto">
+          <h2 class="font-display text-2xl md:text-3xl mb-6 text-center">More Recipes</h2>
+          <div class="grid md:grid-cols-3 gap-4">
+            {relatedCombos.map((c, i) => (
+              <RecipeCard combo={c} meta={relatedMetas[i]} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {relatedArticles.length > 0 && (
+        <section class="mt-16 max-w-5xl mx-auto">
+          <h2 class="font-display text-2xl md:text-3xl mb-6 text-center">Related Guides</h2>
+          <div class="grid md:grid-cols-3 gap-4">
+            {relatedArticles.map((a, i) => (
+              <ArticleCard article={a as any} readingMinutes={Math.max(1, Math.ceil(relatedArticleWordCounts[i] / 200))} />
+            ))}
+          </div>
+        </section>
+      )}
+    </article>
+  </main>
+
+  <script define:vars={{ midSlot: AD_SLOTS.articleMid, client: ADSENSE_CLIENT }}>
+    (function () {
+      if (!midSlot) return;
+      const prose = document.querySelector('.prose');
+      if (!prose) return;
+      const firstH2 = prose.querySelector('h2');
+      if (!firstH2) return;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'ad-slot my-12 mx-auto';
+      wrapper.setAttribute('data-nosnippet', '');
+      wrapper.style.minHeight = '260px';
+
+      const label = document.createElement('p');
+      label.className = 'text-xs uppercase tracking-[0.25em] text-[var(--accent-gold)] font-medium text-center mb-3';
+      label.textContent = 'Advertisement';
+      wrapper.appendChild(label);
+
+      const ins = document.createElement('ins');
+      ins.className = 'adsbygoogle';
+      ins.style.display = 'block';
+      ins.setAttribute('data-ad-client', client);
+      ins.setAttribute('data-ad-slot', midSlot);
+      ins.setAttribute('data-ad-format', 'auto');
+      ins.setAttribute('data-full-width-responsive', 'true');
+      wrapper.appendChild(ins);
+
+      firstH2.before(wrapper);
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    })();
+  </script>
+</Layout>
