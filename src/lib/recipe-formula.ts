@@ -115,6 +115,69 @@ function yeastPercentForStyleAndSchedule(c: Combo): number {
   }
 }
 
+// Returns the shape and bake instructions for a given style. Each style family
+// has different technique: Dutch oven artisan, baguette/ciabatta steam-stone,
+// loaf-pan enriched, or sheet-pan focaccia.
+function shapeStep(c: Combo): string {
+  const meta = STYLE_META[c.style];
+  switch (meta.shapeFamily) {
+    case 'dutch-oven':
+      return 'Shape into a tight boule, place seam-up in a floured banneton.';
+    case 'steam-stone':
+      return `Divide the dough into ${meta.divideInto} equal portions. Pre-shape each, rest 20 minutes, then ${meta.divideInto && meta.divideInto >= 3 ? 'roll into baguettes and place seam-down on a floured couche' : 'shape gently into rectangles on a heavily floured surface'}.`;
+    case 'loaf-pan':
+      return 'Roll the dough into a tight log, tucking the seam under, and place seam-side down in a buttered loaf pan.';
+    case 'sheet-pan':
+      return 'Pour the dough into a generously oiled 9x13 inch sheet pan. Stretch gently to fill the pan corners.';
+  }
+}
+
+function bakeStep(c: Combo): string {
+  const meta = STYLE_META[c.style];
+  switch (meta.shapeFamily) {
+    case 'dutch-oven':
+      return `Score the loaf. Bake at ${meta.bakeTemperatureF}°F covered for 25 minutes, then uncovered for ${Math.max(15, meta.bakeMinutes - 25)} more minutes.`;
+    case 'steam-stone': {
+      const scoringInstruction = c.style === 'baguette'
+        ? 'Score each baguette with three to five diagonal cuts.'
+        : 'Skip scoring (ciabatta bakes without cuts).';
+      return `${scoringInstruction} Slide onto the preheated stone. Bake at ${meta.bakeTemperatureF}°F with steam (a tray of boiling water on the lower rack) for ${meta.bakeMinutes} minutes until deep golden.`;
+    }
+    case 'loaf-pan':
+      return `${meta.hasEggs ? 'Brush the top with beaten egg. ' : ''}Bake at ${meta.bakeTemperatureF}°F for ${meta.bakeMinutes} minutes until the top is deep golden and the internal temperature reads 195°F.`;
+    case 'sheet-pan':
+      return `Dimple the surface deeply with all ten fingers, drizzle generously with olive oil, and add toppings (flaky salt, herbs). Bake at ${meta.bakeTemperatureF}°F for ${meta.bakeMinutes} minutes until the bottom crust is crisp and golden.`;
+  }
+}
+
+function preheatVessel(c: Combo): string {
+  const meta = STYLE_META[c.style];
+  switch (meta.shapeFamily) {
+    case 'dutch-oven':
+      return 'Pull from the refrigerator. Preheat the oven and Dutch oven to bake temperature.';
+    case 'steam-stone':
+      return 'Pull from the refrigerator. Preheat the oven and a baking stone to bake temperature. Place a steam tray on the lower rack.';
+    case 'loaf-pan':
+      return 'Pull from the refrigerator. Let the loaf warm 30-45 minutes while you preheat the oven.';
+    case 'sheet-pan':
+      return 'Pull from the refrigerator. Let the dough warm 30 minutes in the pan while you preheat the oven.';
+  }
+}
+
+function shapeStepSameDay(c: Combo): string {
+  const meta = STYLE_META[c.style];
+  switch (meta.shapeFamily) {
+    case 'dutch-oven':
+      return 'Final shape into a boule, proof in a floured banneton 45-60 minutes.';
+    case 'steam-stone':
+      return `Divide into ${meta.divideInto} portions, pre-shape, rest 20 minutes, final shape, proof 45-60 minutes.`;
+    case 'loaf-pan':
+      return 'Roll into a log, place seam-side down in a buttered loaf pan, proof 45-60 minutes until the dough crests above the rim.';
+    case 'sheet-pan':
+      return 'Pour into an oiled 9x13 sheet pan, stretch to corners, proof 45-60 minutes.';
+  }
+}
+
 export function computeSchedule(c: Combo): ScheduleStep[] {
   const meta = STYLE_META[c.style];
 
@@ -126,9 +189,8 @@ export function computeSchedule(c: Combo): ScheduleStep[] {
       { when: 'Hour 1:00', action: 'Second fold.' },
       { when: 'Hour 1:30', action: 'Third fold.' },
       { when: 'Hour 2:00', action: 'Bulk ferment until visibly puffy.' },
-      { when: 'Hour 3:30', action: 'Pre-shape, rest 20 minutes.' },
-      { when: 'Hour 4:00', action: 'Final shape, proof 45-60 minutes.' },
-      { when: 'Hour 5:00', action: `Score and bake at ${meta.bakeTemperatureF}°F for ${meta.bakeMinutes} minutes.` },
+      { when: 'Hour 3:30', action: shapeStepSameDay(c) },
+      { when: 'Hour 5:00', action: bakeStep(c) },
     ];
   }
 
@@ -138,9 +200,9 @@ export function computeSchedule(c: Combo): ScheduleStep[] {
       { when: 'Day 1, 6:30 PM', action: meta.yeastType === 'starter' ? 'Add starter and salt. Mix until combined.' : 'Add yeast and salt. Mix until smooth.' },
       { when: 'Day 1, 7:00 PM', action: 'Stretch and fold every 30 minutes for 2 hours.' },
       { when: 'Day 1, 9:00 PM', action: 'Bulk ferment 1-2 more hours at room temperature.' },
-      { when: 'Day 1, 10:30 PM', action: 'Shape, place in banneton or proofing vessel, refrigerate overnight.' },
-      { when: 'Day 2, 7:00 AM', action: 'Pull from refrigerator. Preheat oven and Dutch oven (or stone) to bake temperature.' },
-      { when: 'Day 2, 8:00 AM', action: `Score and bake at ${meta.bakeTemperatureF}°F covered for 25 minutes, uncovered for the remaining ${Math.max(0, meta.bakeMinutes - 25)} minutes.` },
+      { when: 'Day 1, 10:30 PM', action: `${shapeStep(c)} Cover and refrigerate overnight.` },
+      { when: 'Day 2, 7:00 AM', action: preheatVessel(c) },
+      { when: 'Day 2, 8:00 AM', action: bakeStep(c) },
     ];
   }
 
@@ -151,10 +213,10 @@ export function computeSchedule(c: Combo): ScheduleStep[] {
     { when: 'Day 1, evening', action: 'Three folds, 30 minutes apart.' },
     { when: 'Day 1, night', action: 'Refrigerate the bulk dough overnight.' },
     { when: 'Day 2, morning', action: 'Pull from refrigerator. Bench rest 1 hour.' },
-    { when: 'Day 2, midday', action: 'Pre-shape, rest 30 minutes, final shape into banneton.' },
-    { when: 'Day 2, afternoon', action: 'Refrigerate the shaped loaf overnight.' },
-    { when: 'Day 3, morning', action: 'Pull, preheat oven and baking vessel.' },
-    { when: 'Day 3, morning', action: `Score and bake at ${meta.bakeTemperatureF}°F covered for 25 minutes, uncovered for the remaining ${Math.max(0, meta.bakeMinutes - 25)} minutes.` },
+    { when: 'Day 2, midday', action: `Pre-shape, rest 30 minutes. ${shapeStep(c)}` },
+    { when: 'Day 2, afternoon', action: 'Cover and refrigerate the shaped dough overnight.' },
+    { when: 'Day 3, morning', action: preheatVessel(c) },
+    { when: 'Day 3, morning', action: bakeStep(c) },
   ];
 }
 

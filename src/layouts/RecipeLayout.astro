@@ -93,7 +93,7 @@ const recipeJsonLd = {
   totalTime: meta.totalTimeISO,
   prepTime: meta.activeTimeISO,
   cookTime: `PT${styleMeta.bakeMinutes}M`,
-  recipeYield: '1 loaf, ~900g baked',
+  recipeYield: styleMeta.yieldDescription,
   recipeCategory: 'Bread',
   recipeCuisine: styleMeta.cuisine,
   keywords: `${styleMeta.displayName.toLowerCase()}, ${combo.hydration}% hydration, ${combo.schedule} schedule`,
@@ -148,7 +148,7 @@ if (bodyWords < 150) {
         <p>{hydrationFraming}</p>
         <p>{scheduleFraming}</p>
 
-        <RecipeIngredients ingredients={ingredients} />
+        <RecipeIngredients ingredients={ingredients} yieldDescription={styleMeta.yieldDescription} />
         <RecipeSchedule schedule={schedule} />
 
         <h2>Method tips for this style</h2>

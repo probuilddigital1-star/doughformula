@@ -63,6 +63,16 @@ export interface StyleMeta {
   difficulty: 1 | 2 | 3;
   // Article slugs (in src/content/styles/) relevant to this style. May be empty.
   relatedArticles: string[];
+  // Shape and bake technique family. Drives the last few steps of the schedule:
+  //   dutch-oven  → shape into a boule, refrigerate in banneton, bake covered in a Dutch oven (sourdough, country-loaf, no-knead)
+  //   steam-stone → shape on a couche or floured cloth, bake on a stone with steam, uncovered (baguette, ciabatta)
+  //   loaf-pan    → shape into a log, place in a loaf pan, bake uncovered (sandwich, brioche)
+  //   sheet-pan   → press into a sheet pan, dimple, bake uncovered (focaccia)
+  shapeFamily: 'dutch-oven' | 'steam-stone' | 'loaf-pan' | 'sheet-pan';
+  // For steam-stone styles, how many portions the dough is divided into before shaping.
+  divideInto?: number;
+  // Human-readable yield used in the page heading and the Recipe schema's recipeYield field.
+  yieldDescription: string;
 }
 
 export const STYLE_META: Record<Style, StyleMeta> = {
@@ -75,6 +85,8 @@ export const STYLE_META: Record<Style, StyleMeta> = {
     bakeMinutes: 45,
     difficulty: 3,
     relatedArticles: ['sourdough-for-beginners'],
+    shapeFamily: 'dutch-oven',
+    yieldDescription: '1 boule, ~900g baked',
   },
   baguette: {
     displayName: 'Baguette',
@@ -85,6 +97,9 @@ export const STYLE_META: Record<Style, StyleMeta> = {
     bakeMinutes: 24,
     difficulty: 3,
     relatedArticles: ['classic-french-baguette'],
+    shapeFamily: 'steam-stone',
+    divideInto: 3,
+    yieldDescription: '3 baguettes, ~280g each baked',
   },
   focaccia: {
     displayName: 'Focaccia',
@@ -96,6 +111,8 @@ export const STYLE_META: Record<Style, StyleMeta> = {
     bakeMinutes: 22,
     difficulty: 1,
     relatedArticles: ['high-hydration-focaccia'],
+    shapeFamily: 'sheet-pan',
+    yieldDescription: '1 focaccia in a 9x13 inch sheet pan',
   },
   sandwich: {
     displayName: 'Sandwich Loaf',
@@ -108,6 +125,8 @@ export const STYLE_META: Record<Style, StyleMeta> = {
     bakeMinutes: 35,
     difficulty: 1,
     relatedArticles: [],
+    shapeFamily: 'loaf-pan',
+    yieldDescription: '1 sandwich loaf, ~850g baked',
   },
   ciabatta: {
     displayName: 'Ciabatta',
@@ -119,6 +138,9 @@ export const STYLE_META: Record<Style, StyleMeta> = {
     bakeMinutes: 22,
     difficulty: 3,
     relatedArticles: ['ciabatta-explained'],
+    shapeFamily: 'steam-stone',
+    divideInto: 2,
+    yieldDescription: '2 ciabattas, ~430g each baked',
   },
   brioche: {
     displayName: 'Brioche',
@@ -132,6 +154,8 @@ export const STYLE_META: Record<Style, StyleMeta> = {
     bakeMinutes: 35,
     difficulty: 3,
     relatedArticles: [],
+    shapeFamily: 'loaf-pan',
+    yieldDescription: '1 brioche loaf, ~850g baked',
   },
   'no-knead': {
     displayName: 'No-Knead Loaf',
@@ -142,6 +166,8 @@ export const STYLE_META: Record<Style, StyleMeta> = {
     bakeMinutes: 45,
     difficulty: 1,
     relatedArticles: [],
+    shapeFamily: 'dutch-oven',
+    yieldDescription: '1 round loaf, ~900g baked',
   },
   'country-loaf': {
     displayName: 'Country Loaf',
@@ -153,5 +179,7 @@ export const STYLE_META: Record<Style, StyleMeta> = {
     bakeMinutes: 45,
     difficulty: 3,
     relatedArticles: ['country-loaf-pain-de-campagne'],
+    shapeFamily: 'dutch-oven',
+    yieldDescription: '1 country loaf, ~900g baked',
   },
 };
