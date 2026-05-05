@@ -40,7 +40,12 @@ const description = `${combo.hydration}% hydration ${scheduleLabel.toLowerCase()
 // for the catch-all preset. Recipe matrix uses 'no-knead' as-is (passes through), and maps
 // 'country-loaf' to the calculator's 'custom' preset since there's no dedicated country-loaf card.
 const calcStyleParam = combo.style === 'country-loaf' ? 'custom' : combo.style;
-const calculatorHref = `/?style=${calcStyleParam}&hydration=${combo.hydration}#calculator`;
+// Pass loaves and weight so the calculator state matches the recipe page's yield. Recipe pages
+// target ~1000g total raw dough; for steam-stone styles (baguette/ciabatta) we divide into
+// portions, for everything else it's a single loaf.
+const calcLoaves = styleMeta.divideInto ?? 1;
+const calcWeight = Math.round(1000 / calcLoaves);
+const calculatorHref = `/?style=${calcStyleParam}&hydration=${combo.hydration}&loaves=${calcLoaves}&weight=${calcWeight}#calculator`;
 
 // Related recipes: same style different schedule, same schedule different style, same style different hydration.
 const all = allCombos();
