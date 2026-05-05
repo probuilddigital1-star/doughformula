@@ -1,7 +1,12 @@
 import type { Combo } from '../data/recipes';
 import { STYLE_META } from '../data/recipes';
 
-const TOTAL_DOUGH_GRAMS = 1000; // Fixed yield target for all recipes.
+// Total raw dough grams for a combo, derived from per-loaf weight × portions.
+// Per-loaf weight is the primary dimension; total dough is what the formula targets.
+function totalDoughGrams(c: Combo): number {
+  const meta = STYLE_META[c.style];
+  return meta.loafGramsRaw * (meta.divideInto ?? 1);
+}
 
 export interface Ingredient {
   name: string;
@@ -31,7 +36,7 @@ export function computeIngredients(c: Combo): Ingredient[] {
   const meta = STYLE_META[c.style];
   const hyd = c.hydration / 100;
 
-  // Derive flour weight so flour + water + salt + extras ≈ TOTAL_DOUGH_GRAMS.
+  // Derive flour weight so flour + water + salt + extras ≈ totalDoughGrams(c).
   // Sum of multipliers for the simple lean dough = 1 + hyd + (salt%/100) + (yeast%/100)
   const yeastPercent = yeastPercentForStyleAndSchedule(c);
   const oilPercent = meta.hasOliveOil ? 5 : 0;
@@ -50,7 +55,7 @@ export function computeIngredients(c: Combo): Ingredient[] {
     eggPercent +
     milkPercent;
 
-  const flour = Math.round((TOTAL_DOUGH_GRAMS / totalPercent) * 100);
+  const flour = Math.round((totalDoughGrams(c) / totalPercent) * 100);
   const water = Math.round(flour * (c.hydration - milkPercent) / 100);
   const salt = round1(flour * meta.saltPercent / 100);
   const yeast = round1(flour * yeastPercent / 100);
@@ -254,7 +259,7 @@ export function recipeMeta(c: Combo): RecipeMeta {
     activeTimeISO: `PT${activeMinutes}M`,
     totalTimeLabel: totalHours >= 24 ? `${totalHours} hours (over ~${Math.round(totalHours / 24) + 1} days)` : `${totalHours} hours`,
     activeTimeLabel: `${activeMinutes} minutes`,
-    yieldGrams: TOTAL_DOUGH_GRAMS,
+    yieldGrams: totalDoughGrams(c),
     difficulty: meta.difficulty,
   };
 }

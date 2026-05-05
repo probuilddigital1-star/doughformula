@@ -40,11 +40,10 @@ const description = `${combo.hydration}% hydration ${scheduleLabel.toLowerCase()
 // for the catch-all preset. Recipe matrix uses 'no-knead' as-is (passes through), and maps
 // 'country-loaf' to the calculator's 'custom' preset since there's no dedicated country-loaf card.
 const calcStyleParam = combo.style === 'country-loaf' ? 'custom' : combo.style;
-// Pass loaves and weight so the calculator state matches the recipe page's yield. Recipe pages
-// target ~1000g total raw dough; for steam-stone styles (baguette/ciabatta) we divide into
-// portions, for everything else it's a single loaf.
+// Pass loaves and weight so the calculator state matches the recipe page's yield. Per-loaf raw
+// weight comes from STYLE_META.loafGramsRaw (e.g., baguette = 300g per loaf, sourdough = 1000g).
 const calcLoaves = styleMeta.divideInto ?? 1;
-const calcWeight = Math.round(1000 / calcLoaves);
+const calcWeight = styleMeta.loafGramsRaw;
 const calculatorHref = `/?style=${calcStyleParam}&hydration=${combo.hydration}&loaves=${calcLoaves}&weight=${calcWeight}#calculator`;
 
 // Related recipes: same style different schedule, same schedule different style, same style different hydration.
@@ -153,7 +152,7 @@ if (bodyWords < 150) {
         <p>{hydrationFraming}</p>
         <p>{scheduleFraming}</p>
 
-        <RecipeIngredients ingredients={ingredients} yieldDescription={styleMeta.yieldDescription} />
+        <RecipeIngredients ingredients={ingredients} yieldDescription={styleMeta.yieldDescription} totalDoughGrams={meta.yieldGrams} />
         <RecipeSchedule schedule={schedule} />
 
         <h2>Method tips for this style</h2>

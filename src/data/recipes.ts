@@ -71,6 +71,9 @@ export interface StyleMeta {
   shapeFamily: 'dutch-oven' | 'steam-stone' | 'loaf-pan' | 'sheet-pan';
   // For steam-stone styles, how many portions the dough is divided into before shaping.
   divideInto?: number;
+  // Raw dough grams per finished loaf, before baking. Total dough = loafGramsRaw * (divideInto ?? 1).
+  // Standard sizes: sourdough boule 1000g, baguette 300g, ciabatta 450g, sandwich/brioche 900g, focaccia 800g.
+  loafGramsRaw: number;
   // Human-readable yield used in the page heading and the Recipe schema's recipeYield field.
   yieldDescription: string;
 }
@@ -86,6 +89,7 @@ export const STYLE_META: Record<Style, StyleMeta> = {
     difficulty: 3,
     relatedArticles: ['sourdough-for-beginners'],
     shapeFamily: 'dutch-oven',
+    loafGramsRaw: 1000,
     yieldDescription: '1 boule, ~900g baked',
   },
   baguette: {
@@ -99,7 +103,8 @@ export const STYLE_META: Record<Style, StyleMeta> = {
     relatedArticles: ['classic-french-baguette'],
     shapeFamily: 'steam-stone',
     divideInto: 3,
-    yieldDescription: '3 baguettes, ~280g each baked',
+    loafGramsRaw: 300,
+    yieldDescription: '3 baguettes, ~270g each baked',
   },
   focaccia: {
     displayName: 'Focaccia',
@@ -112,6 +117,7 @@ export const STYLE_META: Record<Style, StyleMeta> = {
     difficulty: 1,
     relatedArticles: ['high-hydration-focaccia'],
     shapeFamily: 'sheet-pan',
+    loafGramsRaw: 800,
     yieldDescription: '1 focaccia in a 9x13 inch sheet pan',
   },
   sandwich: {
@@ -126,7 +132,8 @@ export const STYLE_META: Record<Style, StyleMeta> = {
     difficulty: 1,
     relatedArticles: [],
     shapeFamily: 'loaf-pan',
-    yieldDescription: '1 sandwich loaf, ~850g baked',
+    loafGramsRaw: 900,
+    yieldDescription: '1 sandwich loaf, ~810g baked',
   },
   ciabatta: {
     displayName: 'Ciabatta',
@@ -140,7 +147,8 @@ export const STYLE_META: Record<Style, StyleMeta> = {
     relatedArticles: ['ciabatta-explained'],
     shapeFamily: 'steam-stone',
     divideInto: 2,
-    yieldDescription: '2 ciabattas, ~430g each baked',
+    loafGramsRaw: 450,
+    yieldDescription: '2 ciabattas, ~400g each baked',
   },
   brioche: {
     displayName: 'Brioche',
@@ -155,7 +163,8 @@ export const STYLE_META: Record<Style, StyleMeta> = {
     difficulty: 3,
     relatedArticles: [],
     shapeFamily: 'loaf-pan',
-    yieldDescription: '1 brioche loaf, ~850g baked',
+    loafGramsRaw: 900,
+    yieldDescription: '1 brioche loaf, ~810g baked',
   },
   'no-knead': {
     displayName: 'No-Knead Loaf',
@@ -167,6 +176,7 @@ export const STYLE_META: Record<Style, StyleMeta> = {
     difficulty: 1,
     relatedArticles: [],
     shapeFamily: 'dutch-oven',
+    loafGramsRaw: 1000,
     yieldDescription: '1 round loaf, ~900g baked',
   },
   'country-loaf': {
@@ -180,6 +190,7 @@ export const STYLE_META: Record<Style, StyleMeta> = {
     difficulty: 3,
     relatedArticles: ['country-loaf-pain-de-campagne'],
     shapeFamily: 'dutch-oven',
+    loafGramsRaw: 1000,
     yieldDescription: '1 country loaf, ~900g baked',
   },
 };

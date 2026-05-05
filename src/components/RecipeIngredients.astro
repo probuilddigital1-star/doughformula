@@ -4,14 +4,15 @@ import type { Ingredient } from '../lib/recipe-formula';
 interface Props {
   ingredients: Ingredient[];
   yieldDescription: string;
+  totalDoughGrams: number;
 }
 
-const { ingredients, yieldDescription } = Astro.props;
+const { ingredients, yieldDescription, totalDoughGrams } = Astro.props;
 ---
 
 <section class="my-10 max-w-2xl mx-auto">
   <h2 class="font-display text-2xl mb-6">Ingredients</h2>
-  <p class="text-sm text-[var(--crust-brown)] mb-4">~1 kg total dough. Yields {yieldDescription}.</p>
+  <p class="text-sm text-[var(--crust-brown)] mb-4">{totalDoughGrams}g total dough. Yields {yieldDescription}.</p>
   <table class="w-full text-left">
     <thead>
       <tr class="border-b border-[var(--border-light)]">
