@@ -1,0 +1,57 @@
+---
+import RecipeLayout from '../../layouts/RecipeLayout.astro';
+import { allCombos } from '../../data/recipes';
+import { comboToSlug } from '../../lib/recipe-slug';
+import { computeIngredients, computeSchedule, composeMethod, recipeMeta } from '../../lib/recipe-formula';
+import { pickVariant } from '../../lib/recipe-copy-pick';
+import {
+  styleIntros,
+  hydrationFraming,
+  scheduleFraming,
+  styleMethodTweaks,
+  selectResultDescriptor,
+} from '../../data/recipe-copy';
+
+export async function getStaticPaths() {
+  const combos = allCombos();
+  // Slug uniqueness assertion at build time
+  const slugs = new Set<string>();
+  for (const c of combos) {
+    const slug = comboToSlug(c);
+    if (slugs.has(slug)) {
+      throw new Error(`Duplicate slug generated: ${slug}`);
+    }
+    slugs.add(slug);
+  }
+  return combos.map((combo) => ({
+    params: { slug: comboToSlug(combo) },
+    props: { combo },
+  }));
+}
+
+const { combo } = Astro.props;
+
+const ingredients = computeIngredients(combo);
+const schedule = computeSchedule(combo);
+const method = composeMethod(combo);
+const meta = recipeMeta(combo);
+
+const intro = pickVariant(styleIntros[combo.style], combo);
+const hydFrame = pickVariant(hydrationFraming[combo.hydration], combo);
+const schedFrame = pickVariant(scheduleFraming[combo.schedule], combo);
+const styleTweak = styleMethodTweaks[combo.style];
+const resultDescriptor = selectResultDescriptor(combo);
+---
+
+<RecipeLayout
+  combo={combo}
+  ingredients={ingredients}
+  schedule={schedule}
+  method={method}
+  meta={meta}
+  intro={intro}
+  hydrationFraming={hydFrame}
+  scheduleFraming={schedFrame}
+  resultDescriptor={resultDescriptor}
+  styleTweak={styleTweak}
+/>

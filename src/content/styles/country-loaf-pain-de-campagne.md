@@ -72,6 +72,8 @@ A longer cold retard at around 38 to 40F (3 to 4C) will be slightly more sour. A
 
 **Cutting the loaf while still warm.** The crumb of a pain de campagne continues to develop for one to two hours after the loaf leaves the oven. Cutting early produces a gummy, wet interior even when the bake was correct. Let it cool completely on a wire rack before slicing.
 
+For a working recipe scaled to a 1kg dough, see the [75% hydration overnight country loaf recipe](/recipes/country-loaf-75-overnight/).
+
 ## Reading the Finished Loaf
 
 The crumb should be open and irregular, with holes that vary in size across the cross-section. The thin crumb walls should look slightly translucent. Dense patches near the bottom often indicate under-fermentation or a cold spot during bulk. Large uniform holes near the top only suggest the loaf was shaped too loosely.

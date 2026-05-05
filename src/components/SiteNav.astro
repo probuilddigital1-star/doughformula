@@ -15,6 +15,7 @@ const isHome = pathname === '/' || pathname === '';
 
     <div class="hidden md:flex items-center gap-8">
       <a href="/guides/" class="text-sm hover:text-[var(--accent-gold)] transition-colors">Guides</a>
+      <a href="/recipes/" class="text-sm hover:text-[var(--accent-gold)] transition-colors">Recipes</a>
       <a href="/about/" class="text-sm hover:text-[var(--accent-gold)] transition-colors">About</a>
       {isHome ? (
         <a href="#calculator" class="btn btn-primary text-sm px-5 py-2">Begin Your Bake</a>
@@ -41,6 +42,7 @@ const isHome = pathname === '/' || pathname === '';
   <div id="mobile-nav" class="md:hidden hidden border-t border-[var(--border-light)] bg-[var(--cream-flour)]">
     <div class="container flex flex-col py-4 gap-4">
       <a href="/guides/" class="py-2">Guides</a>
+      <a href="/recipes/" class="py-2">Recipes</a>
       <a href="/about/" class="py-2">About</a>
       <a href="/contact/" class="py-2">Contact</a>
       <a href={isHome ? '#calculator' : '/#calculator'} class="btn btn-primary text-sm px-5 py-2 w-max">Begin Your Bake</a>

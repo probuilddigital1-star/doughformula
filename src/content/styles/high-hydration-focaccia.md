@@ -72,6 +72,8 @@ A plain olive oil and salt focaccia is worth mastering before adding toppings. T
 
 **Not going deep enough with the dimples.** Shallow dimples close up during baking. If your finished focaccia has a smooth top with no distinct holes, the dimples were too tentative. Before you next bake, press much harder.
 
+For a measured recipe with timing and gram weights, see the [82% hydration overnight focaccia recipe](/recipes/focaccia-82-overnight/).
+
 ## Storing and Reheating
 
 Focaccia is best the day it is baked. The second day, it softens. To restore some of the crust, reheat slices in a dry skillet over medium heat for two to three minutes per side, or run the whole slab in a 375F (190C) oven for ten minutes.

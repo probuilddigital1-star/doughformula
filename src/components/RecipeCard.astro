@@ -1,0 +1,38 @@
+---
+import type { Combo } from '../data/recipes';
+import { STYLE_META } from '../data/recipes';
+import { comboToSlug, comboTitle, SCHEDULE_LABELS } from '../lib/recipe-slug';
+import type { RecipeMeta } from '../lib/recipe-formula';
+
+interface Props {
+  combo: Combo;
+  meta: RecipeMeta;
+}
+
+const { combo, meta } = Astro.props;
+const styleMeta = STYLE_META[combo.style];
+const slug = comboToSlug(combo);
+const title = comboTitle(combo, styleMeta.displayName, SCHEDULE_LABELS[combo.schedule]);
+---
+
+<a
+  href={`/recipes/${slug}/`}
+  class="card block p-6 hover:shadow-md transition-all"
+  data-style={combo.style}
+  data-hydration={combo.hydration}
+  data-schedule={combo.schedule}
+>
+  <div class="flex items-center gap-3 mb-3">
+    <span class="text-xs uppercase tracking-[0.2em] text-[var(--accent-gold)] font-medium">
+      Recipe
+    </span>
+    <span class="text-xs text-[var(--crust-brown)]">
+      {meta.totalTimeLabel}
+    </span>
+  </div>
+  <h3 class="font-display text-xl mb-2 leading-snug">{title}</h3>
+  <p class="text-[var(--crust-brown)] text-sm leading-relaxed mb-3">
+    {styleMeta.cuisine} style · {meta.difficulty === 1 ? 'Beginner' : meta.difficulty === 2 ? 'Intermediate' : 'Advanced'}
+  </p>
+  <p class="text-xs text-[var(--crust-brown)]">{combo.hydration}% hydration</p>
+</a>

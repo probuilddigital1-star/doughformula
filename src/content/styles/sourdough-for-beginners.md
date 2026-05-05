@@ -72,6 +72,8 @@ After scoring, the cuts should open cleanly. In the oven, watch for spring in th
 
 **Cutting into the loaf too early.** The crumb sets as the loaf cools. Cutting while still warm results in a gummy interior even if the bake was otherwise correct. Wait at least one hour, two if you can stand it.
 
+For a working recipe with real gram weights and a complete schedule, see the [75% hydration overnight sourdough recipe](/recipes/sourdough-75-overnight/).
+
 ## After Your First Bake
 
 Look at the crumb. If it is uniformly dense with no air holes, bulk fermentation was probably too short or the starter was underactive. If the crumb is open near the top and dense at the bottom, the dough may have been over-proofed or shaped too loosely. If the crust is pale, the oven was not hot enough or baking time was too short.
