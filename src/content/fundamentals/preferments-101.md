@@ -3,6 +3,7 @@ title: "Preferments 101: Poolish, Biga, And Levain Compared"
 description: "Why skilled bakers mix a small part of the dough hours before the rest. A practical comparison of poolish, biga, and levain."
 category: fundamentals
 publishedDate: 2026-02-27
+updatedDate: 2026-05-07
 ---
 
 A baguette made in one step tastes like bread. A baguette made with a poolish tastes like something else entirely, complex, slightly tangy, with a flavor that lingers after the crust is gone. The difference is not technique in the shaping or timing in the oven. It is a decision made the night before, when the baker mixes a small portion of flour, water, and yeast and sets it aside to ferment slowly while everything else waits.
@@ -13,9 +14,9 @@ Preferments are one of the oldest tools in bread baking. They predate commercial
 
 When you ferment a portion of the flour for 8 to 16 hours before mixing the final dough, several things happen. The yeast population in that portion grows and matures, producing a more complex mix of organic acids and aromatic compounds than a same-day dough can generate. The starches in the prefermented flour partially break down, making them easier for yeast to consume during the final ferment. The gluten in that portion condenses and strengthens, contributing extensibility to the final dough without requiring as much mechanical work.
 
-The result is a final dough that ferments more actively (because it starts with a more vigorous culture), develops faster (because the pre-fermented flour has already built structure), and tastes more complex (because the acid and aromatic compounds from the long ferment carry through to the finished bread).
+A dough built on a preferment starts with a more vigorous yeast culture, so it ferments faster and more reliably than a same-day mix. Some of the gluten in the prefermented portion has already loosened and partially built itself, which means the final dough comes together with less mechanical work. The flavor benefit is the part most people notice first. Acids and aromatic compounds from the long preferment carry through into the finished crumb, even though the preferment is usually only 20 to 40 percent of the total flour.
 
-Preferments also let you control flavor profile with more precision than single-stage fermentation. A poolish made at room temperature and used after 8 hours produces different flavors than the same poolish held for 14 hours in a cooler environment. You are designing a flavor outcome, not just waiting for dough to rise.
+Preferments also let you control flavor profile with more precision than single-stage fermentation. A poolish made at room temperature and used after 8 hours produces different flavors than the same poolish held for 14 hours in a cooler environment. Preferments turn flavor into a design choice. You decide ahead of time what the bread will taste like, instead of leaving it to whatever the rise happens to do.
 
 ## Poolish: 100% Hydration, Commercial Yeast
 
@@ -76,6 +77,28 @@ You can use more than one preferment in a formula. Some bakers combine a small l
 **Confusing total dough hydration with final dough hydration.** When you include a preferment, the final dough (everything you mix in the main mix) has a lower effective hydration than the finished formula because some water came in with the preferment. If your formula calls for 75% total hydration and your poolish contributes 100% hydration flour, you must reduce the water added to the final dough to compensate. This calculation is exactly what the [Dough Formula calculator](/#calculator) handles: enter the preferment separately and the final dough water adjusts automatically.
 
 **Making the preferment too large.** Recipes sometimes call for preferments that represent 40% to 50% of total flour. That is not unusual, but large preferments require that you use the preferment at or near peak, because a very large past-peak preferment will have a significant negative impact on the final dough. If you cannot reliably time it, keep the preferment at 20% to 30% of total flour where the margin for error is wider.
+
+## Common Questions
+
+**Can I substitute biga for poolish in a recipe?**
+
+Yes, but you have to adjust the water in the final dough. Poolish is 100% hydration, biga is 50 to 60%, so swapping changes how much water is locked into the preferment. If a recipe calls for 200g of poolish (100g flour, 100g water) and you swap in 200g of biga at 55% hydration (130g flour, 70g water), you have to add 30g more water to the final dough to hit the same total hydration. The flavor will also shift toward biga's slightly more rounded, less wet character.
+
+**Does a preferment have to be at peak when I use it?**
+
+Close to peak is best. A poolish or biga slightly past peak still works, but the flavor will be tangier and the leavening will be a touch weaker. A levain past peak loses leavening power quickly and produces a denser loaf, so use it at peak or refrigerate it within an hour of falling. If your kitchen runs warm and you cannot reliably hit the window, lower the yeast or starter quantity in the build to widen it.
+
+**Why is my poolish flat after 12 hours?**
+
+Usually too cold, too little yeast, or both. A poolish in a 65°F (18°C) kitchen often needs 14 to 16 hours, and 0.1g of yeast in 200g of flour is on the slow end of the normal range. Bump the yeast to 0.3 to 0.5g, or move the bowl somewhere warmer (top of the refrigerator, inside a microwave with the door cracked, in a turned-off oven with the light on). A ripe poolish should be visibly bubbly with a gently domed surface.
+
+**Can I make a preferment in advance and refrigerate it?**
+
+Yes for biga, with caveats for poolish, and limited for levain. A biga ferments slowly enough that 24 hours in the refrigerator works fine. A poolish refrigerated past peak loses some of its character but is usable within 12 hours of falling. A levain past peak holds in the refrigerator for about 12 hours, but the leavening power drops, so plan for a longer bulk fermentation in the final dough.
+
+**How much yeast goes in a poolish vs a final dough?**
+
+The poolish gets a tiny amount, usually 0.1 to 0.5% of the poolish flour weight (so 0.2g to 1g for 200g of poolish flour). The final dough either gets no additional commercial yeast or a much smaller amount than a same-day formula needs, because the active poolish is doing most of the leavening work. A typical baguette with poolish uses around 0.5% commercial yeast in the poolish and 0.2 to 0.3% in the final dough.
 
 ## Where to Go From Here
 
