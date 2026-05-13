@@ -64,7 +64,7 @@ The simplest home steam method is a metal pan on the oven floor preheated with t
 
 A lava rock setup (a cast iron pan filled with lava rocks, preheated with the oven, then doused with boiling water) produces more consistent steam. Any metal pan works in a pinch.
 
-For more detail on scoring angles and patterns, see the [scoring guide](/techniques/scoring-sourdough/). Most of what applies to sourdough scoring applies here as well.
+For more detail on scoring angles and patterns, see the guide to [scoring sourdough loaves](/techniques/scoring-sourdough/). Most of what applies to sourdough scoring applies here as well.
 
 ## Common Mistakes
 
@@ -80,7 +80,7 @@ For more detail on scoring angles and patterns, see the [scoring guide](/techniq
 
 The poolish can be adjusted to fit your schedule. A shorter ferment (six to eight hours) with slightly more yeast produces a milder flavor. A longer ferment (fourteen to sixteen hours) at cooler temperatures (65F / 18C) develops more complexity. The poolish is overripe if it smells strongly of alcohol or the surface has collapsed into itself; use it sooner or reduce the yeast slightly next time.
 
-For a deeper look at how preferments work, including poolish, biga, and levain comparisons, see the [preferments guide](/fundamentals/preferments-101/).
+For a deeper look at how preferments work, see [poolish, biga, and levain compared](/fundamentals/preferments-101/).
 
 For a complete recipe with measured ingredients and timing, see the [65% hydration overnight baguette recipe](/recipes/baguette-65-overnight/).
 

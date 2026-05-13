@@ -91,4 +91,4 @@ Once the dough is at your target DDT, fermentation begins at a known pace. If yo
 
 Some bakers account for this by targeting a slightly lower DDT in warm weather so the dough does not accelerate out of control. Others use a proofing box or Instant Pot with a yogurt setting to hold a stable ambient temperature and take the kitchen out of the equation entirely.
 
-The [calculator](/#calculator) lets you set your DDT and see the required water temperature before you start mixing. Use it every time you bake until the calculation becomes second nature.
+The [dough temperature calculator](/#calculator) lets you set your DDT and see the required water temperature before you start mixing. Use it every time you bake until the calculation becomes second nature.

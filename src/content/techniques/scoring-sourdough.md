@@ -61,4 +61,4 @@ Finally, hesitating mid-cut drags the blade and tears the surface. Commit to the
 
 The score is the last decision you make before heat takes over. Once the loaf goes into the oven, your work shifts to timing: covered for the first 20 minutes to trap steam, then uncovered to brown and crisp. The ear you built with the blade will be visible within the first 15 minutes, rising and peeling back as the crust sets.
 
-If you are building your first sourdough loaves from scratch, the [shaping guide](/techniques/shaping-a-boule/) covers the step that happens just before scoring, and getting that step right makes scoring significantly easier. A well-shaped, well-tensioned loaf gives you a surface that responds to the blade the way you want it to.
+If you are building your first sourdough loaves from scratch, the guide to [shaping a boule step by step](/techniques/shaping-a-boule/) covers the step that happens just before scoring, and getting that step right makes scoring significantly easier. A well-shaped, well-tensioned loaf gives you a surface that responds to the blade the way you want it to.

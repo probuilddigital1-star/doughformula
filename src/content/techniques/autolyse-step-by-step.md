@@ -63,6 +63,6 @@ Once you understand the step, autolyse fits naturally into the rhythm of a bread
 
 For formulas designed around a [target dough temperature](/fundamentals/desired-dough-temperature/), note that autolyse gives you a second chance to check your water temperature and adjust if needed before salt and starter go in. If your mixed dough feels warmer than expected, you can extend the autolyse a few minutes in a cooler spot before proceeding.
 
-The calculator at [The Dough Formula](/#calculator) accounts for autolyse when you set your water temperature targets. Use it alongside the technique to hit the desired dough temperature even when the rest period shifts things slightly.
+The [Dough Formula water temperature calculator](/#calculator) accounts for autolyse when you set your DDT targets. Use it alongside the technique to hit the desired dough temperature even when the rest period shifts things slightly.
 
 Autolyse is not a dramatic intervention. The loaf you bake with it will not look completely different from one without it. But the process of getting there, from mixing through shaping, will feel easier, and a dough that handles well tends to get shaped more confidently and baked with more control.

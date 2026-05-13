@@ -75,4 +75,4 @@ Start with the bread style you want. A tight sandwich loaf: 65% to 68%. A genera
 
 Then calibrate to your flour. Check the protein content on the bag. If you are using a lower-protein all-purpose, start at the lower end of your target range. If you are using a strong bread flour or a high-extraction flour, you can push a little higher.
 
-Once you have a working formula, use the [calculator](/#calculator) to lock in the percentages. That way, when you want to make two loaves instead of one, the gram amounts scale automatically and your hydration stays exactly where you set it.
+Once you have a working formula, use the [bread hydration calculator](/#calculator) to lock in the percentages. That way, when you want to make two loaves instead of one, the gram amounts scale automatically and your hydration stays exactly where you set it.

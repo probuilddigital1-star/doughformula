@@ -50,7 +50,7 @@ Mix 20g of ripe sourdough starter, 50g of bread flour, and 50g of water at room 
 
 **2:30 PM:** Pre-shape into a loose round. Rest 20 to 30 minutes on the bench, uncovered.
 
-**3 PM:** Final shape. For a boule, see the [shaping guide](/techniques/shaping-a-boule/). For a batard, use the same principle with a longer, tighter fold. Place the shaped loaf seam side up in a well-floured banneton.
+**3 PM:** Final shape. For a boule, see [shaping a boule step by step](/techniques/shaping-a-boule/). For a batard, use the same principle with a longer, tighter fold. Place the shaped loaf seam side up in a well-floured banneton.
 
 **3 PM to the next morning:** Refrigerate. The cold retard can last anywhere from 8 to 18 hours without over-proofing, which gives you flexibility on baking time.
 
@@ -80,4 +80,4 @@ The crumb should be open and irregular, with holes that vary in size across the 
 
 The flavor will be mildly tangy on the day of the bake and develop slightly more depth on day two. The crust softens overnight; store the loaf cut-side down on a wooden board rather than in a bag if you want to preserve some crunch.
 
-For more on how whole grains affect fermentation and dough handling, the [whole grains guide](/ingredients/working-with-whole-grains/) covers the differences in detail and includes tips for formulas with higher whole grain percentages.
+For more on how whole grains affect fermentation and dough handling, the guide on [working with whole grain flours](/ingredients/working-with-whole-grains/) covers the differences in detail and includes tips for formulas with higher whole grain percentages.

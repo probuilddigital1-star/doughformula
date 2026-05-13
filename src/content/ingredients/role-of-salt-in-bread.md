@@ -33,7 +33,7 @@ Salt ions interact with gluten proteins in a way that tightens the overall netwo
 
 This is why the timing of salt addition can affect dough character. In autolyse, bakers intentionally leave out salt (and often yeast or starter) to let gluten develop in a more extensible, relaxed state before salt tightens things up. This gives the flour time to hydrate and form gluten bonds before the restrictive effect of salt kicks in.
 
-For most home bakers, salt goes in early in the process and this is fine. The autolyse technique is a refinement rather than a requirement. The [autolyse guide](/techniques/autolyse-step-by-step/) covers when the timing actually matters.
+For most home bakers, salt goes in early in the process and this is fine. The autolyse technique is a refinement rather than a requirement. The [autolyse step by step guide](/techniques/autolyse-step-by-step/) covers when the timing actually matters.
 
 ## How Salt Affects the Crust
 

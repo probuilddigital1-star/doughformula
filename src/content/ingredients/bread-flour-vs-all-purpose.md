@@ -35,7 +35,7 @@ That elasticity can be an obstacle when you are trying to shape the dough. It al
 
 Bread flour also absorbs more water. A dough formula built for bread flour will become noticeably wetter and stickier if you switch to all-purpose without adjusting the water down, roughly one to three percentage points depending on the specific flours. This is why you cannot always substitute one for the other at a 1:1 ratio by weight without expecting to compensate somewhere else.
 
-If you want to understand how hydration interacts with flour choice, the [hydration guide](/fundamentals/hydration-60-to-90/) walks through the practical differences at several water levels.
+If you want to understand how hydration interacts with flour choice, the guide on [hydration in bread dough from 60% to 90%](/fundamentals/hydration-60-to-90/) walks through the practical differences at several water levels.
 
 ## When All-Purpose Is Fine
 

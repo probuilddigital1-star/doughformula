@@ -46,7 +46,7 @@ Sourdough rewards planning more than it rewards technique in the early stages. H
 
 **Saturday (9 AM to 3 PM):** Bulk fermentation. The dough should rise by 50 to 75% and feel lighter and airy. During the first two hours, do four to six sets of stretch-and-fold, one set every 30 minutes. After that, leave it undisturbed. See the [stretch and coil folds guide](/techniques/stretch-folds-vs-coil-folds/) for technique.
 
-**Saturday (3 PM):** Pre-shape, rest 20 minutes, final shape. Use the shaping method that matches your target form. A round loaf (boule) is the easiest starting point. See the [shaping guide](/techniques/shaping-a-boule/) for step-by-step instructions.
+**Saturday (3 PM):** Pre-shape, rest 20 minutes, final shape. Use the shaping method that matches your target form. A round loaf (boule) is the easiest starting point. See [how to shape a boule step by step](/techniques/shaping-a-boule/).
 
 **Saturday (3:30 PM):** Place the shaped loaf in a floured banneton, seam side up. Cover and refrigerate overnight.
 
@@ -80,4 +80,4 @@ Look at the crumb. If it is uniformly dense with no air holes, bulk fermentation
 
 Each flaw points at something specific. That is the value of a learning loaf. For your second bake, change one variable at a time so you know what made the difference.
 
-When you want to understand how hydration level changes the formula, the [hydration guide](/fundamentals/hydration-60-to-90/) has a full breakdown of what happens from 60% to 90%. When you are ready to improve your scoring, the [scoring guide](/techniques/scoring-sourdough/) covers angles, blade depth, and the patterns that open reliably in a home oven.
+When you want to understand how hydration level changes the formula, [hydration in bread dough from 60% to 90%](/fundamentals/hydration-60-to-90/) has a full breakdown. When you are ready to improve your scoring, the guide to [scoring sourdough loaves](/techniques/scoring-sourdough/) covers angles, blade depth, and the patterns that open reliably in a home oven.

@@ -30,7 +30,7 @@ This makes one large focaccia in a 9x13 inch (23x33 cm) pan, or two smaller ones
 
 The pan oil is listed separately because it contributes to texture rather than dough structure. The 60g goes into the pan before the dough, and some of it is used to coat the dough surface and fill the dimples before baking.
 
-See the [hydration guide](/fundamentals/hydration-60-to-90/) for a full breakdown of what changes at different hydration percentages if you want to adjust this formula.
+See the guide on [hydration in bread dough from 60% to 90%](/fundamentals/hydration-60-to-90/) for a full breakdown of what changes at different hydration percentages if you want to adjust this formula.
 
 ## Same-Day Schedule
 

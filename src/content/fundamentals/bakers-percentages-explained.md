@@ -65,7 +65,7 @@ That means every 100g of flour produces 167.3g of finished dough. For the 450g b
 
 This matters when you are trying to hit a target. If a recipe calls for a final shaped loaf of 800g, you can work backward from total dough weight (accounting for fermentation loss, around 2%) to figure out exactly how much flour to start with.
 
-The calculator at [The Dough Formula](/#calculator) handles this math automatically. Enter your flour weight and percentages, and it gives you all ingredient weights plus the total dough weight in one pass.
+The [baker's percentage calculator](/#calculator) on the home page handles this math automatically. Enter your flour weight and percentages, and it gives you all ingredient weights plus the total dough weight in one pass.
 
 ## How Hydration Fits In
 
