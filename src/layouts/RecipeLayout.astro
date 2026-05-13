@@ -92,6 +92,11 @@ const recipeJsonLd = {
   name: title,
   description,
   image: 'https://thedoughformula.com/og-image.jpg',
+  author: {
+    '@type': 'Person',
+    name: 'Zack Pearson',
+    url: 'https://thedoughformula.com/about/',
+  },
   recipeIngredient: ingredients.map((i) => `${i.grams} g ${i.name}`),
   recipeInstructions: method.map((s) => ({ '@type': 'HowToStep', text: s.text })),
   totalTime: meta.totalTimeISO,

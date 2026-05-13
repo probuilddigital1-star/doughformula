@@ -105,7 +105,11 @@ const articleJsonLd = {
   description: article.data.description,
   datePublished: article.data.publishedDate.toISOString(),
   dateModified: (article.data.updatedDate ?? article.data.publishedDate).toISOString(),
-  author: { '@type': 'Organization', name: 'The Dough Formula' },
+  author: {
+    '@type': 'Person',
+    name: 'Zack Pearson',
+    url: 'https://thedoughformula.com/about/',
+  },
   publisher: {
     '@type': 'Organization',
     name: 'The Dough Formula',

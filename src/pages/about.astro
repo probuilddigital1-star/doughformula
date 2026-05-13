@@ -1,8 +1,21 @@
 ---
 import Layout from '../layouts/Layout.astro';
+
+const personJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: 'Zack Pearson',
+  url: 'https://thedoughformula.com/about/',
+  email: 'admin@thedoughformula.com',
+  description: 'Home baker and the person behind The Dough Formula. Building tools and guides for bread that works every time.',
+};
 ---
 
-<Layout title="About | The Dough Formula" description="Who we are, what The Dough Formula is, and who this site is for.">
+<Layout title="About | The Dough Formula" description="About Zack Pearson and The Dough Formula, a calculator and guide library for home bakers who want their bread to work every time.">
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(personJsonLd)} />
+  </Fragment>
+
   <main id="main-content" class="py-16">
     <article class="container prose">
       <header class="mb-10 not-prose">
@@ -10,42 +23,51 @@ import Layout from '../layouts/Layout.astro';
         <h1 class="font-display text-4xl md:text-5xl leading-tight">About The Dough Formula</h1>
       </header>
 
+      <h2>Who's behind this site</h2>
+
       <p>
-        The Dough Formula is a calculator and a guide library for people who bake bread at home and want their recipes to work. Not sometimes. Every time.
+        Hi, I'm Zack Pearson. I started baking bread during the pandemic, when a lot of us suddenly had time on our hands and a sourdough starter on the counter. What began as a way to fill long quiet weekends turned into a real obsession with dough, fermentation, and the small variables that separate a flat loaf from a beautiful one.
       </p>
 
       <p>
-        Most recipes you find online are written for a specific flour, a specific kitchen, and a specific number of loaves, which is great until any of those change. Then the bread comes out different and you are not sure why. That gap between a recipe and a formula is what this site exists to close.
-      </p>
-
-      <h2>What you will find here</h2>
-
-      <p>
-        The calculator on the home page lets you scale any standard bread style to the number of loaves you want, at the weight you want, and shows you the baker's percentages behind it. You can adjust hydration, pick a preferment, set your dough temperature, and watch the recipe update.
+        I built thedoughformula.com to organize what I was learning. The calculator started as a spreadsheet on my laptop, then a web page when I got tired of opening the spreadsheet, then a real tool once I realized other home bakers might use it too.
       </p>
 
       <p>
-        The guide library backs up the calculator with plain-language articles on the techniques, ingredients, and styles the tool uses. If you click a setting and wonder what it actually means, there is usually a guide that explains it in more depth than a tooltip could.
+        Eventually my baking pulled me toward pizza, which lives in the same world as bread but with stricter rules: shorter bake times, hotter ovens, and a finished product where the crust is half the experience. That side of my baking grew large enough to deserve its own home, so I built <a href="https://thepizzadoughformula.com" rel="noopener" target="_blank">thepizzadoughformula.com</a> to focus on pizza dough specifically. This site stays focused on bread.
       </p>
 
-      <h2>Who this site is for</h2>
+      <h2>Why this calculator exists</h2>
 
       <p>
-        Home bakers who want to understand what they are doing. Not professionals, not food scientists. People who are past their first loaf and want the next one to be better, and the one after that to be predictable.
-      </p>
-
-      <p>
-        If you are brand new to bread, the guides in the Fundamentals category are the place to start. If you are comfortable with sourdough and want to branch out, the Styles section has you covered.
-      </p>
-
-      <h2>Who we are</h2>
-
-      <p>
-        The Dough Formula is a small project built by bakers for bakers. We are not a brand selling flour, a publisher chasing traffic, or a startup with a pivot in the works. The tool is free, the guides are free, and they will stay that way.
+        Most bread recipes are written for one specific style at one specific weight. The moment you want to scale up for a dinner, switch from sourdough to baguette, or work with a poolish, you have to redo the math yourself. I wanted a tool that handled the math in the background and let me focus on the dough.
       </p>
 
       <p>
-        If you spot a mistake in a formula, disagree with a recommendation, or want to suggest a topic, the <a href="/contact/">contact page</a> is the best way to reach us.
+        The calculator uses baker's percentages, which is the same system professional bakers use. Every ingredient is expressed as a percentage of flour weight, so scaling a recipe is just multiplication. Once you see the percentages alongside the weights, the patterns behind each style start to make sense on their own.
+      </p>
+
+      <h2>What you'll find here</h2>
+
+      <ul>
+        <li>A calculator with style presets for sourdough, baguette, focaccia, sandwich loaf, ciabatta, brioche, no-knead, and a custom builder</li>
+        <li>Preferment support for poolish, biga, and levain with hydration math handled automatically</li>
+        <li>A Desired Dough Temperature calculator so you can hit your fermentation target every time</li>
+        <li>22 long-form guides on fundamentals, techniques, ingredients, styles, and troubleshooting</li>
+        <li>60 recipe pages organized by style, hydration, and schedule</li>
+        <li>No account, no paywall, no popups</li>
+      </ul>
+
+      <h2>How the site stays free</h2>
+
+      <p>
+        The site is supported by display advertising. The ads do not influence which techniques are recommended in the guides, which calculator defaults are set, or anything else about the content. The calculator and the guides will stay free.
+      </p>
+
+      <h2>Get in touch</h2>
+
+      <p>
+        Feedback, bug reports, and bread questions are all welcome. The <a href="/contact/">contact page</a> has details, or you can email me directly at <a href="mailto:admin@thedoughformula.com">admin@thedoughformula.com</a>.
       </p>
     </article>
   </main>
