@@ -113,12 +113,26 @@ const articleJsonLd = {
   },
   mainEntityOfPage: `https://thedoughformula.com/${category}/${article.slug}/`,
 };
+
+const faq = article.data.faq;
+const faqJsonLd = faq && faq.length > 0
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faq.map((entry) => ({
+        '@type': 'Question',
+        name: entry.question,
+        acceptedAnswer: { '@type': 'Answer', text: entry.answer },
+      })),
+    }
+  : null;
 ---
 
 <Layout title={`${article.data.title} | The Dough Formula`} description={article.data.description}>
   <Fragment slot="head">
     <script type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd)} />
     <script type="application/ld+json" set:html={JSON.stringify(articleJsonLd)} />
+    {faqJsonLd && <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />}
   </Fragment>
 
   <main id="main-content" class="py-10 md:py-16">
@@ -149,6 +163,18 @@ const articleJsonLd = {
       <div class="prose">
         <slot />
       </div>
+
+      {faq && faq.length > 0 && (
+        <section class="prose mt-12">
+          <h2>Common Questions</h2>
+          {faq.map((entry) => (
+            <>
+              <p><strong>{entry.question}</strong></p>
+              <p>{entry.answer}</p>
+            </>
+          ))}
+        </section>
+      )}
 
       {relatedRecipes.length > 0 && (
         <section class="mt-16 max-w-5xl mx-auto">

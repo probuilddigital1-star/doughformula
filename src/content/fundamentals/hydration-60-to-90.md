@@ -3,7 +3,18 @@ title: "Hydration In Bread Dough, From 60% To 90%"
 description: "What hydration actually means, how it changes dough behavior, and how to choose the right level for the bread you want to bake."
 category: fundamentals
 publishedDate: 2026-02-12
-updatedDate: 2026-05-11
+updatedDate: 2026-05-13
+faq:
+  - question: "What is hydration in bread dough?"
+    answer: "Hydration is the weight of water divided by the weight of flour, expressed as a percentage. A recipe with 500g of flour and 375g of water has 75% hydration. The percentage stays the same when you scale the recipe up or down, so a 75% formula is 75% whether you are baking one loaf or ten. Water in a sourdough starter and any other liquid ingredient counts toward total hydration."
+  - question: "What hydration should I use for sourdough?"
+    answer: "70% to 80% covers most home sourdough. A 72% to 74% dough is approachable and produces a good open crumb with reasonable shaping difficulty. An 80% dough produces dramatically open crumb but requires careful shaping and a Dutch oven that can hold the loaf together during oven spring. Beginners should start in the 70% to 74% range and work up as their shaping improves."
+  - question: "Can I substitute all-purpose flour for bread flour at the same hydration?"
+    answer: "Not directly. All-purpose flour has lower protein (10% to 11%) than bread flour (12% to 13%) and absorbs less water. A 75% hydration dough made with all-purpose flour feels noticeably wetter than the same hydration with bread flour. Reduce hydration by 3% to 5% when substituting, then adjust to the dough's feel from there."
+  - question: "Why does my dough feel too wet at the stated hydration?"
+    answer: "Usually one of three things: flour with lower protein than the recipe assumed, ambient humidity adding moisture (most common in summer), or water from a starter or other ingredient that was not counted in the hydration math. Check the flour protein on the bag, drop hydration by 1% to 2% in humid weather, and remember that a 100g starter at 100% hydration contributes 50g of water to the dough."
+  - question: "Does higher hydration always mean better bread?"
+    answer: "No. Higher hydration produces more open, holey crumb and a thinner, crispier crust, but only when fermentation and gluten development are good. An 80% hydration dough with weak gluten or underfermented yeast produces a flat, gummy loaf. A 68% dough handled well can be a better loaf than an 80% dough mishandled. Pick the hydration that suits the bread style and your skill level, not the highest number you have seen."
 ---
 
 Pull a ciabatta apart and hold it up to the light. The irregular holes, the translucent walls between them, the crust that shatters when you bite it: all of that comes from one number. The baker mixed water at around 80% of the flour weight and let time and gas do the rest.
@@ -57,28 +68,6 @@ When you increase whole grain content in a formula, it is standard practice to i
 **Ignoring ambient humidity.** On a very humid summer day, flour picks up moisture from the air. Your dough will be slightly wetter than it would be on a dry winter day with the same formula. Professional bakers adjust water amounts seasonally. At home, if your dough feels wetter than usual without any recipe change, humidity is often the reason. Dropping hydration by 1% to 2% in humid weather is a practical fix.
 
 **Adding all the water at once without checking texture.** For high-hydration formulas, add 90% of the water first and incorporate it fully, then add the remaining water gradually. This gives you a real-time feel for the dough and prevents over-hydration if your flour has lower absorption than expected.
-
-## Common Questions
-
-**What is hydration in bread dough?**
-
-Hydration is the weight of water divided by the weight of flour, expressed as a percentage. A recipe with 500g of flour and 375g of water has 75% hydration. The percentage stays the same when you scale the recipe up or down, so a 75% formula is 75% whether you are baking one loaf or ten. Water in a sourdough starter and any other liquid ingredient counts toward total hydration.
-
-**What hydration should I use for sourdough?**
-
-70% to 80% covers most home sourdough. A 72% to 74% dough is approachable and produces a good open crumb with reasonable shaping difficulty. An 80% dough produces dramatically open crumb but requires careful shaping and a Dutch oven that can hold the loaf together during oven spring. Beginners should start in the 70% to 74% range and work up as their shaping improves.
-
-**Can I substitute all-purpose flour for bread flour at the same hydration?**
-
-Not directly. All-purpose flour has lower protein (10% to 11%) than bread flour (12% to 13%) and absorbs less water. A 75% hydration dough made with all-purpose flour feels noticeably wetter than the same hydration with bread flour. Reduce hydration by 3% to 5% when substituting, then adjust to the dough's feel from there.
-
-**Why does my dough feel too wet at the stated hydration?**
-
-Usually one of three things: flour with lower protein than the recipe assumed, ambient humidity adding moisture (most common in summer), or water from a starter or other ingredient that was not counted in the hydration math. Check the flour protein on the bag, drop hydration by 1% to 2% in humid weather, and remember that a 100g starter at 100% hydration contributes 50g of water to the dough.
-
-**Does higher hydration always mean better bread?**
-
-No. Higher hydration produces more open, holey crumb and a thinner, crispier crust, but only when fermentation and gluten development are good. An 80% hydration dough with weak gluten or underfermented yeast produces a flat, gummy loaf. A 68% dough handled well can be a better loaf than an 80% dough mishandled. Pick the hydration that suits the bread style and your skill level, not the highest number you have seen.
 
 ## Choosing Your Hydration
 

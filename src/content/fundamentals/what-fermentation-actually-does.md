@@ -3,7 +3,18 @@ title: "What Fermentation Actually Does To Dough"
 description: "Rise is the obvious outcome of fermentation. Flavor development and gluten conditioning are the less visible ones. Here is what is actually happening in your dough."
 category: fundamentals
 publishedDate: 2026-02-16
-updatedDate: 2026-05-11
+updatedDate: 2026-05-13
+faq:
+  - question: "How long should I let bread dough ferment?"
+    answer: "Long enough that the dough has visibly grown 50% to 75% in volume, feels jiggly like set custard when you shake the bowl, and shows surface bubbles. Time depends on temperature, yeast or starter quantity, and flour. A sourdough at 76°F (24°C) typically bulk-ferments for 4 to 6 hours; the same dough at 68°F (20°C) can take 8 to 10 hours. Use the dough's behavior as your cue, not the clock."
+  - question: "How do I know when fermentation is complete?"
+    answer: "Several signs together. The dough should have grown 50% to 75% in volume (not double, which is a common misconception). The jiggle test gives a custard-like wobble. The surface shows bubbles and a domed shape. If you stretch and fold during bulk fermentation, the final fold should feel airy and smooth rather than dense and tearing. Any one sign on its own can be misleading; look at all of them."
+  - question: "What is the difference between bulk fermentation and final proof?"
+    answer: "Bulk fermentation happens before shaping, while the dough is one mass. Most flavor development and gluten conditioning happen here. Final proof happens after shaping and lets the dough relax and pick up one last round of gas before baking. Final proof is shorter (45 minutes to 2 hours for most home formulas) because the goal is oven readiness, not flavor development."
+  - question: "Can I overferment dough?"
+    answer: "Yes, and you cannot reverse it. Overfermented dough has been exposed to acid for too long, which breaks down the gluten network. The dough goes from elastic and strong to slack and sticky, unable to hold shape. Signs of overfermentation: the dough collapses on its own, smells sour or alcoholic, and feels weaker than it did an hour earlier. If you suspect a dough is overfermenting, bake it sooner rather than waiting for a target time."
+  - question: "How much does temperature affect fermentation speed?"
+    answer: "Fermentation roughly doubles for every 10°F (5.5°C) increase in dough temperature, in the working range of 65°F to 85°F (18°C to 29°C). A dough at 76°F ferments about half as fast as the same dough at 86°F. Below 60°F (15°C), yeast activity slows dramatically (the basis for overnight refrigerator retards). Above 90°F (32°C), yeast becomes stressed and the activity becomes less predictable."
 ---
 
 You mix a dough, cover the bowl, and leave it on the counter. Four hours later it has grown noticeably, it smells different, and when you poke it the surface springs back slowly. Something happened in that bowl. Most bakers know it was fermentation. Fewer understand what fermentation is actually doing to the dough, beyond making it rise.
@@ -73,28 +84,6 @@ Time is a guideline, not a finish line. These are the signs to watch for:
 **Over-fermenting because the dough "looks the same."** Dough that has passed its peak can still look unremarkable from the outside. The jiggle test and the structure of the fold tell you more than surface appearance. If you are uncertain whether the dough is done or overfermented, stick your fingers into the dough: overfermented dough often has a slightly sour, almost alcoholic smell and will feel weaker and stickier than expected.
 
 **Equating rise with fermentation.** A dough with too much commercial yeast can double in 45 minutes without meaningful flavor development. A cold-proofed sourdough may barely look different after 10 hours but will have built significant flavor. Volume is one indicator among several, not the final answer.
-
-## Common Questions
-
-**How long should I let bread dough ferment?**
-
-Long enough that the dough has visibly grown 50% to 75% in volume, feels jiggly like set custard when you shake the bowl, and shows surface bubbles. Time depends on temperature, yeast or starter quantity, and flour. A sourdough at 76°F (24°C) typically bulk-ferments for 4 to 6 hours; the same dough at 68°F (20°C) can take 8 to 10 hours. Use the dough's behavior as your cue, not the clock.
-
-**How do I know when fermentation is complete?**
-
-Several signs together. The dough should have grown 50% to 75% in volume (not double, which is a common misconception). The jiggle test gives a custard-like wobble. The surface shows bubbles and a domed shape. If you stretch and fold during bulk fermentation, the final fold should feel airy and smooth rather than dense and tearing. Any one sign on its own can be misleading; look at all of them.
-
-**What is the difference between bulk fermentation and final proof?**
-
-Bulk fermentation happens before shaping, while the dough is one mass. Most flavor development and gluten conditioning happen here. Final proof happens after shaping and lets the dough relax and pick up one last round of gas before baking. Final proof is shorter (45 minutes to 2 hours for most home formulas) because the goal is oven readiness, not flavor development.
-
-**Can I overferment dough?**
-
-Yes, and you cannot reverse it. Overfermented dough has been exposed to acid for too long, which breaks down the gluten network. The dough goes from elastic and strong to slack and sticky, unable to hold shape. Signs of overfermentation: the dough collapses on its own, smells sour or alcoholic, and feels weaker than it did an hour earlier. If you suspect a dough is overfermenting, bake it sooner rather than waiting for a target time.
-
-**How much does temperature affect fermentation speed?**
-
-Fermentation roughly doubles for every 10°F (5.5°C) increase in dough temperature, in the working range of 65°F to 85°F (18°C to 29°C). A dough at 76°F ferments about half as fast as the same dough at 86°F. Below 60°F (15°C), yeast activity slows dramatically (the basis for overnight refrigerator retards). Above 90°F (32°C), yeast becomes stressed and the activity becomes less predictable.
 
 ## Putting Fermentation in Context
 

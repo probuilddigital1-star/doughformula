@@ -14,6 +14,13 @@ const articleSchema = z.object({
   updatedDate: z.date().optional(),
   coverImage: z.string().optional(),
   draft: z.boolean().default(false),
+  // Optional FAQ section. When present, ArticleLayout renders the visible Q&A and
+  // emits FAQPage JSON-LD so Google can use the entries for People Also Ask and
+  // rich result snippets.
+  faq: z.array(z.object({
+    question: z.string(),
+    answer: z.string(),
+  })).optional(),
 });
 
 const fundamentals = defineCollection({ type: 'content', schema: articleSchema });

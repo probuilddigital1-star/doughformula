@@ -3,7 +3,18 @@ title: "Desired Dough Temperature And Why It Matters"
 description: "DDT is the single most underrated number in bread baking. Here is what it is, how to hit it, and why it changes every other part of your bake."
 category: fundamentals
 publishedDate: 2026-02-22
-updatedDate: 2026-05-11
+updatedDate: 2026-05-13
+faq:
+  - question: "What water temperature should I use for my bread dough?"
+    answer: "Your kitchen temperature, the flour temperature, and the friction heat from mixing all factor in. The DDT formula gives an exact answer: Water temperature = (DDT × 3) - Room temperature - Flour temperature - Friction factor (or × 4 for a stand mixer with a friction factor in the 6°F to 8°F range). A 76°F (24°C) DDT in a 70°F kitchen with 68°F flour and hand mixing needs roughly 90°F water. Plug in different inputs and the required water temperature shifts."
+  - question: "What if I don't have a thermometer?"
+    answer: "Get one. A digital instant-read thermometer is the single highest-leverage tool in home bread baking. They cost around $10 to $15 and last for years. Until then, a rough rule for warm kitchens (above 75°F / 24°C) is to use cool tap water. For cool kitchens (below 70°F / 21°C), lukewarm tap water that feels barely warm to your wrist works as a starting point. You sacrifice the timing predictability DDT gives you, but the bread will still bake."
+  - question: "Does DDT matter for no-knead bread?"
+    answer: "Yes, though the tolerance is wider. No-knead doughs ferment for 12 to 18 hours on the counter, so a 2°F or 3°F starting deviation matters less than it would in a four-hour same-day bake. That said, an overnight dough mixed at 80°F (27°C) in a warm summer kitchen can overferment by morning. If you bake no-knead in summer, target a DDT of 72°F to 73°F (22°C) to give yourself some margin."
+  - question: "Why did my dough come out 2 or 3 degrees off despite calculating?"
+    answer: "The friction factor is the most common reason. Stand mixer friction varies with dough hydration, batch size, and how long you mix. The \"6°F friction factor\" from a textbook is an average; your specific mixer with your specific batch may run higher or lower. Measure once with known temperatures, and you have a friction factor calibrated to your setup. The second most common reason is flour temperature: pantry flour can be 5°F below room temperature in winter."
+  - question: "Should I use ice water in summer?"
+    answer: "Sometimes, yes. If your kitchen runs above 80°F (27°C) and your flour is sitting on the counter at the same temperature, the math may call for water at 60°F (15°C) or cooler. Tap water in summer is rarely that cold. Fill a measuring cup, drop in a couple of ice cubes, stir, wait a minute, then measure with a thermometer. Use the chilled water in the formula. Do not dump ice cubes directly into the dough mix."
 ---
 
 Two bakers follow the same formula. One gets a dough that fills out beautifully in four hours. The other is still waiting at six hours with a dough that smells flat and barely moved. The formula is identical. The hydration is the same. The flour is from the same bag. The difference: their kitchens were different temperatures, and they both added water from the tap without thinking about it.
@@ -73,28 +84,6 @@ The friction factor is not constant across batch sizes. A larger batch mixed in 
 **Assuming friction factor is constant regardless of dough size.** Bakers who have calibrated their friction factor on a 500g flour batch and then scale to a 1kg batch in the same mixer sometimes undershoot their DDT by 2°F to 3°F (1°C to 2°C) because the larger batch generates more heat. Remeasure when you change batch size significantly.
 
 **Not measuring after mixing.** Even after careful calculation, check your actual dough temperature right after mixing. The calculation is a predictor, not a guarantee. If your dough lands 2°F low, you know to adjust the next time. Logging both the target and the actual temperature across several bakes gives you a personal friction factor that is more accurate than any textbook estimate.
-
-## Common Questions
-
-**What water temperature should I use for my bread dough?**
-
-Your kitchen temperature, the flour temperature, and the friction heat from mixing all factor in. The DDT formula gives an exact answer: Water temperature = (DDT × 3) - Room temperature - Flour temperature - Friction factor (or × 4 for a stand mixer with a friction factor in the 6°F to 8°F range). A 76°F (24°C) DDT in a 70°F kitchen with 68°F flour and hand mixing needs roughly 90°F water. Plug in different inputs and the required water temperature shifts.
-
-**What if I don't have a thermometer?**
-
-Get one. A digital instant-read thermometer is the single highest-leverage tool in home bread baking. They cost around $10 to $15 and last for years. Until then, a rough rule for warm kitchens (above 75°F / 24°C) is to use cool tap water. For cool kitchens (below 70°F / 21°C), lukewarm tap water that feels barely warm to your wrist works as a starting point. You sacrifice the timing predictability DDT gives you, but the bread will still bake.
-
-**Does DDT matter for no-knead bread?**
-
-Yes, though the tolerance is wider. No-knead doughs ferment for 12 to 18 hours on the counter, so a 2°F or 3°F starting deviation matters less than it would in a four-hour same-day bake. That said, an overnight dough mixed at 80°F (27°C) in a warm summer kitchen can overferment by morning. If you bake no-knead in summer, target a DDT of 72°F to 73°F (22°C) to give yourself some margin.
-
-**Why did my dough come out 2 or 3 degrees off despite calculating?**
-
-The friction factor is the most common reason. Stand mixer friction varies with dough hydration, batch size, and how long you mix. The "6°F friction factor" from a textbook is an average; your specific mixer with your specific batch may run higher or lower. Measure once with known temperatures, and you have a friction factor calibrated to your setup. The second most common reason is flour temperature: pantry flour can be 5°F below room temperature in winter.
-
-**Should I use ice water in summer?**
-
-Sometimes, yes. If your kitchen runs above 80°F (27°C) and your flour is sitting on the counter at the same temperature, the math may call for water at 60°F (15°C) or cooler. Tap water in summer is rarely that cold. Fill a measuring cup, drop in a couple of ice cubes, stir, wait a minute, then measure with a thermometer. Use the chilled water in the formula. Do not dump ice cubes directly into the dough mix.
 
 ## Temperature and the Rest of the Bake
 
