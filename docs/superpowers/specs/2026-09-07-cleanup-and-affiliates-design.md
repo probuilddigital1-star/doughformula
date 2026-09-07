@@ -112,8 +112,9 @@ Homepage section (`index.astro` lines 1164 to 1191): keep the existing markup an
 
 Submit handler (~line 3561): replace the toast-only handler with a client-side subscribe.
 
-- **Primary path:** `fetch('https://api.convertkit.com/v3/forms/' + KIT_FORM_ID + '/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ api_key: KIT_PUBLIC_API_KEY, email }) })`. Kit's v3 public API key is designed for client-side form subscribes. On a 2xx response, show the existing `showToast("You're in! Check your inbox to confirm.")` and clear the field. On a non-2xx or network error, show `showToast("Something went wrong. Try again in a moment.")`.
-- **Verification step before wiring:** confirm the endpoint, host (`api.convertkit.com` vs `api.kit.com`), and field names against Kit's current developer documentation. If the public-key path has been retired, fall back to the plain HTML form POST that every Kit embed uses (`action="https://app.kit.com/forms/{FORM_ID}/subscriptions" method="post"`, field name `email_address`), which lands the visitor on Kit's hosted confirmation page.
+- **Primary path (verified against Kit's developer docs 2026-09-07):** `POST https://api.convertkit.com/v3/forms/{FORM_ID}/subscribe` with a JSON body `{ api_key: KIT_PUBLIC_API_KEY, email }`. The v3 `api_key` is Kit's public key and is documented as safe for browser use; `api_secret` is never shipped. Success is HTTP 200 with a `subscription` object. On success, show `showToast("You're in! Check your inbox to confirm.")` and clear the field. On a non-2xx or network error, show `showToast("Something went wrong. Try again in a moment.")`.
+- **Known risk:** Kit marks v3 as "deprecated and will be sunset in the future" with no date given. v4 requires a secret API key or OAuth and has no client-side path, so v3 remains the only documented API route for a static site.
+- **Fallback if v3 is sunset:** switch the form to a plain HTML POST to `https://app.kit.com/forms/{FORM_ID}/subscriptions` with field name `email_address`, the same endpoint Kit's own embed script uses. This lands the visitor on Kit's hosted confirmation page instead of showing the toast. Kit's embed also sends a reCAPTCHA `token` with its fetch-based submissions, so a fetch to this endpoint from our own code may be rejected without one; the plain form POST avoids that. The switch is a small handler change, not a redesign.
 - No Kit JavaScript embed is loaded. The site stays free of third-party scripts.
 
 Kit's default double opt-in stays on. The toast copy above tells the visitor to look for the confirmation email.
@@ -280,7 +281,7 @@ Single release on a feature branch. After it ships, watch Search Console for two
 
 ## Risks
 
-- **Kit endpoint drift.** Mitigated by the verification step and the documented fallback to a plain form POST.
+- **Kit v3 sunset.** The primary subscribe path uses Kit's deprecated v3 API, with no sunset date announced. Mitigated by the documented fallback to a plain HTML form POST to Kit's embed endpoint, a small handler change.
 - **Amazon ASIN rot.** Products go out of stock or get delisted. The data file makes swaps a one-line change. Check the four new ASINs resolve at implementation time.
 - **CLS source is not the homepage.** Section 1.3 stops and re-plans rather than guessing.
 - **Recipe-page block reads as templated.** Four distinct variants across 60 pages, each with product blurbs specific to the bake, and each block sits below substantial unique recipe content.
