@@ -6,7 +6,7 @@
 
 **Architecture:** Astro 5 static site. Deletions strip every AdSense artifact (script, preconnects, component, config, `ads.txt`, lazy injectors, privacy section). A new `src/data/equipment.ts` holds products, gear sets keyed by `shapeFamily`, tracking IDs, and URL building; two new components (`EquipmentGrid`, `AffiliateDisclosure`) render it in three placements. The newsletter posts client-side to Kit's v3 public-key endpoint and renders only when configured. Vitest is added for unit tests (data module), component tests (Astro container API), and build-output assertions over `dist/`.
 
-**Tech Stack:** Astro ^5.16, Tailwind 4, TypeScript, Node 22, Vitest ^4 with `getViteConfig` from `astro/config` and `experimental_AstroContainer` from `astro/container`.
+**Tech Stack:** Astro ^5.16, Tailwind 4, TypeScript, Node 22, Vitest ^3 (peer Vite `^5 || ^6`, so it shares Astro's Vite 6 rather than hoisting a second Vite major) with `getViteConfig` from `astro/config` and `experimental_AstroContainer` from `astro/container`.
 
 **Spec:** `docs/superpowers/specs/2026-09-07-cleanup-and-affiliates-design.md`
 
@@ -68,10 +68,23 @@
 
 Run:
 ```bash
-npm install
-npm install --save-dev vitest@^4
+npm ci
+npm install --save-dev vitest@^3
 ```
-Expected: `node_modules/` exists; `package.json` devDependencies contains `"vitest": "^4.x"`.
+Expected: `node_modules/` exists; `package.json` devDependencies contains `"vitest": "^3.x"`; no `--legacy-peer-deps` was needed. Vitest 3 declares peer Vite `^5 || ^6`, so it reuses the top-level Vite 6 that Astro already installs. Do not use vitest 4: its peer range admits Vite 8, which npm hoists to the top level and forces Astro to nest its own Vite 6 while `@tailwindcss/vite` resolves the hoisted one.
+
+Then confirm the lockfile changed only for vitest and its dependencies:
+```bash
+git diff --stat HEAD -- package-lock.json
+npm ls astro vite vitest @tailwindcss/vite --depth=0
+```
+Expected: `astro@5.16.x`, one `vite@6.4.x`, `vitest@3.x`, `@tailwindcss/vite@4.1.x`, and `npm ls` reports no nested or duplicated `vite`. If `astro` or `@tailwindcss/vite` show a different version than before the install, stop: restore `package-lock.json` from git and retry.
+
+Then confirm the site still builds under the new tree:
+```bash
+npm run build
+```
+Expected: `93 page(s) built`, no errors.
 
 - [ ] **Step 2: Add test scripts**
 
