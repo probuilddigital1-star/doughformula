@@ -19,6 +19,6 @@
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
-    "vitest": "^4.1.11"
+    "vitest": "^3.2.7"
   }
 }
