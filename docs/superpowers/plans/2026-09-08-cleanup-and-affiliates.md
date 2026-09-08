@@ -511,6 +511,8 @@ Claude-Session: https://claude.ai/code/session_017ThxmVsuHnogxQMUzQKx3r"
 
 ### Task 3: Subset fonts and drop the stale preload
 
+> **Amended at execution (2026-09-08).** Step 1's grep matched the hero (`index.astro:247`, `font-display font-medium italic`), and Cormorant italic is live too (`.pizza-cta-headline em` on the homepage, `.prose blockquote` in articles). Ruling: the fonts query string is restored to its original value in all three tags; only the stale v32 preload removal stands. `tests/dist/fonts.test.ts` asserts the full original Cormorant and Fraunces segments are present and the v32 preload is absent. Steps 2 and 4 below describe the original subsetting attempt and are superseded by the correction commit that follows `c9da60e`.
+
 **Files:**
 - Modify: `src/layouts/Layout.astro`
 - Create: `tests/dist/fonts.test.ts`

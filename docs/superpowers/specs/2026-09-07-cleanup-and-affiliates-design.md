@@ -66,8 +66,7 @@ The `Fjalla One` stylesheet and the `mysidia_one_click_handler` script that Ligh
 
 Current request loads Cormorant Garamond in five variants, DM Sans in five, and Fraunces in seven (four upright, three italic). Six font files, 282KB on the homepage.
 
-- **Cormorant Garamond** is used in exactly three places (`ArticleLayout.astro:159`, `RecipeLayout.astro:149`, `index.astro:252`), each a lede paragraph at regular weight with no italic class. Subset the request to `Cormorant+Garamond:wght@400`.
-- **Fraunces** italic axis: the `italic` occurrences in the codebase are body-font emphasis (article `<em>` rendered through prose, two body-text spots on the homepage), not display headings. At implementation, grep for any element carrying both `font-display` (or `.font-display`) and `italic`; if none, drop the three Fraunces italic variants. Expected saving: one font file, roughly 66KB.
+- **Corrected at execution (2026-09-08):** the query-string subsetting is dropped. The hero's second line (`index.astro:247`) is `font-display font-medium italic`, so Fraunces italic is on the LCP text; Cormorant italic is live on the homepage pizza CTA (`.pizza-cta-headline em`) and in article blockquotes (`.prose blockquote`). Browsers only download the faces a page uses, so listing unused weights costs CSS bytes and nothing else, while dropping a used italic face makes the browser synthesize an oblique. The original request string stays exactly as it was. The earlier claim that Cormorant was upright-only was wrong; the baseline Lighthouse run had in fact loaded two Cormorant files.
 - **DM Sans** is the body font and stays as-is.
 - The hardcoded Fraunces `<link rel="preload">` in `Layout.astro` points at a `v32` file that Google Fonts no longer serves (Lighthouse shows it requested with 0 bytes used). Remove it; the stylesheet preload already covers font discovery.
 - `display=swap` stays.
