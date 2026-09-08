@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import { Image, getImage } from 'astro:assets';
 import heroImage from '../assets/hero-bread.jpg';
+import { KIT_FORM_ID, KIT_PUBLIC_API_KEY, NEWSLETTER_ENABLED } from '../config/newsletter';
 
 const heroWidths = [480, 768, 1200, 1600];
 const heroVariants = await Promise.all(
@@ -1160,17 +1161,25 @@ const breadStyles = [
   </section>
 
   <!-- Newsletter Section -->
+  {NEWSLETTER_ENABLED && (
   <section class="section-dark py-16 mt-16">
     <div class="container max-w-2xl text-center">
       <h2 class="font-display text-2xl md:text-3xl mb-3">
-        Level Up Your <span class="text-[var(--wheat-gold)]" id="newsletter-style">Sourdough</span> Game
+        Level Up Your <span class="text-[var(--wheat-gold)]">Sourdough</span> Game
       </h2>
       <p class="text-[var(--cream-warm)] mb-8">
         Get weekly tips, troubleshooting guides, and pro techniques for perfect bread.
       </p>
-      <form class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto" id="newsletter-form">
+      <form
+        class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+        id="newsletter-form"
+        data-kit-form-id={KIT_FORM_ID}
+        data-kit-api-key={KIT_PUBLIC_API_KEY}
+      >
         <input
           type="email"
+          name="email"
+          autocomplete="email"
           placeholder="your@email.com"
           class="input flex-1"
           required
@@ -1187,6 +1196,7 @@ const breadStyles = [
       </p>
     </div>
   </section>
+  )}
 
   <!-- Baker's Percentage Section -->
   <section class="py-16 bg-[var(--cream-warm)]" id="bakers-percent">
@@ -2608,12 +2618,6 @@ const breadStyles = [
       }
     }
 
-    // Update newsletter style
-    const newsletterStyle = document.getElementById('newsletter-style');
-    if (newsletterStyle) {
-      newsletterStyle.textContent = state.style.charAt(0).toUpperCase() + state.style.slice(1).replace('-', ' ');
-    }
-
     // Update preferment UI if the function is defined
     if (typeof updatePrefermentUI === 'function') {
       updatePrefermentUI();
@@ -3548,11 +3552,35 @@ END:VEVENT
     });
   });
 
-  // Newsletter form
-  document.getElementById('newsletter-form')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    showToast("You're in! Check your inbox.");
-  });
+  // Newsletter form: client-side subscribe through Kit's v3 public-key endpoint.
+  // The form only renders when src/config/newsletter.ts has both values set.
+  const newsletterForm = document.getElementById('newsletter-form') as HTMLFormElement | null;
+  if (newsletterForm) {
+    const kitFormId = newsletterForm.dataset.kitFormId || '';
+    const kitApiKey = newsletterForm.dataset.kitApiKey || '';
+    newsletterForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = newsletterForm.querySelector('input[type="email"]') as HTMLInputElement | null;
+      const email = input?.value.trim() || '';
+      if (!email || !kitFormId || !kitApiKey) return;
+      const button = newsletterForm.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+      if (button) button.disabled = true;
+      try {
+        const res = await fetch(`https://api.convertkit.com/v3/forms/${kitFormId}/subscribe`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ api_key: kitApiKey, email }),
+        });
+        if (!res.ok) throw new Error(`Kit responded ${res.status}`);
+        showToast("You're in! Check your inbox to confirm.");
+        if (input) input.value = '';
+      } catch {
+        showToast('Something went wrong. Try again in a moment.');
+      } finally {
+        if (button) button.disabled = false;
+      }
+    });
+  }
 
   // Load recipe from URL params
   function loadFromURL() {
