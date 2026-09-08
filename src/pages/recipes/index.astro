@@ -1,8 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import RecipeCard from '../../components/RecipeCard.astro';
-import AdUnit from '../../components/AdUnit.astro';
-import { AD_SLOTS } from '../../config/ads';
 import { allCombos, STYLES, HYDRATIONS, SCHEDULES, STYLE_META } from '../../data/recipes';
 import { recipeMeta } from '../../lib/recipe-formula';
 import { SCHEDULE_LABELS } from '../../lib/recipe-slug';
@@ -60,14 +58,9 @@ const combosWithMeta = combos.map((c) => ({ combo: c, meta: recipeMeta(c) }));
       </div>
 
       <div id="recipe-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-6xl mx-auto">
-        {combosWithMeta.map(({ combo, meta }, i) => {
-          return [
-            <RecipeCard combo={combo} meta={meta} />,
-            i === 2 && combosWithMeta.length >= 4 ? (
-              <AdUnit slot={AD_SLOTS.categoryInFeed} class="card !p-6 !my-0" minHeight="200px" />
-            ) : null,
-          ];
-        })}
+        {combosWithMeta.map(({ combo, meta }) => (
+          <RecipeCard combo={combo} meta={meta} />
+        ))}
       </div>
     </div>
   </main>

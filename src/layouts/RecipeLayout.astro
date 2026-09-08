@@ -1,12 +1,10 @@
 ---
 import Layout from './Layout.astro';
-import AdUnit from '../components/AdUnit.astro';
 import ArticleCard from '../components/ArticleCard.astro';
 import RecipeCard from '../components/RecipeCard.astro';
 import RecipeStatBlock from '../components/RecipeStatBlock.astro';
 import RecipeIngredients from '../components/RecipeIngredients.astro';
 import RecipeSchedule from '../components/RecipeSchedule.astro';
-import { AD_SLOTS, ADSENSE_CLIENT } from '../config/ads';
 import type { Combo } from '../data/recipes';
 import { STYLE_META, allCombos } from '../data/recipes';
 import type { Ingredient, ScheduleStep, MethodStep, RecipeMeta } from '../lib/recipe-formula';
@@ -173,10 +171,6 @@ if (bodyWords < 150) {
         </a>
       </div>
 
-      <div class="max-w-3xl mx-auto">
-        <AdUnit slot={AD_SLOTS.articleEnd} />
-      </div>
-
       {relatedCombos.length > 0 && (
         <section class="mt-20 max-w-5xl mx-auto">
           <h2 class="font-display text-2xl md:text-3xl mb-6 text-center">More Recipes</h2>
@@ -201,49 +195,4 @@ if (bodyWords < 150) {
     </article>
   </main>
 
-  <script define:vars={{ midSlot: AD_SLOTS.articleMid, client: ADSENSE_CLIENT }}>
-    (function () {
-      if (!midSlot) return;
-      const prose = document.querySelector('.prose');
-      if (!prose) return;
-      const firstH2 = prose.querySelector('h2');
-      if (!firstH2) return;
-
-      const wrapper = document.createElement('div');
-      wrapper.className = 'ad-slot my-12 mx-auto';
-      wrapper.setAttribute('data-nosnippet', '');
-      wrapper.style.minHeight = '260px';
-
-      const label = document.createElement('p');
-      label.className = 'text-xs uppercase tracking-[0.25em] text-[var(--accent-gold)] font-medium text-center mb-3';
-      label.textContent = 'Advertisement';
-      wrapper.appendChild(label);
-
-      const ins = document.createElement('ins');
-      ins.className = 'adsbygoogle';
-      ins.style.display = 'block';
-      ins.setAttribute('data-ad-client', client);
-      ins.setAttribute('data-ad-slot', midSlot);
-      ins.setAttribute('data-ad-format', 'auto');
-      ins.setAttribute('data-full-width-responsive', 'true');
-      wrapper.appendChild(ins);
-
-      firstH2.before(wrapper);
-
-      if (!('IntersectionObserver' in window)) {
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-        return;
-      }
-      const io = new IntersectionObserver((entries, observer) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            (window.adsbygoogle = window.adsbygoogle || []).push({});
-            observer.disconnect();
-            break;
-          }
-        }
-      }, { rootMargin: '200px 0px' });
-      io.observe(ins);
-    })();
-  </script>
 </Layout>
