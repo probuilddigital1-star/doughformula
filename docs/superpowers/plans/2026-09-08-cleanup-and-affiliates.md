@@ -151,6 +151,7 @@ Claude-Session: https://claude.ai/code/session_017ThxmVsuHnogxQMUzQKx3r"
 **Files:**
 - Delete: `src/components/AdUnit.astro`, `src/config/ads.ts`, `public/ads.txt`
 - Modify: `src/layouts/Layout.astro`, `src/layouts/ArticleLayout.astro`, `src/layouts/RecipeLayout.astro`, `src/pages/index.astro`, `src/pages/recipes/index.astro`, `src/pages/[category]/index.astro`
+- Modify: `.gitignore` (root-anchor `dist/` → `/dist/`) and `vitest.config.ts` (explicit `exclude` list without `**/dist/**`). Discovered at execution: the unanchored `dist/` pattern git-ignored `tests/dist/`, and vitest's default exclude skipped it. Ruled to keep the `tests/dist/` name and fix the two configs rather than rename across six later tasks.
 - Create: `tests/dist/helpers.ts`, `tests/dist/adsense.test.ts`
 
 **Interfaces:**
