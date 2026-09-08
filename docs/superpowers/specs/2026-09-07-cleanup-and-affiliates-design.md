@@ -69,6 +69,7 @@ Current request loads Cormorant Garamond in five variants, DM Sans in five, and 
 - **Cormorant Garamond** is used in exactly three places (`ArticleLayout.astro:159`, `RecipeLayout.astro:149`, `index.astro:252`), each a lede paragraph at regular weight with no italic class. Subset the request to `Cormorant+Garamond:wght@400`.
 - **Fraunces** italic axis: the `italic` occurrences in the codebase are body-font emphasis (article `<em>` rendered through prose, two body-text spots on the homepage), not display headings. At implementation, grep for any element carrying both `font-display` (or `.font-display`) and `italic`; if none, drop the three Fraunces italic variants. Expected saving: one font file, roughly 66KB.
 - **DM Sans** is the body font and stays as-is.
+- The hardcoded Fraunces `<link rel="preload">` in `Layout.astro` points at a `v32` file that Google Fonts no longer serves (Lighthouse shows it requested with 0 bytes used). Remove it; the stylesheet preload already covers font discovery.
 - `display=swap` stays.
 
 ### 1.3 CLS: identify, then fix
@@ -136,14 +137,19 @@ New `src/data/equipment.ts`:
 ```ts
 import type { ShapeFamily } from './recipes';
 
+export type Merchant = 'amazon' | 'direct';
+
 export interface Product {
   id: string;
   name: string;
   blurb: string;
-  asin: string;
+  merchant: Merchant;
+  asin?: string;          // required when merchant === 'amazon'
+  href?: string;          // required when merchant === 'direct'; the full affiliate URL that program issues
+  merchantLabel?: string; // link text, e.g. 'Breadtopia'; defaults to 'Amazon' for amazon products
 }
 
-export const PRODUCTS: Record<string, Product> = { /* ten products, below */ };
+export const PRODUCTS: Record<string, Product> = { /* ten products, below, all merchant: 'amazon' today */ };
 
 export type GearFamily = ShapeFamily | 'universal';
 export const GEAR_SETS: Record<GearFamily, string[]> = {
@@ -166,9 +172,15 @@ export const TRACKING_IDS = {
   calculator: 'probuild20-20',   // replace with tdf-calc-20 once created
 } as const;
 
-export function amazonUrl(asin: string, trackingId: string): string {
-  return `https://www.amazon.com/dp/${asin}?tag=${trackingId}`;
+export function productUrl(p: Product, trackingId: string): string {
+  if (p.merchant === 'amazon') return `https://www.amazon.com/dp/${p.asin}?tag=${trackingId}`;
+  return p.href!;
 }
+```
+
+All ten current products are `merchant: 'amazon'`. The `direct` shape exists so links from other programs (Brød & Taylor, Breadtopia, Challenger) can join the same gear lists later with a data-file edit and no model change. Card link text reads "View on {merchantLabel} →", so the destination is never obscured.
+
+```ts
 
 // Maps calculator style ids (index.astro breadStyles) to a gear family.
 export const CALCULATOR_STYLE_FAMILY: Record<string, GearFamily> = {
@@ -197,7 +209,7 @@ Four new products, researched on Amazon 2026-09-07. Each is the top organic resu
 
 | id | Name | ASIN | Blurb |
 |---|---|---|---|
-| `thermichef-steel` | ThermiChef 16" Baking Steel | B0BR5ZLMFP | Quarter-inch steel stores and transfers far more heat than a stone. Slide baguettes or ciabatta straight onto it for a fast, crisp bottom crust. Made in the USA. |
+| `thermichef-steel` | ThermiChef 16-Inch Baking Steel | B0BR5ZLMFP | Quarter-inch steel stores and transfers far more heat than a stone. Slide baguettes or ciabatta straight onto it for a fast, crisp bottom crust. Made in the USA. |
 | `saint-germain-couche` | Saint Germain Bakery Couche | B06XXXQVNZ | Heavy French flax linen holds shaped baguettes and ciabatta in place while they proof, and wicks just enough moisture to set the skin for scoring. |
 | `usa-pan-9x13` | USA Pan 9x13 Rectangular Pan | B0029JOC6I | Aluminized steel with a corrugated base bakes an even, deeply browned focaccia bottom. The two-inch sides give a high-hydration dough room to rise. |
 | `usa-pan-loaf` | USA Pan 9x5 Loaf Pan | B002UNMZOO | Commercial-grade aluminized steel in the standard 9x5 size. Straight walls and a corrugated base produce a tall, evenly browned sandwich or brioche loaf. |
@@ -210,9 +222,10 @@ Four new products, researched on Amazon 2026-09-07. Each is the top organic resu
 - Renders `<AffiliateDisclosure compact={compact} />` beneath the grid when `disclosure` is true. The calculator block passes `disclosure={false}` for its five lists and renders one compact disclosure itself.
 
 `src/components/AffiliateDisclosure.astro`
-- Props: `compact?: boolean`.
+- Props: `compact?: boolean`, `hasDirect?: boolean` (computed by `EquipmentGrid` as whether any product in its list is `merchant: 'direct'`).
 - Full variant: the existing homepage disclosure text, unchanged.
 - Compact variant: one line, "As an Amazon Associate, we earn from qualifying purchases."
+- When `hasDirect` is true, both variants append: "Some links go to other retailers who also pay us a commission." With all-Amazon lists (every list today) the sentence is omitted so the disclosure stays accurate. This single line satisfies Amazon's required wording and the FTC's disclosure rule for any other program.
 
 ### 3.4 Placements
 
@@ -250,7 +263,9 @@ The user creates two IDs in Associates Central (Account Settings, Manage Your Tr
 - No prices displayed anywhere.
 - No product images.
 - `rel="sponsored"` on every affiliate link.
+- Link text names the merchant, so destinations are never obscured.
 - Privacy policy mentions the program (Section 1.4).
+- Amazon Associate links never appear in newsletter emails; Amazon prohibits them in email, PDFs, and anything off-site. Gear links in emails point to recipe pages or to direct merchants whose programs allow it. This is a content rule for whoever writes the emails, not a code change.
 
 ---
 
