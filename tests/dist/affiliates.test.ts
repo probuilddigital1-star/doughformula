@@ -26,7 +26,7 @@ describe('homepage equipment section', () => {
       expect(idx, name).toBeGreaterThan(last);
       last = idx;
     }
-    expect(section).not.toContain('~$');
+    expect(section).not.toMatch(/\$\d/);
   });
 
   it('links carry the homepage tracking id and sponsored rel', () => {

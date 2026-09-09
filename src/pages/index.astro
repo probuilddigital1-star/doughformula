@@ -5,7 +5,7 @@ import heroImage from '../assets/hero-bread.jpg';
 import { KIT_FORM_ID, KIT_PUBLIC_API_KEY, NEWSLETTER_ENABLED } from '../config/newsletter';
 import EquipmentGrid from '../components/EquipmentGrid.astro';
 import AffiliateDisclosure from '../components/AffiliateDisclosure.astro';
-import { HOMEPAGE_PRODUCTS, TRACKING_IDS, GEAR_SETS, CALCULATOR_STYLE_FAMILY } from '../data/equipment';
+import { HOMEPAGE_PRODUCTS, TRACKING_IDS, GEAR_SETS, CALCULATOR_STYLE_FAMILY, ALL_GEAR_PRODUCT_IDS, hasDirectMerchant } from '../data/equipment';
 
 const heroWidths = [480, 768, 1200, 1600];
 const heroVariants = await Promise.all(
@@ -1174,7 +1174,7 @@ const breadStyles = [
             <div data-gear-family="loaf-pan" class="mt-2 hidden">
               <EquipmentGrid compact disclosure={false} productIds={GEAR_SETS['loaf-pan']} trackingId={TRACKING_IDS.calculator} />
             </div>
-            <AffiliateDisclosure compact />
+            <AffiliateDisclosure compact hasDirect={hasDirectMerchant(ALL_GEAR_PRODUCT_IDS)} />
           </aside>
         </div>
       </div>

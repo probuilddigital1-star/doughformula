@@ -127,6 +127,15 @@ export function productUrl(p: Product, trackingId: string): string {
   return p.href!;
 }
 
+/** True when any of the given product ids belongs to a non-Amazon merchant. Used by placements
+ *  that render one disclosure for several gear lists, so the wording stays accurate. */
+export function hasDirectMerchant(ids: string[]): boolean {
+  return ids.some((id) => PRODUCTS[id]?.merchant === 'direct');
+}
+
+/** Every product id that appears in any gear set, deduplicated. */
+export const ALL_GEAR_PRODUCT_IDS: string[] = [...new Set(Object.values(GEAR_SETS).flat())];
+
 /** Calculator style ids (index.astro breadStyles) to gear family. `custom` gets universal only. */
 export const CALCULATOR_STYLE_FAMILY: Record<string, GearFamily> = {
   sourdough: 'dutch-oven',

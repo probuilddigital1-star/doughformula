@@ -6,6 +6,8 @@ import {
   TRACKING_IDS,
   CALCULATOR_STYLE_FAMILY,
   productUrl,
+  hasDirectMerchant,
+  ALL_GEAR_PRODUCT_IDS,
 } from '../../src/data/equipment';
 
 const ASIN = /^[A-Z0-9]{10}$/;
@@ -124,5 +126,27 @@ describe('CALCULATOR_STYLE_FAMILY', () => {
     expect(CALCULATOR_STYLE_FAMILY.focaccia).toBe('sheet-pan');
     expect(CALCULATOR_STYLE_FAMILY.sandwich).toBe('loaf-pan');
     expect(CALCULATOR_STYLE_FAMILY.custom).toBe('universal');
+  });
+});
+
+describe('hasDirectMerchant', () => {
+  it('is false for every gear product today (all Amazon)', () => {
+    expect(hasDirectMerchant(ALL_GEAR_PRODUCT_IDS)).toBe(false);
+    expect(hasDirectMerchant([])).toBe(false);
+  });
+
+  it('is true as soon as a direct-merchant product is in the list', () => {
+    PRODUCTS['__test-direct'] = { id: '__test-direct', name: 'Test', blurb: 'Test.', merchant: 'direct', href: 'https://example.com/?ref=tdf', merchantLabel: 'Example' };
+    try {
+      expect(hasDirectMerchant(['escali-scale', '__test-direct'])).toBe(true);
+    } finally {
+      delete PRODUCTS['__test-direct'];
+    }
+  });
+
+  it('ALL_GEAR_PRODUCT_IDS covers every id in every gear set exactly once', () => {
+    const all = Object.values(GEAR_SETS).flat();
+    for (const id of all) expect(ALL_GEAR_PRODUCT_IDS).toContain(id);
+    expect(new Set(ALL_GEAR_PRODUCT_IDS).size).toBe(ALL_GEAR_PRODUCT_IDS.length);
   });
 });

@@ -1,4 +1,4 @@
-# build output (repo root only — not tests/dist/, which holds source test files)
+# build output (repo root only; tests/dist/ holds source test files)
 /dist/
 
 # generated types
