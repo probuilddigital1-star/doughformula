@@ -3,6 +3,8 @@ import Layout from '../layouts/Layout.astro';
 import { Image, getImage } from 'astro:assets';
 import heroImage from '../assets/hero-bread.jpg';
 import { KIT_FORM_ID, KIT_PUBLIC_API_KEY, NEWSLETTER_ENABLED } from '../config/newsletter';
+import EquipmentGrid from '../components/EquipmentGrid.astro';
+import { HOMEPAGE_PRODUCTS, TRACKING_IDS } from '../data/equipment';
 
 const heroWidths = [480, 768, 1200, 1600];
 const heroVariants = await Promise.all(
@@ -1366,65 +1368,12 @@ const breadStyles = [
   <!-- Equipment Section -->
   <section class="py-16" id="equipment">
     <div class="container">
-      <h2 class="font-display text-2xl md:text-3xl text-center mb-3">Essential Bread Equipment</h2>
-      <p class="text-center text-[var(--crust-brown)] mb-10">The right tools make all the difference</p>
-
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div class="card p-5">
-          <h3 class="font-medium mb-1">Lodge Combo Cooker</h3>
-          <p class="text-sm text-[var(--crust-brown)] mb-3">The go-to choice for home bakers. Shallow lid makes loading dough safer and easier.</p>
-          <div class="flex items-center justify-between">
-            <span class="text-[var(--accent-gold)] font-medium">~$45</span>
-            <a href="https://www.amazon.com/Lodge-Cooker-Pre-seasoned-Skillet-Convertible/dp/B0009JKG9M?tag=probuild20-20" target="_blank" class="text-sm text-[var(--accent-gold)] hover:text-[var(--espresso)] font-medium" rel="noopener noreferrer sponsored" aria-label="View Lodge Combo Cooker on Amazon">View on Amazon →</a>
-          </div>
-        </div>
-        <div class="card p-5">
-          <h3 class="font-medium mb-1">Escali Primo Scale</h3>
-          <p class="text-sm text-[var(--crust-brown)] mb-3">NY Times recommended. 11 lb capacity, 1g accuracy, simple two-button operation.</p>
-          <div class="flex items-center justify-between">
-            <span class="text-[var(--accent-gold)] font-medium">~$27</span>
-            <a href="https://www.amazon.com/Escali-Digital-Multi-Functional-Kitchen-Measuring/dp/B0007GAWRS?tag=probuild20-20" target="_blank" class="text-sm text-[var(--accent-gold)] hover:text-[var(--espresso)] font-medium" rel="noopener noreferrer sponsored" aria-label="View Escali Primo Scale on Amazon">View on Amazon →</a>
-          </div>
-        </div>
-        <div class="card p-5">
-          <h3 class="font-medium mb-1">OXO Bench Scraper</h3>
-          <p class="text-sm text-[var(--crust-brown)] mb-3">Stainless steel blade with measurement markings. Comfortable non-slip grip.</p>
-          <div class="flex items-center justify-between">
-            <span class="text-[var(--accent-gold)] font-medium">~$10</span>
-            <a href="https://www.amazon.com/OXO-Multi-purpose-Stainless-Scraper-Chopper/dp/B00004OCNJ?tag=probuild20-20" target="_blank" class="text-sm text-[var(--accent-gold)] hover:text-[var(--espresso)] font-medium" rel="noopener noreferrer sponsored" aria-label="View OXO Bench Scraper on Amazon">View on Amazon →</a>
-          </div>
-        </div>
-        <div class="card p-5">
-          <h3 class="font-medium mb-1">Banneton Basket Set</h3>
-          <p class="text-sm text-[var(--crust-brown)] mb-3">Round & oval baskets with liners, lame, and scrapers. Premium Indonesian rattan.</p>
-          <div class="flex items-center justify-between">
-            <span class="text-[var(--accent-gold)] font-medium">~$26</span>
-            <a href="https://www.amazon.com/RORECAY-Proofing-Banneton-Sourdough-Fermentation/dp/B08G4ZPZBZ?tag=probuild20-20" target="_blank" class="text-sm text-[var(--accent-gold)] hover:text-[var(--espresso)] font-medium" rel="noopener noreferrer sponsored" aria-label="View Banneton Basket Set on Amazon">View on Amazon →</a>
-          </div>
-        </div>
-        <div class="card p-5">
-          <h3 class="font-medium mb-1">UFO Bread Lame</h3>
-          <p class="text-sm text-[var(--crust-brown)] mb-3">Handcrafted walnut wood handle with secure blade storage. Includes extra blades.</p>
-          <div class="flex items-center justify-between">
-            <span class="text-[var(--accent-gold)] font-medium">~$13</span>
-            <a href="https://www.amazon.com/VIROTEE-UFO-Bread-Lame-Sourdough/dp/B08CTCHYDT?tag=probuild20-20" target="_blank" class="text-sm text-[var(--accent-gold)] hover:text-[var(--espresso)] font-medium" rel="noopener noreferrer sponsored" aria-label="View UFO Bread Lame on Amazon">View on Amazon →</a>
-          </div>
-        </div>
-        <div class="card p-5">
-          <h3 class="font-medium mb-1">ThermoWorks Thermapen</h3>
-          <p class="text-sm text-[var(--crust-brown)] mb-3">Pro-grade accuracy in 1 second. Check water temp and bread doneness (190-210°F).</p>
-          <div class="flex items-center justify-between">
-            <span class="text-[var(--accent-gold)] font-medium">~$105</span>
-            <a href="https://www.amazon.com/ThermoWorks-Thermapen-Recommended-Instant-Read-Thermometer/dp/B0DG71Q1LZ?tag=probuild20-20" target="_blank" class="text-sm text-[var(--accent-gold)] hover:text-[var(--espresso)] font-medium" rel="noopener noreferrer sponsored" aria-label="View ThermoWorks Thermapen on Amazon">View on Amazon →</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-10 p-5 bg-[var(--cream-flour)] rounded-lg border border-[var(--border-light)]">
-        <p class="text-sm text-[var(--crust-brown)] text-center">
-          <strong>Affiliate Disclosure:</strong> As an Amazon Associate, we earn from qualifying purchases. This means we may receive a small commission if you buy through our links, at no extra cost to you. We only recommend products we genuinely believe will help your bread baking journey. Thank you for supporting The Dough Formula!
-        </p>
-      </div>
+      <EquipmentGrid
+        productIds={HOMEPAGE_PRODUCTS}
+        trackingId={TRACKING_IDS.homepage}
+        heading="Essential Bread Equipment"
+        intro="The right tools make all the difference"
+      />
     </div>
   </section>
 
