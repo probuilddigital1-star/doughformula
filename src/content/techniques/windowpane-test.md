@@ -3,7 +3,19 @@ title: "The Windowpane Test: Reading Gluten Development"
 description: "The single most reliable test for whether your dough has enough gluten. What to look for and how to interpret what you see."
 category: techniques
 publishedDate: 2026-03-15
+updatedDate: 2026-09-09
+faq:
+  - question: "What is the windowpane test?"
+    answer: "A check of gluten development. You pinch off a golf ball of dough with wet hands, stretch it slowly from the center outward for fifteen to twenty seconds, and hold it up to the light. Well-developed gluten stretches into a thin translucent membrane that holds together. Underdeveloped gluten tears before it gets that thin."
+  - question: "When during bulk fermentation should I do the windowpane test?"
+    answer: "At the end of each set of stretch and folds, and once more just before shaping. A test in the first twenty minutes after mixing will almost always fail and tells you nothing, because the gluten has barely started to develop. Passing before shaping is the signal that the dough will hold its shape through proofing and oven spring."
+  - question: "What does it mean if the dough tears during the windowpane test?"
+    answer: "Early in bulk, a tear means the gluten needs more folds or more time, which is normal. Late in bulk, a tear in a dough that passed earlier points to over-fermentation: acids produced during fermentation break gluten down, and more folding cannot reverse that. Check your dough temperature and shorten bulk next time."
+  - question: "Does the windowpane test work for high-hydration dough?"
+    answer: "Yes, with a different reading. Above about 75% hydration the membrane is thinner and looks translucent before the gluten is fully developed, so translucency alone is not the signal. Watch whether the dough stretches evenly in all directions for several inches without tearing. Whole grain flours never give a perfectly clear pane because bran cuts the strands, so judge the dough against its own flour rather than a video made with strong bread flour."
 ---
+
+The windowpane test is a quick check of gluten development: you stretch a small piece of dough thin enough to see light through it, and the gluten passes if the sheet holds without tearing. A passing stretch looks like a translucent membrane about the size of your palm, thin enough to show the outline of your fingers behind it, with intact edges and at most a pinhole in the center. A tear before the dough turns translucent means the gluten needs more time or more folds.
 
 You are thirty minutes into bulk fermentation and you want to know if the gluten is developing the way it should. You cannot see inside the dough. You cannot feel the protein bonds forming. But you can pull off a small piece and hold it up to the light, and that small piece will tell you more about your dough's readiness than any timer will.
 
