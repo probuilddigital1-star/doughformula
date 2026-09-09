@@ -35,7 +35,7 @@ const labelFor = (label?: string) => label ?? 'Amazon';
         <a
           href={productUrl(p, trackingId)}
           target="_blank"
-          rel="noopener noreferrer sponsored"
+          rel="sponsored nofollow noopener noreferrer"
           class="text-[var(--accent-gold)] hover:text-[var(--espresso)] whitespace-nowrap"
           aria-label={`View ${p.name} on ${labelFor(p.merchantLabel)}`}
         >View on {labelFor(p.merchantLabel)} →</a>
@@ -52,7 +52,7 @@ const labelFor = (label?: string) => label ?? 'Amazon';
           <a
             href={productUrl(p, trackingId)}
             target="_blank"
-            rel="noopener noreferrer sponsored"
+            rel="sponsored nofollow noopener noreferrer"
             class="text-sm text-[var(--accent-gold)] hover:text-[var(--espresso)] font-medium"
             aria-label={`View ${p.name} on ${labelFor(p.merchantLabel)}`}
           >View on {labelFor(p.merchantLabel)} →</a>

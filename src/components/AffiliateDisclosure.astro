@@ -6,17 +6,17 @@ interface Props {
 }
 
 const { compact = false, hasDirect = false } = Astro.props;
-const extra = hasDirect ? ' Some links go to other retailers who also pay us a commission.' : '';
+const extra = hasDirect ? ' Some links go to other retailers who also pay me a commission.' : '';
 ---
 
 {compact ? (
   <p class="text-xs text-[var(--crust-brown)] mt-4">
-    As an Amazon Associate, we earn from qualifying purchases.{extra}
+    As an Amazon Associate I earn from qualifying purchases.{extra}
   </p>
 ) : (
   <div class="mt-10 p-5 bg-[var(--cream-flour)] rounded-lg border border-[var(--border-light)]">
     <p class="text-sm text-[var(--crust-brown)] text-center">
-      <strong>Affiliate Disclosure:</strong> As an Amazon Associate, we earn from qualifying purchases. This means we may receive a small commission if you buy through our links, at no extra cost to you. We only recommend products we genuinely believe will help your bread baking journey. Thank you for supporting The Dough Formula!{extra}
+      <strong>Affiliate Disclosure:</strong> As an Amazon Associate I earn from qualifying purchases. This means I may receive a small commission if you buy through my links, at no extra cost to you. I only recommend products I genuinely believe will help your bread baking journey. Thank you for supporting The Dough Formula!{extra}
     </p>
   </div>
 )}

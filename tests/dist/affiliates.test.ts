@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { distFile } from './helpers';
+import { TRACKING_IDS } from '../../src/data/equipment';
 
 describe('homepage equipment section', () => {
   const home = distFile('index.html');
@@ -30,8 +31,8 @@ describe('homepage equipment section', () => {
   });
 
   it('links carry the homepage tracking id and sponsored rel', () => {
-    expect(section).toContain('https://www.amazon.com/dp/B0009JKG9M?tag=probuild20-20');
-    expect(section.match(/rel="noopener noreferrer sponsored"/g)?.length).toBeGreaterThanOrEqual(6);
+    expect(section).toContain(`https://www.amazon.com/dp/B0009JKG9M?tag=${TRACKING_IDS.homepage}`);
+    expect(section.match(/rel="sponsored nofollow noopener noreferrer"/g)?.length).toBeGreaterThanOrEqual(6);
   });
 
   it('shows the full disclosure', () => {
@@ -57,7 +58,7 @@ describe('recipe page gear blocks', () => {
       }
       for (const name of no) expect(html, name).not.toContain(name);
       expect(html).toContain('Affiliate Disclosure:');
-      expect(html).toContain(`?tag=probuild20-20`);
+      expect(html).toContain(`?tag=${TRACKING_IDS.recipe}`);
     });
   }
 });
@@ -89,8 +90,8 @@ describe('calculator gear block', () => {
   });
 
   it('uses the calculator tracking id and one compact disclosure', () => {
-    expect(block).toContain('?tag=probuild20-20');
-    expect(block.match(/As an Amazon Associate, we earn from qualifying purchases\./g)).toHaveLength(1);
+    expect(block).toContain(`?tag=${TRACKING_IDS.calculator}`);
+    expect(block.match(/As an Amazon Associate I earn from qualifying purchases\./g)).toHaveLength(1);
     expect(block).not.toContain('Affiliate Disclosure:');
   });
 });

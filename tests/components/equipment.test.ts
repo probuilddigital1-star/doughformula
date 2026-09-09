@@ -15,7 +15,7 @@ describe('EquipmentGrid (cards)', () => {
     });
     expect(html).toContain('Lodge Combo Cooker');
     expect(html).toContain('Escali Primo Scale');
-    expect(html.match(/rel="noopener noreferrer sponsored"/g)).toHaveLength(2);
+    expect(html.match(/rel="sponsored nofollow noopener noreferrer"/g)).toHaveLength(2);
     expect(html.match(/target="_blank"/g)).toHaveLength(2);
     expect(html).toContain('href="https://www.amazon.com/dp/B0009JKG9M?tag=test-20"');
     expect(html).toContain('View on Amazon');
@@ -36,7 +36,7 @@ describe('EquipmentGrid (cards)', () => {
       props: { productIds: ['thermapen'], trackingId: 't-20' },
     });
     expect(html).toContain('Affiliate Disclosure');
-    expect(html).toContain('As an Amazon Associate, we earn from qualifying purchases.');
+    expect(html).toContain('As an Amazon Associate I earn from qualifying purchases.');
     expect(html).not.toContain('other retailers');
   });
 
@@ -62,7 +62,7 @@ describe('EquipmentGrid (compact)', () => {
     expect(html).toContain('<ul');
     expect(html).not.toContain('class="card');
     expect(html).toContain('?tag=c-20');
-    expect(html).toContain('As an Amazon Associate, we earn from qualifying purchases.');
+    expect(html).toContain('As an Amazon Associate I earn from qualifying purchases.');
     expect(html).not.toContain('Affiliate Disclosure:');
   });
 });
@@ -70,13 +70,13 @@ describe('EquipmentGrid (compact)', () => {
 describe('AffiliateDisclosure', () => {
   it('compact variant is one sentence for Amazon-only lists', async () => {
     const html = await container.renderToString(AffiliateDisclosure, { props: { compact: true } });
-    expect(html).toContain('As an Amazon Associate, we earn from qualifying purchases.');
+    expect(html).toContain('As an Amazon Associate I earn from qualifying purchases.');
     expect(html).not.toContain('other retailers');
   });
 
   it('appends the other-retailers sentence when hasDirect is true', async () => {
     const html = await container.renderToString(AffiliateDisclosure, { props: { compact: true, hasDirect: true } });
-    expect(html).toContain('Some links go to other retailers who also pay us a commission.');
+    expect(html).toContain('Some links go to other retailers who also pay me a commission.');
   });
 
   it('full variant keeps the original homepage wording', async () => {
