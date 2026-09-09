@@ -118,8 +118,8 @@ export const HOMEPAGE_PRODUCTS: string[] = [
 // and replace the values below. Until then every placement falls back to the original tag.
 export const TRACKING_IDS = {
   homepage: 'probuild20-20',
-  recipe: 'probuild20-20', // replace with tdf-recipe-20 once created
-  calculator: 'probuild20-20', // replace with tdf-calc-20 once created
+  recipe: 'tdf-recipe-20',
+  calculator: 'tdf-calc-20',
 } as const;
 
 export function productUrl(p: Product, trackingId: string): string {
