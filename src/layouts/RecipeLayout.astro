@@ -5,6 +5,8 @@ import RecipeCard from '../components/RecipeCard.astro';
 import RecipeStatBlock from '../components/RecipeStatBlock.astro';
 import RecipeIngredients from '../components/RecipeIngredients.astro';
 import RecipeSchedule from '../components/RecipeSchedule.astro';
+import EquipmentGrid from '../components/EquipmentGrid.astro';
+import { GEAR_SETS, TRACKING_IDS } from '../data/equipment';
 import type { Combo } from '../data/recipes';
 import { STYLE_META, allCombos } from '../data/recipes';
 import type { Ingredient, ScheduleStep, MethodStep, RecipeMeta } from '../lib/recipe-formula';
@@ -164,6 +166,14 @@ if (bodyWords < 150) {
         <h2>What to expect</h2>
         <p>{resultDescriptor}</p>
       </div>
+
+      <section class="max-w-5xl mx-auto mt-16">
+        <EquipmentGrid
+          productIds={[...GEAR_SETS.universal, ...GEAR_SETS[styleMeta.shapeFamily]]}
+          trackingId={TRACKING_IDS.recipe}
+          heading="What you'll need for this bake"
+        />
+      </section>
 
       <div class="max-w-3xl mx-auto my-10 text-center">
         <a href={calculatorHref} class="btn btn-primary inline-block">
