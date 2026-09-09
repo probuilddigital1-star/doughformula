@@ -275,7 +275,7 @@ Run `npm run build` and `npm run preview`, then:
 1. **Cleanup.** Homepage, one article, one recipe page, the recipes index, and one category index render with no "Advertisement" labels, no empty 260px boxes, and no console errors. View source confirms no `googlesyndication`, `doubleclick`, or `googletagservices` references.
 2. **Performance.** Lighthouse mobile against the preview build on the same three URLs measured before (homepage, `/recipes/focaccia-75-same-day/`, `/fundamentals/hydration-60-to-90/`). Expect total transfer down by roughly 370KB and a higher performance score. Record the before and after numbers.
 3. **CLS.** Chrome performance trace of the calculator interactions before and after the targeted fix; confirm the named elements no longer shift.
-4. **Newsletter.** With Kit values set: submit a real address, confirm the success toast, confirm the double opt-in email arrives, confirm the address appears in Kit. With Kit values empty: confirm the section does not render.
+4. **Newsletter.** First with placeholder values (`'test'` for both) in `npm run dev`: the section renders and a submit shows the "Something went wrong" toast, which proves the listener attaches and the failure path works. Then with real Kit values: submit a real address, confirm the success toast, confirm the double opt-in email arrives, confirm the address appears in Kit. With Kit values empty: confirm the section does not render. The placeholder and real-value runs happen at configuration time, since the handler cannot execute in the build-output tests.
 5. **Affiliates.** Homepage grid shows the same six products in the same order with no prices. One recipe page per family (sourdough, baguette, focaccia, sandwich) shows universal plus the correct family set. In the calculator, switching through all eight styles swaps the family list correctly and `custom` shows universal only. Every link resolves on Amazon with the `tag` parameter intact and the correct tracking ID for its placement.
 6. **Privacy.** Page renders, AdSense section gone, newsletter and Amazon paragraphs present.
 
@@ -291,7 +291,10 @@ Single release on a feature branch. After it ships, watch Search Console for two
 |---|---|---|
 | Kit form ID and public API key | `src/config/newsletter.ts` | Newsletter section does not render |
 | Two tracking IDs (`tdf-recipe-20`, `tdf-calc-20`) | `src/data/equipment.ts` | All placements use `probuild20-20` |
-| Cloudflare CWV per-path confirmation | Gate for Section 1.3 step 2 | CLS work waits |
+| Cloudflare CWV per-path confirmation | Section 1.3 (measurement found no interaction shift; this confirms the field source) | Attribution of the field CLS stays inferred |
+| Kit handler browser test at configuration time | Verification step 4 below, run locally before deploying real values | The submit handler has only been exercised by build-and-grep; its first real execution would otherwise be in production |
+
+Done during execution (2026-09-09): the four new ASINs were opened in headless Chrome and all resolve (HTTP 200, no "currently unavailable" or not-found page).
 
 ## Risks
 
