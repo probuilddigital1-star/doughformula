@@ -1308,6 +1308,7 @@ Claude-Session: https://claude.ai/code/session_017ThxmVsuHnogxQMUzQKx3r"
 
 **Files:**
 - Create: `src/components/AffiliateDisclosure.astro`, `src/components/EquipmentGrid.astro`, `tests/components/equipment.test.ts`
+- Modify: `vitest.config.ts`. Discovered at execution: the container API under vitest runs Vite in serve mode with Astro's dev toolbar enabled, which annotates every rendered element with `data-astro-source-*` attributes and breaks exact-markup assertions. Ruled to pass `{ devToolbar: { enabled: false } }` as `getViteConfig`'s second (Astro inline config) argument so test renders match production; `astro.config.mjs` is untouched.
 
 **Interfaces:**
 - Consumes: `PRODUCTS`, `productUrl`, `Product` from `src/data/equipment.ts`.
