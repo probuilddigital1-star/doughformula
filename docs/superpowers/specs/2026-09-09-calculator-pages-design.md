@@ -1,7 +1,7 @@
 # Calculator Pages Design (Phase 2)
 
 **Date:** 2026-09-09
-**Status:** Draft for review. No implementation until the Search Console observation window for the cleanup-and-affiliates release is declared closed.
+**Status:** Approved with amendments 2026-09-09. Spec only; no implementation until the Search Console observation window for the cleanup-and-affiliates release is declared closed.
 **Goal:** Capture the calculator-intent queries the homepage half-ranks for by adding two dedicated single-purpose calculator pages, additively, without changing any ranking signal on the homepage.
 
 ## Context
@@ -18,15 +18,18 @@ The same data shows what happens when a tool query reaches the top four: `bread 
 
 The constraint from the previous release carries forward: nothing on the homepage that ranks changes. The homepage is not refactored to share code with the new pages; each page carries its own small formula.
 
-## Decisions to confirm
+## Decisions (approved 2026-09-09)
 
-These are the judgment calls made in drafting. Each is a one-line change if you want it otherwise.
+Items 1 to 5 were the drafting judgment calls, approved as written. Items 6 to 8 are the approval amendments.
 
 1. **URLs:** `/hydration-calculator/` and `/bakers-percentage-calculator/`, top level, no `/tools/` prefix. Short, exact-match slugs; the site has no existing tools section to nest under.
 2. **Salt lives on the baker's percentage page**, as its own section with an anchor (`#salt`), an H2 that names the query ("Salt in bread calculator"), and its own FAQ entry. Salt is a baker's-percentage line, so a third page would be thin.
-3. **Internal linking touches the site footer.** The two pages get a "Tools" group in `SiteFooter.astro`, which renders on every page including the homepage. That is the one homepage change in this spec: two footer links. If you would rather keep the homepage byte-identical, the alternative is article-only linking, which is weaker.
-4. **The windowpane article edit** from the earlier plan is not in this spec; it is a separate five-line task.
+3. **Internal linking touches the site footer.** The two pages get a "Tools" group in `SiteFooter.astro`, which renders on every page including the homepage. That is the one homepage change in this spec: two footer links.
+4. **The windowpane article edit** from the earlier plan is not in this spec; see Out of scope for the task.
 5. **No new dependencies.** Plain Astro pages with a processed TypeScript script each, matching how the homepage calculator is built.
+6. **Affiliate placement on both pages.** The calculator gear block, built from the same `EquipmentGrid` and `AffiliateDisclosure` components and using `TRACKING_IDS.calculator` exactly as the homepage does, sits directly below the tool panel and above the prose, with its disclosure. A build-output test covers it (see Verification).
+7. **Hydration page default tab.** "Water from flour" is the selected tab on load.
+8. **Newsletter on both pages.** The newsletter section renders in the same position it holds on the homepage (after the tool section, before the explanatory content), gated by `NEWSLETTER_ENABLED` like everywhere else.
 
 ## Pages
 
@@ -38,7 +41,7 @@ These are the judgment calls made in drafting. Each is a one-line change if you 
 **H1:** `Bread Hydration Calculator`
 **Meta description:** `Work out water from flour and hydration, hydration from a recipe, or the flour and water split for a target dough weight. Accounts for starter water.`
 
-**Tool (three modes, one form, switched by tabs):**
+**Tool (three modes, one form, switched by tabs; "Water from flour" is the default tab on load):**
 1. *Water from flour:* flour grams and hydration percent in, water grams out.
 2. *Hydration from a recipe:* flour and water grams in (optional starter grams and starter hydration), total hydration percent out, with the starter's flour and water shown separately.
 3. *Split a dough weight:* total dough grams and hydration percent in, flour and water grams out.
@@ -75,6 +78,9 @@ Rows can be added and removed; defaults show a four-line sourdough (flour, water
 ## Shared elements
 
 - **Layout:** `Layout.astro` with the site header and footer, `container` widths, `.card` for the tool panel, Fraunces headings. No new fonts or CSS files.
+- **Page structure, top to bottom:** site header; H1 and a one-sentence intro; tool panel (`.card`); gear block; newsletter section (only when `NEWSLETTER_ENABLED`); prose; FAQ; site footer. This mirrors the homepage, where the newsletter follows the calculator section and precedes the explanatory content.
+- **Gear block:** new `src/components/CalculatorGearBlock.astro` reproducing the homepage aside's markup: `<aside id="gear-block">`, heading "Gear for this bake", the universal compact `EquipmentGrid`, one family compact `EquipmentGrid` (prop `family: GearFamily`, default `'dutch-oven'`, the homepage's initial state; these pages have no style selector, so there is no toggle script and no hidden wrappers), and one `<AffiliateDisclosure compact hasDirect={hasDirectMerchant(ALL_GEAR_PRODUCT_IDS)} />`. Every grid passes `disclosure={false}` and `trackingId={TRACKING_IDS.calculator}`. The homepage keeps its inline aside unchanged; adopting the component there is a separate like-for-like task, not part of this spec.
+- **Newsletter section:** new `src/components/NewsletterSection.astro` reproducing the homepage section exactly (same heading and copy, `id="newsletter-form"`, `data-kit-form-id` and `data-kit-api-key` attributes from `src/config/newsletter.ts`, `name="email"` on the input) wrapped in `{NEWSLETTER_ENABLED && (...)}`, with the Kit submit handler in the component's own `<script>` so it runs on any page that includes it. The homepage keeps its inline section and handler unchanged in this spec; consolidating the two copies onto the component is a later like-for-like task.
 - **Schema:** each page emits `WebApplication` JSON-LD (`applicationCategory: "UtilityApplication"`, `operatingSystem: "Any"`, `offers` free) plus `FAQPage` JSON-LD from its FAQ list, and `BreadcrumbList` (Home → page).
 - **Formulas:** `src/lib/hydration.ts` and `src/lib/bakers-percentage.ts`, pure functions with unit tests. They are new modules; nothing is extracted from `index.astro`.
 - **Cannibalization safeguards:** neither page uses "bread calculator" as a heading or title term; each links up to the homepage as the full calculator; the homepage links down to them only via the footer Tools group; both pages are self-canonical. Neither page repeats the homepage's "Understanding Baker's Percentages" copy.
@@ -91,6 +97,8 @@ Rows can be added and removed; defaults show a four-line sourdough (flour, water
 
 1. Unit tests for both formula modules (including the starter-water case and rounding).
 2. Build-output tests: both pages exist, titles and H1s exact, `FAQPage` and `WebApplication` JSON-LD parse, the hand-off links carry the expected parameters, footer links present on the homepage and a recipe page, no "bread calculator" phrase in either page's title or H1.
+3. Build-output tests for the gear block on both pages: `id="gear-block"` and "Gear for this bake" present; the three universal product names present; every link in the block carries `?tag=${TRACKING_IDS.calculator}` and a `rel` containing both `sponsored` and `nofollow`; exactly one "As an Amazon Associate I earn from qualifying purchases." inside the block; the block sits after the tool panel and before the prose in document order. The existing site-wide compliance test (`tests/dist/compliance.test.ts`) picks both pages up automatically; its minimum page count rises from 61 to 63.
+4. Build-output tests for the newsletter section on both pages, branching on `NEWSLETTER_ENABLED` the way `tests/dist/newsletter.test.ts` does for the homepage: present with its data attributes when configured, absent otherwise, and positioned after the gear block and before the prose.
 3. Lighthouse mobile on both pages: performance at or above the homepage's post-cleanup score (67).
 4. Search Console URL Inspection on both pages after deploy; request indexing.
 
@@ -101,4 +109,14 @@ Rows can be added and removed; defaults show a four-line sourdough (flour, water
 
 ## Out of scope
 
-The windowpane article addition, any homepage title change, `noindex` or consolidation of recipe pages, and the calculator-in-article embed approach considered and rejected in the September 7 brainstorm.
+Any homepage title change, `noindex` or consolidation of recipe pages, and the calculator-in-article embed approach considered and rejected in the September 7 brainstorm.
+
+**Windowpane article edit: a separate five-line task.** It did not ship in the cleanup-and-affiliates release; `src/content/techniques/windowpane-test.md` is unchanged since `9d774ea` and has no `faq` frontmatter. Target query: `windowpane test definition`, 110 impressions at position 7.0 with zero clicks.
+
+1. Prepend one definition-first paragraph above the existing opening, leaving the current text intact below it: what the windowpane test is, in one sentence, then what a passing stretch looks like.
+2. Add three or four `faq` entries to the frontmatter (what the test is, when in bulk to do it, what a torn window means, whether it applies to high-hydration doughs). `ArticleLayout.astro` already renders `faq` and emits `FAQPage` JSON-LD; `src/content/config.ts` already accepts the field.
+3. Leave `title` and `description` unchanged; the page ranks on them.
+4. Apply the writing bans: no em dashes, none of the listed phrases, no rule-of-three constructions.
+5. Verify with the build-output page walk and a Search Console URL inspection after deploy; watch the query's CTR for four weeks.
+
+Pointer: the on-page workstream deferred in `docs/superpowers/specs/2026-09-07-cleanup-and-affiliates-design.md` (Scope, "Out"), where the September 7 discussion ruled the edit additive-only.
