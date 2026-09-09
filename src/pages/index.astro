@@ -1,9 +1,11 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { Image, getImage } from 'astro:assets';
-import AdUnit from '../components/AdUnit.astro';
-import { AD_SLOTS } from '../config/ads';
 import heroImage from '../assets/hero-bread.jpg';
+import { KIT_FORM_ID, KIT_PUBLIC_API_KEY, NEWSLETTER_ENABLED } from '../config/newsletter';
+import EquipmentGrid from '../components/EquipmentGrid.astro';
+import AffiliateDisclosure from '../components/AffiliateDisclosure.astro';
+import { HOMEPAGE_PRODUCTS, TRACKING_IDS, GEAR_SETS, CALCULATOR_STYLE_FAMILY, ALL_GEAR_PRODUCT_IDS, hasDirectMerchant } from '../data/equipment';
 
 const heroWidths = [480, 768, 1200, 1600];
 const heroVariants = await Promise.all(
@@ -1156,23 +1158,49 @@ const breadStyles = [
               </div>
             </div>
           </div>
+
+          <aside id="gear-block" class="mt-6" data-style-family={JSON.stringify(CALCULATOR_STYLE_FAMILY)}>
+            <h4 class="font-medium text-lg mb-3">Gear for this bake</h4>
+            <EquipmentGrid compact disclosure={false} productIds={GEAR_SETS.universal} trackingId={TRACKING_IDS.calculator} />
+            <div data-gear-family="dutch-oven" class="mt-2">
+              <EquipmentGrid compact disclosure={false} productIds={GEAR_SETS['dutch-oven']} trackingId={TRACKING_IDS.calculator} />
+            </div>
+            <div data-gear-family="steam-stone" class="mt-2 hidden">
+              <EquipmentGrid compact disclosure={false} productIds={GEAR_SETS['steam-stone']} trackingId={TRACKING_IDS.calculator} />
+            </div>
+            <div data-gear-family="sheet-pan" class="mt-2 hidden">
+              <EquipmentGrid compact disclosure={false} productIds={GEAR_SETS['sheet-pan']} trackingId={TRACKING_IDS.calculator} />
+            </div>
+            <div data-gear-family="loaf-pan" class="mt-2 hidden">
+              <EquipmentGrid compact disclosure={false} productIds={GEAR_SETS['loaf-pan']} trackingId={TRACKING_IDS.calculator} />
+            </div>
+            <AffiliateDisclosure compact hasDirect={hasDirectMerchant(ALL_GEAR_PRODUCT_IDS)} />
+          </aside>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Newsletter Section -->
+  {NEWSLETTER_ENABLED && (
   <section class="section-dark py-16 mt-16">
     <div class="container max-w-2xl text-center">
       <h2 class="font-display text-2xl md:text-3xl mb-3">
-        Level Up Your <span class="text-[var(--wheat-gold)]" id="newsletter-style">Sourdough</span> Game
+        Level Up Your <span class="text-[var(--wheat-gold)]">Sourdough</span> Game
       </h2>
       <p class="text-[var(--cream-warm)] mb-8">
         Get weekly tips, troubleshooting guides, and pro techniques for perfect bread.
       </p>
-      <form class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto" id="newsletter-form">
+      <form
+        class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+        id="newsletter-form"
+        data-kit-form-id={KIT_FORM_ID}
+        data-kit-api-key={KIT_PUBLIC_API_KEY}
+      >
         <input
           type="email"
+          name="email"
+          autocomplete="email"
           placeholder="your@email.com"
           class="input flex-1"
           required
@@ -1189,10 +1217,7 @@ const breadStyles = [
       </p>
     </div>
   </section>
-
-  <div class="container">
-    <AdUnit slot={AD_SLOTS.homepagePostNewsletter} class="max-w-4xl" />
-  </div>
+  )}
 
   <!-- Baker's Percentage Section -->
   <section class="py-16 bg-[var(--cream-warm)]" id="bakers-percent">
@@ -1362,71 +1387,14 @@ const breadStyles = [
   <!-- Equipment Section -->
   <section class="py-16" id="equipment">
     <div class="container">
-      <h2 class="font-display text-2xl md:text-3xl text-center mb-3">Essential Bread Equipment</h2>
-      <p class="text-center text-[var(--crust-brown)] mb-10">The right tools make all the difference</p>
-
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div class="card p-5">
-          <h3 class="font-medium mb-1">Lodge Combo Cooker</h3>
-          <p class="text-sm text-[var(--crust-brown)] mb-3">The go-to choice for home bakers. Shallow lid makes loading dough safer and easier.</p>
-          <div class="flex items-center justify-between">
-            <span class="text-[var(--accent-gold)] font-medium">~$45</span>
-            <a href="https://www.amazon.com/Lodge-Cooker-Pre-seasoned-Skillet-Convertible/dp/B0009JKG9M?tag=probuild20-20" target="_blank" class="text-sm text-[var(--accent-gold)] hover:text-[var(--espresso)] font-medium" rel="noopener noreferrer sponsored" aria-label="View Lodge Combo Cooker on Amazon">View on Amazon →</a>
-          </div>
-        </div>
-        <div class="card p-5">
-          <h3 class="font-medium mb-1">Escali Primo Scale</h3>
-          <p class="text-sm text-[var(--crust-brown)] mb-3">NY Times recommended. 11 lb capacity, 1g accuracy, simple two-button operation.</p>
-          <div class="flex items-center justify-between">
-            <span class="text-[var(--accent-gold)] font-medium">~$27</span>
-            <a href="https://www.amazon.com/Escali-Digital-Multi-Functional-Kitchen-Measuring/dp/B0007GAWRS?tag=probuild20-20" target="_blank" class="text-sm text-[var(--accent-gold)] hover:text-[var(--espresso)] font-medium" rel="noopener noreferrer sponsored" aria-label="View Escali Primo Scale on Amazon">View on Amazon →</a>
-          </div>
-        </div>
-        <div class="card p-5">
-          <h3 class="font-medium mb-1">OXO Bench Scraper</h3>
-          <p class="text-sm text-[var(--crust-brown)] mb-3">Stainless steel blade with measurement markings. Comfortable non-slip grip.</p>
-          <div class="flex items-center justify-between">
-            <span class="text-[var(--accent-gold)] font-medium">~$10</span>
-            <a href="https://www.amazon.com/OXO-Multi-purpose-Stainless-Scraper-Chopper/dp/B00004OCNJ?tag=probuild20-20" target="_blank" class="text-sm text-[var(--accent-gold)] hover:text-[var(--espresso)] font-medium" rel="noopener noreferrer sponsored" aria-label="View OXO Bench Scraper on Amazon">View on Amazon →</a>
-          </div>
-        </div>
-        <div class="card p-5">
-          <h3 class="font-medium mb-1">Banneton Basket Set</h3>
-          <p class="text-sm text-[var(--crust-brown)] mb-3">Round & oval baskets with liners, lame, and scrapers. Premium Indonesian rattan.</p>
-          <div class="flex items-center justify-between">
-            <span class="text-[var(--accent-gold)] font-medium">~$26</span>
-            <a href="https://www.amazon.com/RORECAY-Proofing-Banneton-Sourdough-Fermentation/dp/B08G4ZPZBZ?tag=probuild20-20" target="_blank" class="text-sm text-[var(--accent-gold)] hover:text-[var(--espresso)] font-medium" rel="noopener noreferrer sponsored" aria-label="View Banneton Basket Set on Amazon">View on Amazon →</a>
-          </div>
-        </div>
-        <div class="card p-5">
-          <h3 class="font-medium mb-1">UFO Bread Lame</h3>
-          <p class="text-sm text-[var(--crust-brown)] mb-3">Handcrafted walnut wood handle with secure blade storage. Includes extra blades.</p>
-          <div class="flex items-center justify-between">
-            <span class="text-[var(--accent-gold)] font-medium">~$13</span>
-            <a href="https://www.amazon.com/VIROTEE-UFO-Bread-Lame-Sourdough/dp/B08CTCHYDT?tag=probuild20-20" target="_blank" class="text-sm text-[var(--accent-gold)] hover:text-[var(--espresso)] font-medium" rel="noopener noreferrer sponsored" aria-label="View UFO Bread Lame on Amazon">View on Amazon →</a>
-          </div>
-        </div>
-        <div class="card p-5">
-          <h3 class="font-medium mb-1">ThermoWorks Thermapen</h3>
-          <p class="text-sm text-[var(--crust-brown)] mb-3">Pro-grade accuracy in 1 second. Check water temp and bread doneness (190-210°F).</p>
-          <div class="flex items-center justify-between">
-            <span class="text-[var(--accent-gold)] font-medium">~$105</span>
-            <a href="https://www.amazon.com/ThermoWorks-Thermapen-Recommended-Instant-Read-Thermometer/dp/B0DG71Q1LZ?tag=probuild20-20" target="_blank" class="text-sm text-[var(--accent-gold)] hover:text-[var(--espresso)] font-medium" rel="noopener noreferrer sponsored" aria-label="View ThermoWorks Thermapen on Amazon">View on Amazon →</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-10 p-5 bg-[var(--cream-flour)] rounded-lg border border-[var(--border-light)]">
-        <p class="text-sm text-[var(--crust-brown)] text-center">
-          <strong>Affiliate Disclosure:</strong> As an Amazon Associate, we earn from qualifying purchases. This means we may receive a small commission if you buy through our links, at no extra cost to you. We only recommend products we genuinely believe will help your bread baking journey. Thank you for supporting The Dough Formula!
-        </p>
-      </div>
+      <EquipmentGrid
+        productIds={HOMEPAGE_PRODUCTS}
+        trackingId={TRACKING_IDS.homepage}
+        heading="Essential Bread Equipment"
+        intro="The right tools make all the difference"
+      />
     </div>
   </section>
-
-  <div class="container">
-    <AdUnit slot={AD_SLOTS.homepagePreFaq} class="max-w-4xl" />
-  </div>
 
   <!-- FAQ Section -->
   <section class="py-16 bg-[var(--cream-warm)]" id="faq">
@@ -2256,6 +2224,17 @@ const breadStyles = [
       titleEl.textContent = `${styleName} Bread`;
     }
 
+    // Show the gear list for the selected style's shape family. The map is server-rendered
+    // onto the aside because this script is processed TypeScript and cannot use define:vars.
+    const gearBlock = document.getElementById('gear-block');
+    if (gearBlock) {
+      const familyMap = JSON.parse(gearBlock.dataset.styleFamily || '{}') as Record<string, string>;
+      const family = familyMap[state.style] ?? 'universal';
+      gearBlock.querySelectorAll<HTMLElement>('[data-gear-family]').forEach((el) => {
+        el.classList.toggle('hidden', el.dataset.gearFamily !== family);
+      });
+    }
+
     // Update recipe yield
     const yieldEl = document.getElementById('recipe-yield');
     if (yieldEl) {
@@ -2616,12 +2595,6 @@ const breadStyles = [
       } else {
         coldRetardInfo.classList.add('hidden');
       }
-    }
-
-    // Update newsletter style
-    const newsletterStyle = document.getElementById('newsletter-style');
-    if (newsletterStyle) {
-      newsletterStyle.textContent = state.style.charAt(0).toUpperCase() + state.style.slice(1).replace('-', ' ');
     }
 
     // Update preferment UI if the function is defined
@@ -3558,11 +3531,35 @@ END:VEVENT
     });
   });
 
-  // Newsletter form
-  document.getElementById('newsletter-form')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    showToast("You're in! Check your inbox.");
-  });
+  // Newsletter form: client-side subscribe through Kit's v3 public-key endpoint.
+  // The form only renders when src/config/newsletter.ts has both values set.
+  const newsletterForm = document.getElementById('newsletter-form') as HTMLFormElement | null;
+  if (newsletterForm) {
+    const kitFormId = newsletterForm.dataset.kitFormId || '';
+    const kitApiKey = newsletterForm.dataset.kitApiKey || '';
+    newsletterForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = newsletterForm.querySelector('input[type="email"]') as HTMLInputElement | null;
+      const email = input?.value.trim() || '';
+      if (!email || !kitFormId || !kitApiKey) return;
+      const button = newsletterForm.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+      if (button) button.disabled = true;
+      try {
+        const res = await fetch(`https://api.convertkit.com/v3/forms/${kitFormId}/subscribe`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ api_key: kitApiKey, email }),
+        });
+        if (!res.ok) throw new Error(`Kit responded ${res.status}`);
+        showToast("You're in! Check your inbox to confirm.");
+        if (input) input.value = '';
+      } catch {
+        showToast('Something went wrong. Try again in a moment.');
+      } finally {
+        if (button) button.disabled = false;
+      }
+    });
+  }
 
   // Load recipe from URL params
   function loadFromURL() {

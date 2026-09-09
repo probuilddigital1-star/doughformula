@@ -48,6 +48,8 @@ export function allCombos(): Combo[] {
   return combos;
 }
 
+export type ShapeFamily = 'dutch-oven' | 'steam-stone' | 'loaf-pan' | 'sheet-pan';
+
 export interface StyleMeta {
   displayName: string;
   cuisine: string;          // for schema.org recipeCuisine
@@ -68,7 +70,7 @@ export interface StyleMeta {
   //   steam-stone → shape on a couche or floured cloth, bake on a stone with steam, uncovered (baguette, ciabatta)
   //   loaf-pan    → shape into a log, place in a loaf pan, bake uncovered (sandwich, brioche)
   //   sheet-pan   → press into a sheet pan, dimple, bake uncovered (focaccia)
-  shapeFamily: 'dutch-oven' | 'steam-stone' | 'loaf-pan' | 'sheet-pan';
+  shapeFamily: ShapeFamily;
   // For steam-stone styles, how many portions the dough is divided into before shaping.
   divideInto?: number;
   // Raw dough grams per finished loaf, before baking. Total dough = loafGramsRaw * (divideInto ?? 1).

@@ -1,9 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import ArticleCard from '../../components/ArticleCard.astro';
-import AdUnit from '../../components/AdUnit.astro';
 import { getCollection } from 'astro:content';
-import { AD_SLOTS } from '../../config/ads';
 
 export async function getStaticPaths() {
   const categories = [
@@ -51,18 +49,9 @@ const articlesWithReading = articles.map((a: any) => ({
         <p class="text-center text-[var(--crust-brown)]">No articles yet. Check back soon.</p>
       ) : (
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-6xl mx-auto">
-          {articlesWithReading.map(({ article, readingMinutes }: any, i: number) => {
-            return [
-              <ArticleCard article={article} readingMinutes={readingMinutes} />,
-              i === 2 && articlesWithReading.length >= 4 ? (
-                <AdUnit
-                  slot={AD_SLOTS.categoryInFeed}
-                  class="card !p-6 !my-0"
-                  minHeight="200px"
-                />
-              ) : null,
-            ];
-          })}
+          {articlesWithReading.map(({ article, readingMinutes }: any) => (
+            <ArticleCard article={article} readingMinutes={readingMinutes} />
+          ))}
         </div>
       )}
     </div>

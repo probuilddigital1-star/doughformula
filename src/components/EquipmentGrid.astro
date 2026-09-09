@@ -1,0 +1,65 @@
+---
+import { PRODUCTS, productUrl } from '../data/equipment';
+import AffiliateDisclosure from './AffiliateDisclosure.astro';
+
+interface Props {
+  productIds: string[];
+  trackingId: string;
+  heading?: string;
+  intro?: string;
+  /** Tight list for the calculator column instead of cards. */
+  compact?: boolean;
+  /** Set false when the caller renders one disclosure for several grids. */
+  disclosure?: boolean;
+}
+
+const { productIds, trackingId, heading, intro, compact = false, disclosure = true } = Astro.props;
+
+const products = productIds.map((id) => {
+  const p = PRODUCTS[id];
+  if (!p) throw new Error(`EquipmentGrid: unknown product id "${id}"`);
+  return p;
+});
+const hasDirect = products.some((p) => p.merchant === 'direct');
+const labelFor = (label?: string) => label ?? 'Amazon';
+---
+
+{heading && <h2 class="font-display text-2xl md:text-3xl text-center mb-3">{heading}</h2>}
+{intro && <p class="text-center text-[var(--crust-brown)] mb-10">{intro}</p>}
+
+{compact ? (
+  <ul class="space-y-2">
+    {products.map((p) => (
+      <li class="flex items-baseline justify-between gap-3 text-sm">
+        <span class="font-medium">{p.name}</span>
+        <a
+          href={productUrl(p, trackingId)}
+          target="_blank"
+          rel="sponsored nofollow noopener noreferrer"
+          class="text-[var(--accent-gold)] hover:text-[var(--espresso)] whitespace-nowrap"
+          aria-label={`View ${p.name} on ${labelFor(p.merchantLabel)}`}
+        >View on {labelFor(p.merchantLabel)} →</a>
+      </li>
+    ))}
+  </ul>
+) : (
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    {products.map((p) => (
+      <div class="card p-5">
+        <h3 class="font-medium mb-1">{p.name}</h3>
+        <p class="text-sm text-[var(--crust-brown)] mb-3">{p.blurb}</p>
+        <div class="flex items-center justify-end">
+          <a
+            href={productUrl(p, trackingId)}
+            target="_blank"
+            rel="sponsored nofollow noopener noreferrer"
+            class="text-sm text-[var(--accent-gold)] hover:text-[var(--espresso)] font-medium"
+            aria-label={`View ${p.name} on ${labelFor(p.merchantLabel)}`}
+          >View on {labelFor(p.merchantLabel)} →</a>
+        </div>
+      </div>
+    ))}
+  </div>
+)}
+
+{disclosure && <AffiliateDisclosure compact={compact} hasDirect={hasDirect} />}
