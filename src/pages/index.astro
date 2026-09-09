@@ -4,7 +4,8 @@ import { Image, getImage } from 'astro:assets';
 import heroImage from '../assets/hero-bread.jpg';
 import { KIT_FORM_ID, KIT_PUBLIC_API_KEY, NEWSLETTER_ENABLED } from '../config/newsletter';
 import EquipmentGrid from '../components/EquipmentGrid.astro';
-import { HOMEPAGE_PRODUCTS, TRACKING_IDS } from '../data/equipment';
+import AffiliateDisclosure from '../components/AffiliateDisclosure.astro';
+import { HOMEPAGE_PRODUCTS, TRACKING_IDS, GEAR_SETS, CALCULATOR_STYLE_FAMILY } from '../data/equipment';
 
 const heroWidths = [480, 768, 1200, 1600];
 const heroVariants = await Promise.all(
@@ -1157,6 +1158,24 @@ const breadStyles = [
               </div>
             </div>
           </div>
+
+          <aside id="gear-block" class="mt-6" data-style-family={JSON.stringify(CALCULATOR_STYLE_FAMILY)}>
+            <h4 class="font-medium text-lg mb-3">Gear for this bake</h4>
+            <EquipmentGrid compact disclosure={false} productIds={GEAR_SETS.universal} trackingId={TRACKING_IDS.calculator} />
+            <div data-gear-family="dutch-oven" class="mt-2">
+              <EquipmentGrid compact disclosure={false} productIds={GEAR_SETS['dutch-oven']} trackingId={TRACKING_IDS.calculator} />
+            </div>
+            <div data-gear-family="steam-stone" class="mt-2 hidden">
+              <EquipmentGrid compact disclosure={false} productIds={GEAR_SETS['steam-stone']} trackingId={TRACKING_IDS.calculator} />
+            </div>
+            <div data-gear-family="sheet-pan" class="mt-2 hidden">
+              <EquipmentGrid compact disclosure={false} productIds={GEAR_SETS['sheet-pan']} trackingId={TRACKING_IDS.calculator} />
+            </div>
+            <div data-gear-family="loaf-pan" class="mt-2 hidden">
+              <EquipmentGrid compact disclosure={false} productIds={GEAR_SETS['loaf-pan']} trackingId={TRACKING_IDS.calculator} />
+            </div>
+            <AffiliateDisclosure compact />
+          </aside>
         </div>
       </div>
     </div>
@@ -2203,6 +2222,17 @@ const breadStyles = [
     if (titleEl) {
       const styleName = state.style.charAt(0).toUpperCase() + state.style.slice(1).replace('-', ' ');
       titleEl.textContent = `${styleName} Bread`;
+    }
+
+    // Show the gear list for the selected style's shape family. The map is server-rendered
+    // onto the aside because this script is processed TypeScript and cannot use define:vars.
+    const gearBlock = document.getElementById('gear-block');
+    if (gearBlock) {
+      const familyMap = JSON.parse(gearBlock.dataset.styleFamily || '{}') as Record<string, string>;
+      const family = familyMap[state.style] ?? 'universal';
+      gearBlock.querySelectorAll<HTMLElement>('[data-gear-family]').forEach((el) => {
+        el.classList.toggle('hidden', el.dataset.gearFamily !== family);
+      });
     }
 
     // Update recipe yield

@@ -61,3 +61,36 @@ describe('recipe page gear blocks', () => {
     });
   }
 });
+
+describe('calculator gear block', () => {
+  const home = distFile('index.html');
+  // Bound at the Baker's Percentage section, which follows the calculator (and the newsletter, when enabled)
+  // and precedes the homepage #equipment grid, so that grid's full disclosure is not counted here.
+  const block = home.slice(home.indexOf('id="gear-block"'), home.indexOf('id="bakers-percent"'));
+
+  it('exists with a style-to-family map covering every calculator style', () => {
+    expect(home).toContain('id="gear-block"');
+    expect(home).toContain('data-style-family=');
+    for (const style of ['sourdough', 'no-knead', 'baguette', 'ciabatta', 'focaccia', 'sandwich', 'brioche', 'custom']) {
+      expect(block, style).toContain(style);
+    }
+  });
+
+  it('renders the universal list and four family wrappers, dutch-oven visible by default', () => {
+    expect(block.match(/data-gear-family="/g)).toHaveLength(4);
+    const dutch = block.match(/data-gear-family="dutch-oven" class="([^"]*)"/);
+    expect(dutch).not.toBeNull();
+    expect(dutch![1]).not.toContain('hidden');
+    for (const fam of ['steam-stone', 'sheet-pan', 'loaf-pan']) {
+      const m = block.match(new RegExp(`data-gear-family="${fam}" class="([^"]*)"`));
+      expect(m, fam).not.toBeNull();
+      expect(m![1], fam).toContain('hidden');
+    }
+  });
+
+  it('uses the calculator tracking id and one compact disclosure', () => {
+    expect(block).toContain('?tag=probuild20-20');
+    expect(block.match(/As an Amazon Associate, we earn from qualifying purchases\./g)).toHaveLength(1);
+    expect(block).not.toContain('Affiliate Disclosure:');
+  });
+});
