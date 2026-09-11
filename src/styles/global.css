@@ -120,9 +120,15 @@ h1, h2, h3, h4, h5, h6 {
   z-index: 1;
 }
 
-.flour-dusted > * {
-  position: relative;
-  z-index: 2;
+/* Layered so Tailwind's utilities (fixed, inset-0, z-50, sticky) win on direct
+   children of <body> such as the schedule modal, the toast and the site nav.
+   An unlayered rule beats every layered rule regardless of specificity, and
+   Tailwind v4 emits its utilities inside @layer utilities. */
+@layer components {
+  .flour-dusted > * {
+    position: relative;
+    z-index: 2;
+  }
 }
 
 /* ============================================
