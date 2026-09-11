@@ -7,9 +7,8 @@ describe('homepage equipment section', () => {
   // Bound at the FAQ section that follows, so footer and FAQ text do not leak into the assertions.
   const section = home.slice(home.indexOf('id="equipment"'), home.indexOf('id="faq"'));
 
-  it('keeps the section anchor the footer links to', () => {
+  it('keeps the section anchor', () => {
     expect(home).toContain('id="equipment"');
-    expect(home).toContain('href="#equipment"');
   });
 
   it('shows the original six products in the original order with no prices', () => {

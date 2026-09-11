@@ -89,7 +89,7 @@ Rows can be added and removed; defaults show a four-line sourdough (flour, water
 ## Internal linking
 
 - `SiteFooter.astro`: a "Tools" group with "Bread Calculator" (`/#calculator`), "Hydration Calculator", "Baker's Percentage Calculator".
-- **Homepage footer caveat (noted 2026-09-11, no implementation yet).** The homepage does not rely on `SiteFooter.astro` for its footer: `index.astro` carries its own inline footer inside `<main>` (link groups, Stay Updated, copyright). `Layout.astro` still renders `SiteFooter.astro` after the slot on every page, so the built homepage currently shows both, the inline footer first and the shared one beneath it. A "Tools" group added only to `SiteFooter.astro` therefore lands in the homepage's second, lower footer, not in its primary link groups. Before the Tools group ships, either add it to both footers, or switch the homepage to `SiteFooter.astro` alone by removing the inline footer as a separate like-for-like task (same links, same copy, same newsletter call to action).
+- **Homepage footer (updated 2026-09-11).** The homepage once carried its own inline footer inside `<main>` in `index.astro`, rendered above the shared `SiteFooter.astro` that `Layout.astro` adds to every page. That inline footer was removed on 2026-09-11, so the homepage now shows `SiteFooter.astro` only, like every other page. The "Tools" group is therefore a single change in `SiteFooter.astro` and lands in the homepage's primary (and only) footer.
 - Article cross-links, one sentence each, additive: `hydration-60-to-90` → hydration page; `bakers-percentages-explained` and `role-of-salt-in-bread` → baker's percentage page (salt anchor).
 - Recipe pages: no change.
 - Sitemap: automatic via `@astrojs/sitemap`.

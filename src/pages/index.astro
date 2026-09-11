@@ -7,7 +7,6 @@ import EquipmentGrid from '../components/EquipmentGrid.astro';
 import AffiliateDisclosure from '../components/AffiliateDisclosure.astro';
 import { HOMEPAGE_PRODUCTS, TRACKING_IDS, GEAR_SETS, CALCULATOR_STYLE_FAMILY, ALL_GEAR_PRODUCT_IDS, hasDirectMerchant } from '../data/equipment';
 
-const year = new Date().getFullYear();
 const heroWidths = [480, 768, 1200, 1600];
 const heroVariants = await Promise.all(
   heroWidths.map((w) =>
@@ -1465,55 +1464,6 @@ const breadStyles = [
       </div>
     </div>
   </section>
-
-  <!-- Footer -->
-  <footer class="section-dark py-10 sm:py-12">
-    <div class="container">
-      <div class="grid gap-8 sm:grid-cols-2 md:grid-cols-3">
-        <div>
-          <div class="flex items-center gap-2 mb-4">
-            <svg class="w-7 h-7 text-[var(--wheat-gold)]" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M16 28V12"/>
-              <path d="M16 12c-2-3-2-6 0-8 2 2 2 5 0 8z"/>
-              <path d="M16 16c-3-2-5-1-7 1 2 2 5 2 7-1z"/>
-              <path d="M16 16c3-2 5-1 7 1-2 2-5 2-7-1z"/>
-              <path d="M16 20c-3-2-5-1-7 1 2 2 5 2 7-1z"/>
-              <path d="M16 20c3-2 5-1 7 1-2 2-5 2-7-1z"/>
-              <path d="M16 24c-3-2-5-1-7 1 2 2 5 2 7-1z"/>
-              <path d="M16 24c3-2 5-1 7 1-2 2-5 2-7-1z"/>
-            </svg>
-            <span class="font-display text-xl font-semibold text-[var(--cream-flour)]">The Dough Formula</span>
-          </div>
-          <p class="text-[var(--cream-warm)] text-sm leading-relaxed">
-            Free bread dough calculator using baker's percentages. Perfect dough for sourdough, baguettes, focaccia, and more.
-          </p>
-        </div>
-
-        <div>
-          <h4 class="font-medium mb-4 text-[var(--cream-flour)]">Links</h4>
-          <ul class="space-y-2 text-sm">
-            <li><a href="#about" class="text-[var(--cream-warm)] hover:text-[var(--wheat-gold)] transition-colors">About</a></li>
-            <li><a href="#bread-styles" class="text-[var(--cream-warm)] hover:text-[var(--wheat-gold)] transition-colors">Bread Styles</a></li>
-            <li><a href="#bakers-percent" class="text-[var(--cream-warm)] hover:text-[var(--wheat-gold)] transition-colors">Baker's Percentages</a></li>
-            <li><a href="#equipment" class="text-[var(--cream-warm)] hover:text-[var(--wheat-gold)] transition-colors">Equipment</a></li>
-            <li><a href="#faq" class="text-[var(--cream-warm)] hover:text-[var(--wheat-gold)] transition-colors">FAQ</a></li>
-          </ul>
-        </div>
-
-        <div>
-          <h4 class="font-medium mb-4 text-[var(--cream-flour)]">Stay Updated</h4>
-          <p class="text-[var(--cream-warm)] text-sm mb-3">
-            Get bread tips and new features delivered to your inbox.
-          </p>
-          <a href="#newsletter" class="btn btn-gold text-sm">Subscribe</a>
-        </div>
-      </div>
-
-      <div class="border-t border-[var(--cream-warm)]/20 mt-8 pt-8 text-center text-sm text-[var(--cream-warm)]">
-        &copy; {year} The Dough Formula. Made with care for home bakers everywhere.
-      </div>
-    </div>
-  </footer>
 
   </main>
 
