@@ -1,5 +1,6 @@
 ---
 import { PRODUCTS, productUrl } from '../data/equipment';
+import { affiliateLinkAttributes } from '../config/analytics';
 import AffiliateDisclosure from './AffiliateDisclosure.astro';
 
 interface Props {
@@ -38,6 +39,7 @@ const labelFor = (label?: string) => label ?? 'Amazon';
           rel="sponsored nofollow noopener noreferrer"
           class="text-[var(--accent-gold)] hover:text-[var(--espresso)] whitespace-nowrap"
           aria-label={`View ${p.name} on ${labelFor(p.merchantLabel)}`}
+          {...affiliateLinkAttributes(p, trackingId)}
         >View on {labelFor(p.merchantLabel)} →</a>
       </li>
     ))}
@@ -55,6 +57,7 @@ const labelFor = (label?: string) => label ?? 'Amazon';
             rel="sponsored nofollow noopener noreferrer"
             class="text-sm text-[var(--accent-gold)] hover:text-[var(--espresso)] font-medium"
             aria-label={`View ${p.name} on ${labelFor(p.merchantLabel)}`}
+            {...affiliateLinkAttributes(p, trackingId)}
           >View on {labelFor(p.merchantLabel)} →</a>
         </div>
       </div>

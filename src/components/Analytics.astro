@@ -1,0 +1,91 @@
+---
+// PostHog, loaded from the PostHog CDN but initialized late on purpose.
+//
+// The snippet below only installs the `window.posthog` stub, which queues calls in an array
+// and costs no network request. The stub's init() is what injects array.js from the CDN, and
+// this component holds that call back until the window load event, then hands it to
+// requestIdleCallback with a 3s timeout. Nothing analytics-related competes with first paint
+// or the LCP image, and events fired before array.js arrives sit in the stub's queue and
+// replay once it does.
+import {
+  ANALYTICS_ENABLED,
+  EVENTS,
+  POSTHOG_KEY,
+  POSTHOG_OPTIONS,
+  PRODUCTION_HOST,
+} from '../config/analytics';
+---
+
+{ANALYTICS_ENABLED && (
+  <script
+    data-analytics="posthog"
+    data-load="deferred"
+    define:vars={{
+      phKey: POSTHOG_KEY,
+      phOptions: POSTHOG_OPTIONS,
+      prodHost: PRODUCTION_HOST,
+      events: EVENTS,
+    }}
+  >
+    (function () {
+      var host = location.hostname;
+      if (host !== prodHost && host.slice(-(prodHost.length + 1)) !== '.' + prodHost) return;
+
+      !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug getPageViewId captureTraceFeedback captureTraceMetric".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+
+      function capture(name, props) {
+        var payload = { path: location.pathname };
+        if (props) for (var k in props) if (props[k] !== undefined) payload[k] = props[k];
+        try { window.posthog.capture(name, payload); } catch (err) {}
+      }
+
+      // One delegated listener for every custom event. Bound before init so early clicks
+      // queue rather than vanish. Nothing here calls preventDefault, so affiliate links
+      // navigate exactly as they did before.
+      document.addEventListener('click', function (e) {
+        var el = e.target;
+        if (!el || typeof el.closest !== 'function') return;
+
+        var link = el.closest('a[data-affiliate]');
+        if (link) {
+          var d = link.dataset;
+          capture(events.affiliateClick, {
+            product_id: d.productId,
+            product_name: d.productName,
+            merchant: d.merchant,
+            placement: d.placement,
+            tracking_id: d.trackingId,
+          });
+          return;
+        }
+
+        var tab = el.closest('.advanced-tab[data-tab]');
+        if (tab) {
+          capture(events.calculatorTab, { tab: tab.dataset.tab });
+          return;
+        }
+
+        if (el.closest('#plan-bake-btn')) capture(events.planBakeOpened);
+      }, true);
+
+      // Dispatched by index.astro once the Kit request resolves ok. The email address stays
+      // in that handler and is never part of the event.
+      document.addEventListener('df:newsletter-submitted', function () {
+        capture(events.newsletterSubmitted);
+      });
+
+      function start() {
+        try { window.posthog.init(phKey, phOptions); } catch (err) {}
+      }
+      function schedule() {
+        if (typeof window.requestIdleCallback === 'function') {
+          window.requestIdleCallback(start, { timeout: 3000 });
+        } else {
+          setTimeout(start, 1);
+        }
+      }
+      if (document.readyState === 'complete') schedule();
+      else window.addEventListener('load', schedule, { once: true });
+    })();
+  </script>
+)}

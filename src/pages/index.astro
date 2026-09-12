@@ -3502,6 +3502,7 @@ END:VEVENT
           body: JSON.stringify({ api_key: kitApiKey, email }),
         });
         if (!res.ok) throw new Error(`Kit responded ${res.status}`);
+        document.dispatchEvent(new CustomEvent('df:newsletter-submitted'));
         showToast("You're in! Check your inbox to confirm.");
         if (input) input.value = '';
       } catch {
