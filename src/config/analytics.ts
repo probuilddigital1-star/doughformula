@@ -28,6 +28,12 @@ export const POSTHOG_OPTIONS = {
   capture_pageleave: true,
   capture_performance: { web_vitals: true },
   persistence: 'localStorage+cookie',
+  // Project-level extras PostHog would otherwise load on init regardless of the client
+  // config above. Surveys and dead-clicks autocapture are both a form of autocapture this
+  // site deliberately keeps off; exception autocapture is unused here too.
+  disable_surveys: true,
+  capture_dead_clicks: false,
+  capture_exceptions: false,
 } as const;
 
 /** Events the site captures today. */

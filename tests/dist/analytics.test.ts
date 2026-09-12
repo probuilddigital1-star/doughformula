@@ -52,6 +52,12 @@ describe('PostHog snippet', () => {
         expect(script).toContain('"persistence":"localStorage+cookie"');
       });
 
+      it('turns off the project-level extras PostHog would otherwise load on init', () => {
+        expect(script).toContain('"disable_surveys":true');
+        expect(script).toContain('"capture_dead_clicks":false');
+        expect(script).toContain('"capture_exceptions":false');
+      });
+
       it('guards on the production hostname', () => {
         expect(script).toContain(PRODUCTION_HOST);
         expect(script).toContain('location.hostname');

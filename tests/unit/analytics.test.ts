@@ -70,6 +70,12 @@ describe('PostHog configuration', () => {
     expect(POSTHOG_OPTIONS.disable_session_recording).toBe(true);
   });
 
+  it('turns off the project-level extras PostHog would otherwise load on init', () => {
+    expect(POSTHOG_OPTIONS.disable_surveys).toBe(true);
+    expect(POSTHOG_OPTIONS.capture_dead_clicks).toBe(false);
+    expect(POSTHOG_OPTIONS.capture_exceptions).toBe(false);
+  });
+
   it('captures pageviews, pageleaves and web vitals', () => {
     expect(POSTHOG_OPTIONS.capture_pageview).toBe(true);
     expect(POSTHOG_OPTIONS.capture_pageleave).toBe(true);
