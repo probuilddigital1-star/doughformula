@@ -56,6 +56,7 @@ describe('PostHog snippet', () => {
         expect(script).toContain('"disable_surveys":true');
         expect(script).toContain('"capture_dead_clicks":false');
         expect(script).toContain('"capture_exceptions":false');
+        expect(script).toContain('"capture_heatmaps":false');
       });
 
       it('guards on the production hostname', () => {

@@ -34,6 +34,11 @@ export const POSTHOG_OPTIONS = {
   disable_surveys: true,
   capture_dead_clicks: false,
   capture_exceptions: false,
+  // Heatmaps are on at the project level, and the Heatmaps extension unconditionally
+  // instantiates DeadClicksAutocapture to feed it, which is what actually pulls in
+  // dead-clicks-autocapture.js. capture_dead_clicks alone doesn't stop that: this is the
+  // flag that does.
+  capture_heatmaps: false,
 } as const;
 
 /** Events the site captures today. */

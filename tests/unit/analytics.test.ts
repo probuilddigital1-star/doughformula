@@ -74,6 +74,7 @@ describe('PostHog configuration', () => {
     expect(POSTHOG_OPTIONS.disable_surveys).toBe(true);
     expect(POSTHOG_OPTIONS.capture_dead_clicks).toBe(false);
     expect(POSTHOG_OPTIONS.capture_exceptions).toBe(false);
+    expect(POSTHOG_OPTIONS.capture_heatmaps).toBe(false);
   });
 
   it('captures pageviews, pageleaves and web vitals', () => {
