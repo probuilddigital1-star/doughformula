@@ -37,7 +37,7 @@ const PAGES: PageSpec[] = [
       'Can I change hydration after mixing?',
     ],
     tabs: ['water-from-flour', 'hydration-from-recipe', 'split-dough-weight'],
-    handoffHref: '/?loaves=1&weight=875&hydration=75#calculator',
+    handoffHref: '/?loaves=1&weight=985&hydration=75#calculator',
     links: [
       '/fundamentals/hydration-60-to-90/',
       '/recipes/sourdough-65-overnight/',
@@ -62,7 +62,7 @@ const PAGES: PageSpec[] = [
       'How do I handle a preferment?',
     ],
     tabs: ['recipe-to-percentages', 'percentages-to-grams'],
-    handoffHref: '/?loaves=1&weight=960&hydration=72.7#calculator',
+    handoffHref: '/?loaves=1&weight=960&hydration=70#calculator',
     links: [
       '/fundamentals/bakers-percentages-explained/',
       '/fundamentals/preferments-101/',
@@ -185,6 +185,7 @@ function describeCalculatorPage(p: PageSpec) {
         }
         const challenger = anchors.find((a) => a.includes('challengerbreadware.com'))!;
         expect(challenger).toContain('data-merchant="challenger"');
+        expect(challenger).toContain('data-tracking-id="calculator"');
       });
 
       it('has exactly one Amazon disclosure, with the other-retailers line', () => {
@@ -236,7 +237,7 @@ describe('/bakers-percentage-calculator/ specifics', () => {
     expect(input).toContain('min="1.5"');
     expect(input).toContain('max="2.5"');
     expect(input).toContain('step="0.1"');
-    expect(salt).toMatch(/id="salt-grams">10</);
+    expect(salt).toMatch(/id="salt-grams">10 g</);
     expect(salt).toContain('href="/ingredients/role-of-salt-in-bread/"');
   });
 

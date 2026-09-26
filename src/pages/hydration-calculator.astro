@@ -2,8 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import CalculatorGearBlock from '../components/CalculatorGearBlock.astro';
 import NewsletterSection from '../components/NewsletterSection.astro';
-import { waterFromFlour, hydrationFromRecipe, splitDough } from '../lib/hydration';
-import { handoffHref } from '../lib/handoff';
+import { HYDRATION_DEFAULTS as D, hydrationView } from '../lib/hydration-view';
 
 const SITE = 'https://thedoughformula.com';
 const PATH = '/hydration-calculator/';
@@ -11,12 +10,9 @@ const title = 'Bread Hydration Calculator | The Dough Formula';
 const description =
   'Work out water from flour and hydration, hydration from a recipe, or the flour and water split for a target dough weight. Accounts for starter water.';
 
-// Defaults shown before any input (and without JS).
-const D = { flour: 500, hydration: 75, rFlour: 450, rWater: 300, rStarter: 100, rStarterH: 100, total: 900, tHydration: 75 };
-const d1Water = waterFromFlour(D.flour, D.hydration);
-const d2 = hydrationFromRecipe({ flour: D.rFlour, water: D.rWater, starter: D.rStarter, starterHydration: D.rStarterH });
-const d3 = splitDough(D.total, D.tHydration);
-const defaultHandoff = handoffHref({ hydration: D.hydration, weight: D.flour + d1Water });
+// Defaults shown before any input (and without JS), through the same view the script uses.
+const view = hydrationView('water-from-flour', D);
+const v = view.values;
 
 const tabs = [
   { id: 'water-from-flour', label: 'Water from flour' },
@@ -116,16 +112,16 @@ const resultCls = 'font-display text-3xl text-[var(--espresso)]';
           <div class="grid sm:grid-cols-2 gap-4">
             <div>
               <label for="wf-flour" class={labelCls}>Flour (g)</label>
-              <input id="wf-flour" class="input w-full" type="number" inputmode="decimal" min="0" step="1" value={D.flour} />
+              <input id="wf-flour" class="input w-full" type="number" inputmode="decimal" min="0" step="1" value={D['wf-flour']} />
             </div>
             <div>
               <label for="wf-hydration" class={labelCls}>Hydration (%)</label>
-              <input id="wf-hydration" class="input w-full" type="number" inputmode="decimal" min="0" max="150" step="0.5" value={D.hydration} />
+              <input id="wf-hydration" class="input w-full" type="number" inputmode="decimal" min="0" max="150" step="0.5" value={D['wf-hydration']} />
             </div>
           </div>
           <div class="mt-6" aria-live="polite">
             <p class="text-sm text-[var(--crust-brown)]">Water</p>
-            <p class={resultCls}><span id="wf-water">{d1Water}</span> g</p>
+            <p class={resultCls} id="wf-water">{v['wf-water']}</p>
           </div>
         </div>
 
@@ -133,57 +129,57 @@ const resultCls = 'font-display text-3xl text-[var(--espresso)]';
           <div class="grid sm:grid-cols-2 gap-4">
             <div>
               <label for="hr-flour" class={labelCls}>Flour (g)</label>
-              <input id="hr-flour" class="input w-full" type="number" inputmode="decimal" min="0" step="1" value={D.rFlour} />
+              <input id="hr-flour" class="input w-full" type="number" inputmode="decimal" min="0" step="1" value={D['hr-flour']} />
             </div>
             <div>
               <label for="hr-water" class={labelCls}>Water (g)</label>
-              <input id="hr-water" class="input w-full" type="number" inputmode="decimal" min="0" step="1" value={D.rWater} />
+              <input id="hr-water" class="input w-full" type="number" inputmode="decimal" min="0" step="1" value={D['hr-water']} />
             </div>
             <div>
               <label for="hr-starter" class={labelCls}>Starter (g, optional)</label>
-              <input id="hr-starter" class="input w-full" type="number" inputmode="decimal" min="0" step="1" value={D.rStarter} />
+              <input id="hr-starter" class="input w-full" type="number" inputmode="decimal" min="0" step="1" value={D['hr-starter']} />
             </div>
             <div>
               <label for="hr-starter-h" class={labelCls}>Starter hydration (%)</label>
-              <input id="hr-starter-h" class="input w-full" type="number" inputmode="decimal" min="0" max="200" step="5" value={D.rStarterH} />
+              <input id="hr-starter-h" class="input w-full" type="number" inputmode="decimal" min="0" max="200" step="5" value={D['hr-starter-h']} />
             </div>
           </div>
           <div class="mt-6 grid sm:grid-cols-3 gap-4" aria-live="polite">
             <div>
               <p class="text-sm text-[var(--crust-brown)]">Total hydration</p>
-              <p class={resultCls}><span id="hr-hydration">{d2.hydration}</span>%</p>
+              <p class={resultCls} id="hr-hydration">{v['hr-hydration']}</p>
             </div>
             <div>
               <p class="text-sm text-[var(--crust-brown)]">Flour in starter</p>
-              <p class="font-display text-xl"><span id="hr-starter-flour">{d2.starterFlour}</span> g</p>
+              <p class="font-display text-xl" id="hr-starter-flour">{v['hr-starter-flour']}</p>
             </div>
             <div>
               <p class="text-sm text-[var(--crust-brown)]">Water in starter</p>
-              <p class="font-display text-xl"><span id="hr-starter-water">{d2.starterWater}</span> g</p>
+              <p class="font-display text-xl" id="hr-starter-water">{v['hr-starter-water']}</p>
             </div>
           </div>
-          <p class="text-sm text-[var(--crust-brown)] mt-3">Totals: <span id="hr-total-flour">{d2.totalFlour}</span> g flour, <span id="hr-total-water">{d2.totalWater}</span> g water.</p>
+          <p class="text-sm text-[var(--crust-brown)] mt-3">Totals: flour <span id="hr-total-flour">{v['hr-total-flour']}</span>, water <span id="hr-total-water">{v['hr-total-water']}</span>.</p>
         </div>
 
         <div role="tabpanel" id="panel-split-dough-weight" aria-labelledby="tab-split-dough-weight" data-panel="split-dough-weight" hidden>
           <div class="grid sm:grid-cols-2 gap-4">
             <div>
               <label for="sd-total" class={labelCls}>Dough weight (g)</label>
-              <input id="sd-total" class="input w-full" type="number" inputmode="decimal" min="0" step="10" value={D.total} />
+              <input id="sd-total" class="input w-full" type="number" inputmode="decimal" min="0" step="10" value={D['sd-total']} />
             </div>
             <div>
               <label for="sd-hydration" class={labelCls}>Hydration (%)</label>
-              <input id="sd-hydration" class="input w-full" type="number" inputmode="decimal" min="0" max="150" step="0.5" value={D.tHydration} />
+              <input id="sd-hydration" class="input w-full" type="number" inputmode="decimal" min="0" max="150" step="0.5" value={D['sd-hydration']} />
             </div>
           </div>
           <div class="mt-6 grid grid-cols-2 gap-4" aria-live="polite">
             <div>
               <p class="text-sm text-[var(--crust-brown)]">Flour</p>
-              <p class={resultCls}><span id="sd-flour">{d3.flour}</span> g</p>
+              <p class={resultCls} id="sd-flour">{v['sd-flour']}</p>
             </div>
             <div>
               <p class="text-sm text-[var(--crust-brown)]">Water</p>
-              <p class={resultCls}><span id="sd-water">{d3.water}</span> g</p>
+              <p class={resultCls} id="sd-water">{v['sd-water']}</p>
             </div>
           </div>
         </div>
@@ -191,14 +187,14 @@ const resultCls = 'font-display text-3xl text-[var(--espresso)]';
         <div class="mt-8 pt-6 border-t border-[var(--border-light)]">
           <a
             id="handoff"
-            href={defaultHandoff}
+            href={view.handoff}
             class="btn btn-primary inline-block"
             data-handoff
             data-from-page="hydration-calculator"
             data-to-page="homepage-calculator"
             data-tab="water-from-flour"
           >Open in the full bread calculator</a>
-          <p class="text-sm text-[var(--crust-brown)] mt-3">Takes this hydration and dough weight to the main calculator, which builds the rest of the formula and a baking schedule.</p>
+          <p class="text-sm text-[var(--crust-brown)] mt-3">Takes your flour and water weights to the main calculator, which adds salt and starter from its Sourdough preset and builds a baking schedule.</p>
         </div>
       </section>
 
@@ -263,56 +259,32 @@ const resultCls = 'font-display text-3xl text-[var(--espresso)]';
 </Layout>
 
 <script>
-  import { waterFromFlour, hydrationFromRecipe, splitDough } from '../lib/hydration';
-  import { handoffHref } from '../lib/handoff';
+  import { hydrationView, type HydrationInputs, type HydrationMode } from '../lib/hydration-view';
 
-  const $ = (id: string) => document.getElementById(id);
-  const val = (id: string) => parseFloat(($(id) as HTMLInputElement | null)?.value ?? '');
-  const put = (id: string, v: number) => {
-    const el = $(id);
-    if (el) el.textContent = String(v);
-  };
-
+  const INPUT_IDS: (keyof HydrationInputs)[] = [
+    'wf-flour', 'wf-hydration', 'hr-flour', 'hr-water', 'hr-starter', 'hr-starter-h', 'sd-total', 'sd-hydration',
+  ];
   const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('.calc-mode-tab'));
-  const handoff = $('handoff') as HTMLAnchorElement | null;
-  let mode = 'water-from-flour';
+  const handoff = document.getElementById('handoff') as HTMLAnchorElement | null;
+  let mode: HydrationMode = 'water-from-flour';
 
   function update() {
-    let hydration = 75;
-    let weight = 900;
-    if (mode === 'water-from-flour') {
-      const flour = val('wf-flour');
-      hydration = val('wf-hydration');
-      const water = waterFromFlour(flour, hydration);
-      put('wf-water', water);
-      weight = (Number.isFinite(flour) ? flour : 0) + water;
-    } else if (mode === 'hydration-from-recipe') {
-      const flour = val('hr-flour');
-      const water = val('hr-water');
-      const starter = val('hr-starter');
-      const r = hydrationFromRecipe({ flour, water, starter: Number.isFinite(starter) ? starter : 0, starterHydration: val('hr-starter-h') });
-      put('hr-hydration', r.hydration);
-      put('hr-starter-flour', r.starterFlour);
-      put('hr-starter-water', r.starterWater);
-      put('hr-total-flour', r.totalFlour);
-      put('hr-total-water', r.totalWater);
-      hydration = r.hydration;
-      weight = r.totalFlour + r.totalWater;
-    } else {
-      hydration = val('sd-hydration');
-      const s = splitDough(val('sd-total'), hydration);
-      put('sd-flour', s.flour);
-      put('sd-water', s.water);
-      weight = s.flour + s.water;
+    const raw = Object.fromEntries(
+      INPUT_IDS.map((id) => [id, (document.getElementById(id) as HTMLInputElement | null)?.value ?? '']),
+    ) as unknown as HydrationInputs;
+    const view = hydrationView(mode, raw);
+    for (const [id, text] of Object.entries(view.values)) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
     }
     if (handoff) {
-      handoff.href = handoffHref({ hydration, weight });
+      handoff.href = view.handoff;
       handoff.dataset.tab = mode;
     }
   }
 
   function select(tab: HTMLButtonElement, focus = false) {
-    mode = tab.dataset.mode || mode;
+    mode = (tab.dataset.mode as HydrationMode) || mode;
     for (const t of tabs) {
       const on = t === tab;
       t.setAttribute('aria-selected', on ? 'true' : 'false');
@@ -329,11 +301,10 @@ const resultCls = 'font-display text-3xl text-[var(--espresso)]';
     tab.addEventListener('keydown', (e) => {
       if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
       e.preventDefault();
-      const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
-      select(next, true);
+      select(tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length], true);
     });
   });
 
-  $('tool')?.addEventListener('input', update);
+  document.getElementById('tool')?.addEventListener('input', update);
   update();
 </script>

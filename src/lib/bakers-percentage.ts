@@ -1,7 +1,7 @@
 // Pure baker's percentage math for /bakers-percentage-calculator/. Every ingredient is
 // expressed against the total of the flour rows, which is always 100%. A starter row is an
-// ingredient like any other here; its flour and water only count in rowsHydration().
-import { hydrationFromRecipe, roundG, roundPct } from './hydration';
+// ingredient like any other here.
+import { roundG, roundPct } from './hydration';
 
 export type RowKind = 'flour' | 'water' | 'starter' | 'other';
 
@@ -42,16 +42,6 @@ export function toPercentages(rows: Row[]): PctRow[] {
 export function toGrams(flourG: number, rows: PctRow[]): Row[] {
   const flour = num(flourG);
   return rows.map((r) => ({ name: r.name, kind: r.kind, grams: roundG((flour * num(r.pct)) / 100) }));
-}
-
-/** Total hydration of the rows, with starter split into flour and water. */
-export function rowsHydration(rows: Row[], starterHydration = 100): number {
-  return hydrationFromRecipe({
-    flour: sum(rows, 'flour'),
-    water: sum(rows, 'water'),
-    starter: sum(rows, 'starter'),
-    starterHydration,
-  }).hydration;
 }
 
 export const SALT_MIN = 1.5;

@@ -2,18 +2,8 @@
 import Layout from '../layouts/Layout.astro';
 import CalculatorGearBlock from '../components/CalculatorGearBlock.astro';
 import NewsletterSection from '../components/NewsletterSection.astro';
-import {
-  DEFAULT_ROWS,
-  SALT_DEFAULT,
-  SALT_MAX,
-  SALT_MIN,
-  rowsHydration,
-  saltGrams,
-  toGrams,
-  toPercentages,
-  type RowKind,
-} from '../lib/bakers-percentage';
-import { handoffHref } from '../lib/handoff';
+import { DEFAULT_ROWS, SALT_DEFAULT, SALT_MAX, SALT_MIN, toPercentages, type RowKind } from '../lib/bakers-percentage';
+import { percentagesToGramsView, recipeToPercentagesView, saltView, type RowInput } from '../lib/bakers-view';
 
 const SITE = 'https://thedoughformula.com';
 const PATH = '/bakers-percentage-calculator/';
@@ -21,13 +11,13 @@ const title = "Baker's Percentage Calculator | The Dough Formula";
 const description =
   "Convert any bread recipe to baker's percentages, or turn percentages into gram weights for a chosen flour amount. Includes a salt calculator.";
 
-// Defaults shown before any input (and without JS).
-const DEFAULT_FLOUR = 500;
-const defaultPcts = toPercentages(DEFAULT_ROWS);
-const defaultGramsFromPct = toGrams(DEFAULT_FLOUR, defaultPcts);
-const defaultWeight = DEFAULT_ROWS.reduce((t, r) => t + r.grams, 0);
-const defaultHandoff = handoffHref({ hydration: rowsHydration(DEFAULT_ROWS), weight: defaultWeight });
-const defaultSalt = saltGrams(DEFAULT_FLOUR, SALT_DEFAULT);
+// Defaults shown before any input (and without JS), through the same views the script uses.
+const DEFAULT_FLOUR = '500';
+const gInputs: RowInput[] = DEFAULT_ROWS.map((r) => ({ name: r.name, kind: r.kind, amount: String(r.grams) }));
+const pInputs: RowInput[] = toPercentages(DEFAULT_ROWS).map((r) => ({ name: r.name, kind: r.kind, amount: String(r.pct) }));
+const gView = recipeToPercentagesView(gInputs);
+const pView = percentagesToGramsView(DEFAULT_FLOUR, pInputs);
+const defaultSalt = saltView(DEFAULT_FLOUR, SALT_DEFAULT.toFixed(1));
 
 const KINDS: { value: RowKind; label: string }[] = [
   { value: 'flour', label: 'Flour' },
@@ -42,8 +32,8 @@ const tabs = [
 ];
 
 // Mode 1 rows take grams and show percent; mode 2 rows take percent and show grams.
-const gRows = DEFAULT_ROWS.map((r, i) => ({ name: r.name, kind: r.kind, amount: r.grams, out: `${defaultPcts[i].pct}%` }));
-const pRows = defaultPcts.map((r, i) => ({ name: r.name, kind: r.kind, amount: r.pct, out: `${defaultGramsFromPct[i].grams} g` }));
+const gRows = gInputs.map((r, i) => ({ ...r, out: gView.outs[i] }));
+const pRows = pInputs.map((r, i) => ({ ...r, out: pView.outs[i] }));
 
 const faq = [
   {
@@ -134,8 +124,8 @@ const rowGrid = 'grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:grid-cols-[minm
         </div>
 
         {[
-          { id: 'recipe-to-percentages', unit: 'g', rows: gRows, amountLabel: 'Grams', outLabel: 'Percent', step: '1' },
-          { id: 'percentages-to-grams', unit: 'pct', rows: pRows, amountLabel: 'Percent', outLabel: 'Grams', step: '0.1' },
+          { id: 'recipe-to-percentages', unit: 'g', rows: gRows, view: gView, amountLabel: 'Grams', outLabel: 'Percent', step: '1' },
+          { id: 'percentages-to-grams', unit: 'pct', rows: pRows, view: pView, amountLabel: 'Percent', outLabel: 'Grams', step: '0.1' },
         ].map((panel, pi) => (
           <div role="tabpanel" id={`panel-${panel.id}`} aria-labelledby={`tab-${panel.id}`} data-panel={panel.id} data-unit={panel.unit} hidden={pi !== 0}>
             {panel.unit === 'pct' && (
@@ -167,32 +157,32 @@ const rowGrid = 'grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:grid-cols-[minm
                   {KINDS.map((k) => <option value={k.value} selected={k.value === 'other'}>{k.label}</option>)}
                 </select>
                 <input class="input w-full" type="number" inputmode="decimal" min="0" step={panel.step} aria-label={panel.amountLabel} value="" data-field="amount" />
-                <output class="font-display text-lg sm:text-right pl-1 sm:pl-0" data-field="out">{panel.unit === 'g' ? '0%' : '0 g'}</output>
+                <output class="font-display text-lg sm:text-right pl-1 sm:pl-0" data-field="out">–</output>
                 <button type="button" class="text-[var(--crust-brown)] hover:text-[var(--espresso)] text-xl leading-none justify-self-end sm:justify-self-center px-2" aria-label="Remove ingredient" data-remove>&times;</button>
               </li>
             </template>
             <button type="button" class="btn btn-outline text-sm mt-4" data-add>Add ingredient</button>
             <p class="text-sm text-[var(--crust-brown)] mt-4" aria-live="polite" data-summary>
               {panel.unit === 'g'
-                ? <>Flour total: <span data-flour-total>{DEFAULT_FLOUR} g</span> (100%). Dough weight: <span data-dough-total>{defaultWeight} g</span>.</>
-                : <>Flour rows add up to <span data-flour-total>100%</span>. Dough weight: <span data-dough-total>{defaultWeight} g</span>.</>}
+                ? <>Flour total: <span data-flour-total>{panel.view.flourTotal}</span>. Dough weight: <span data-dough-total>{panel.view.doughTotal}</span>.</>
+                : <>Flour rows add up to <span data-flour-total>{panel.view.flourTotal}</span>. Dough weight: <span data-dough-total>{panel.view.doughTotal}</span>.</>}
             </p>
           </div>
         ))}
 
-        <p class="text-xs text-[var(--crust-brown)] mt-3">Mark every flour as Flour so they share the 100%. A starter is treated as equal parts flour and water when the hydration goes over to the full calculator.</p>
+        <p class="text-xs text-[var(--crust-brown)] mt-3">Mark every flour as Flour so they share the 100%.</p>
 
         <div class="mt-8 pt-6 border-t border-[var(--border-light)]">
           <a
             id="handoff"
-            href={defaultHandoff}
+            href={gView.handoff}
             class="btn btn-primary inline-block"
             data-handoff
             data-from-page="bakers-percentage-calculator"
             data-to-page="homepage-calculator"
             data-tab="recipe-to-percentages"
           >Open in the full bread calculator</a>
-          <p class="text-sm text-[var(--crust-brown)] mt-3">Takes this dough's hydration and total weight to the main calculator, which builds the rest of the formula and a baking schedule.</p>
+          <p class="text-sm text-[var(--crust-brown)] mt-3">Takes your flour and water weights to the main calculator, which adds salt and starter from its Sourdough preset and builds a baking schedule.</p>
         </div>
       </section>
 
@@ -210,7 +200,7 @@ const rowGrid = 'grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:grid-cols-[minm
           </div>
           <div aria-live="polite">
             <p class="text-sm text-[var(--crust-brown)]">Salt</p>
-            <p class="font-display text-3xl"><span id="salt-grams">{defaultSalt}</span> g</p>
+            <p class="font-display text-3xl" id="salt-grams">{defaultSalt}</p>
           </div>
         </div>
         <p class="text-sm text-[var(--crust-brown)] mt-4">More on what salt does to a dough in <a href="/ingredients/role-of-salt-in-bread/" class="underline decoration-[var(--accent-gold)] underline-offset-2">the role of salt in bread</a>.</p>
@@ -246,7 +236,7 @@ const rowGrid = 'grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:grid-cols-[minm
 
         <h2>Where the system bends</h2>
         <p>
-          Preferments are the first place the simple version gets fuzzy. A starter or poolish holds its own flour and water, so a dough listed at 70% water with 20% starter is closer to 73% once the starter is counted. This calculator lists the starter as its own line, the way most recipes are written, and splits it into flour and water only when it works out the hydration for the full calculator. <a href="/fundamentals/preferments-101/">Preferments 101</a> covers how bakers account for them in more detail.
+          Preferments are the first place the simple version gets fuzzy. A starter or poolish holds its own flour and water, so a dough listed at 70% water with 20% starter is closer to 73% once the starter is counted. This calculator lists the starter as its own line, the way most recipes are written. <a href="/fundamentals/preferments-101/">Preferments 101</a> covers how bakers account for them in more detail.
         </p>
         <p>
           Enriched doughs bend it too. Milk and eggs both carry water, so a brioche with 20% milk and 30% eggs is wetter than its water line suggests, and bakers judge those doughs by feel as much as by the number. For the full background on the system, see <a href="/fundamentals/bakers-percentages-explained/">baker's percentages explained</a>.
@@ -269,65 +259,54 @@ const rowGrid = 'grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:grid-cols-[minm
 </Layout>
 
 <script>
-  import { rowsHydration, saltGrams, toGrams, toPercentages, type Row, type RowKind } from '../lib/bakers-percentage';
-  import { handoffHref } from '../lib/handoff';
+  import { percentagesToGramsView, recipeToPercentagesView, saltView, type RowInput, type RowsView } from '../lib/bakers-view';
+  import type { RowKind } from '../lib/bakers-percentage';
 
   const handoff = document.getElementById('handoff') as HTMLAnchorElement | null;
   const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('.calc-mode-tab'));
   const panels = Array.from(document.querySelectorAll<HTMLElement>('[data-panel]'));
+  const value = (id: string) => (document.getElementById(id) as HTMLInputElement | null)?.value ?? '';
   let mode = 'recipe-to-percentages';
 
-  const num = (el: Element | null) => parseFloat((el as HTMLInputElement | null)?.value ?? '');
-
-  function readRows(panel: HTMLElement) {
+  function readRows(panel: HTMLElement): { li: HTMLElement; row: RowInput }[] {
     return Array.from(panel.querySelectorAll<HTMLElement>('.calc-row')).map((li) => ({
       li,
-      name: (li.querySelector('[data-field="name"]') as HTMLInputElement).value,
-      kind: (li.querySelector('[data-field="kind"]') as HTMLSelectElement).value as RowKind,
-      amount: num(li.querySelector('[data-field="amount"]')),
+      row: {
+        name: (li.querySelector('[data-field="name"]') as HTMLInputElement).value,
+        kind: (li.querySelector('[data-field="kind"]') as HTMLSelectElement).value as RowKind,
+        amount: (li.querySelector('[data-field="amount"]') as HTMLInputElement).value,
+      },
     }));
   }
 
-  function setText(root: ParentNode, sel: string, v: string) {
+  function setText(root: ParentNode, sel: string, text: string) {
     const el = root.querySelector(sel);
-    if (el) el.textContent = v;
+    if (el) el.textContent = text;
   }
 
-  /** Recomputes one panel and returns its rows in grams. */
-  function computePanel(panel: HTMLElement): Row[] {
+  function render(panel: HTMLElement): RowsView {
     const rows = readRows(panel);
-    if (panel.dataset.unit === 'g') {
-      const gramRows: Row[] = rows.map((r) => ({ name: r.name, kind: r.kind, grams: Number.isFinite(r.amount) ? r.amount : 0 }));
-      toPercentages(gramRows).forEach((p, i) => setText(rows[i].li, '[data-field="out"]', `${p.pct}%`));
-      const flour = gramRows.filter((r) => r.kind === 'flour').reduce((t, r) => t + r.grams, 0);
-      setText(panel, '[data-flour-total]', `${Math.round(flour)} g`);
-      setText(panel, '[data-dough-total]', `${Math.round(gramRows.reduce((t, r) => t + r.grams, 0))} g`);
-      return gramRows;
-    }
-    const pctRows = rows.map((r) => ({ name: r.name, kind: r.kind, pct: Number.isFinite(r.amount) ? r.amount : 0 }));
-    const gramRows = toGrams(num(document.getElementById('pg-flour')), pctRows);
-    gramRows.forEach((g, i) => setText(rows[i].li, '[data-field="out"]', `${g.grams} g`));
-    const flourPct = pctRows.filter((r) => r.kind === 'flour').reduce((t, r) => t + r.pct, 0);
-    setText(panel, '[data-flour-total]', `${Math.round(flourPct * 10) / 10}%`);
-    setText(panel, '[data-dough-total]', `${gramRows.reduce((t, r) => t + r.grams, 0)} g`);
-    return gramRows;
+    const view = panel.dataset.unit === 'g'
+      ? recipeToPercentagesView(rows.map((r) => r.row))
+      : percentagesToGramsView(value('pg-flour'), rows.map((r) => r.row));
+    view.outs.forEach((text, i) => setText(rows[i].li, '[data-field="out"]', text));
+    setText(panel, '[data-flour-total]', view.flourTotal);
+    setText(panel, '[data-dough-total]', view.doughTotal);
+    return view;
   }
 
   function update() {
     const active = panels.find((p) => p.dataset.panel === mode);
     if (!active) return;
-    const gramRows = computePanel(active);
+    const view = render(active);
     if (handoff) {
-      handoff.href = handoffHref({
-        hydration: rowsHydration(gramRows),
-        weight: gramRows.reduce((t, r) => t + r.grams, 0),
-      });
+      handoff.href = view.handoff;
       handoff.dataset.tab = mode;
     }
   }
 
   function updateSalt() {
-    setText(document, '#salt-grams', String(saltGrams(num(document.getElementById('salt-flour')), num(document.getElementById('salt-pct')))));
+    setText(document, '#salt-grams', saltView(value('salt-flour'), value('salt-pct')));
   }
 
   function select(tab: HTMLButtonElement, focus = false) {

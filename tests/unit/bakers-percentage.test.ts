@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DEFAULT_ROWS, toPercentages, toGrams, rowsHydration, saltGrams } from '../../src/lib/bakers-percentage';
+import { DEFAULT_ROWS, toPercentages, toGrams, saltGrams } from '../../src/lib/bakers-percentage';
 
 describe('DEFAULT_ROWS', () => {
   it('is a four-line sourdough', () => {
@@ -37,18 +37,6 @@ describe('toGrams', () => {
       { name: 'Salt', kind: 'other', pct: 2 },
     ]);
     expect(out.map((r) => r.grams)).toEqual([500, 360, 10]);
-  });
-});
-
-describe('rowsHydration', () => {
-  it('counts the starter as half flour, half water by default', () => {
-    expect(rowsHydration(DEFAULT_ROWS)).toBe(72.7);
-  });
-  it('is plain water over flour without starter', () => {
-    expect(rowsHydration([
-      { name: 'Flour', kind: 'flour', grams: 1000 },
-      { name: 'Water', kind: 'water', grams: 680 },
-    ])).toBe(68);
   });
 });
 
