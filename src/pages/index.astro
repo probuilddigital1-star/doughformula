@@ -400,18 +400,18 @@ const featuredOnLoad = DUTCH_OVEN_STYLES.includes(breadStyles[0].id);
           <!-- Advanced Options - Tabbed Interface -->
           <div class="card p-0">
             <div class="accordion-item border-0">
-              <button class="accordion-trigger px-4 sm:px-6 py-4" id="advanced-trigger">
+              <button class="accordion-trigger px-4 sm:px-6 py-4" id="advanced-trigger" aria-expanded="true" aria-controls="advanced-content">
                 <span class="flex items-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
                   </svg>
                   Advanced Options
                 </span>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform" id="advanced-chevron" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform" id="advanced-chevron" style="transform: rotate(180deg)" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                 </svg>
               </button>
-              <div class="hidden" id="advanced-content">
+              <div id="advanced-content">
                 <!-- Tab Navigation - Wrapping Grid -->
                 <div class="advanced-tabs-grid" id="tabs-wrapper">
                     <button class="advanced-tab advanced-tab-active" data-tab="basics">Basics</button>
@@ -2707,13 +2707,15 @@ const featuredOnLoad = DUTCH_OVEN_STYLES.includes(breadStyles[0].id);
     });
   });
 
-  // Advanced options toggle
-  document.getElementById('advanced-trigger')?.addEventListener('click', () => {
+  // Advanced options toggle (open by default)
+  document.getElementById('advanced-trigger')?.addEventListener('click', (e) => {
     const content = document.getElementById('advanced-content');
     const chevron = document.getElementById('advanced-chevron');
     if (content && chevron) {
       content.classList.toggle('hidden');
-      chevron.style.transform = content.classList.contains('hidden') ? '' : 'rotate(180deg)';
+      const open = !content.classList.contains('hidden');
+      chevron.style.transform = open ? 'rotate(180deg)' : '';
+      (e.currentTarget as HTMLElement).setAttribute('aria-expanded', open ? 'true' : 'false');
       // Initialize scroll indicator when opening
       if (!content.classList.contains('hidden')) {
         setTimeout(updateScrollIndicators, 50);
