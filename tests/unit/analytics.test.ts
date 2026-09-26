@@ -5,6 +5,7 @@ import {
   POSTHOG_KEY,
   POSTHOG_OPTIONS,
   affiliateLinkAttributes,
+  TOOL_LINK_LOCATIONS,
   placementForTrackingId,
 } from '../../src/config/analytics';
 import { PRODUCTS, TRACKING_IDS } from '../../src/data/equipment';
@@ -111,6 +112,11 @@ describe('PostHog configuration', () => {
     expect(POSTHOG_OPTIONS.capture_pageleave).toBe(true);
     expect(POSTHOG_OPTIONS.capture_performance.web_vitals).toBe(true);
     expect(POSTHOG_OPTIONS.persistence).toBe('localStorage+cookie');
+  });
+
+  it('has the tool link event and its four locations', () => {
+    expect(EVENTS.toolLinkClick).toBe('tool_link_click');
+    expect([...TOOL_LINK_LOCATIONS]).toEqual(['nav', 'nav_mobile', 'homepage_more_tools', 'footer']);
   });
 
   it('has the Phase 2 hand-off event live', () => {

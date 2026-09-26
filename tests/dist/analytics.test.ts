@@ -68,6 +68,16 @@ describe('PostHog snippet', () => {
         for (const name of Object.values(EVENTS)) expect(script).toContain(name);
       });
 
+      it('sends tool_link_click with link_location and destination read from the link', () => {
+        const start = script.indexOf("closest('a[data-tool-link]')");
+        expect(start).toBeGreaterThan(-1);
+        const branch = script.slice(start, script.indexOf('return;', start));
+        expect(branch).toContain('events.toolLinkClick');
+        expect(branch).toContain('link_location: toolLink.dataset.toolLink');
+        expect(branch).toContain("destination: toolLink.getAttribute('href')");
+        expect(branch).not.toMatch(/email|value|input/i);
+      });
+
       it('sends calculator_handoff with from_page, to_page and tab read from the link, and nothing typed', () => {
         const start = script.indexOf("closest('a[data-handoff]')");
         expect(start).toBeGreaterThan(-1);

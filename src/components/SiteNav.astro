@@ -1,6 +1,13 @@
 ---
 const pathname = new URL(Astro.request.url).pathname;
 const isHome = pathname === '/' || pathname === '';
+
+// The three calculators. The same list feeds the desktop dropdown and the mobile menu.
+const calculators = [
+  { href: '/#calculator', label: 'Bread Calculator' },
+  { href: '/hydration-calculator/', label: 'Hydration Calculator' },
+  { href: '/bakers-percentage-calculator/', label: "Baker's Percentage Calculator" },
+];
 ---
 
 <nav class="sticky top-0 z-50 bg-[var(--cream-flour)]/95 backdrop-blur-sm border-b border-[var(--border-light)]">
@@ -14,6 +21,30 @@ const isHome = pathname === '/' || pathname === '';
     </a>
 
     <div class="hidden md:flex items-center gap-8">
+      <div class="relative" id="calc-menu">
+        <button
+          type="button"
+          id="calc-menu-button"
+          class="text-sm hover:text-[var(--accent-gold)] transition-colors inline-flex items-center gap-1"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="calc-menu-list"
+        >
+          Calculators
+          <svg class="w-3 h-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5"/></svg>
+        </button>
+        <ul
+          id="calc-menu-list"
+          class="absolute left-0 top-full mt-3 w-64 rounded-lg border border-[var(--border-light)] bg-[var(--cream-flour)] shadow-lg py-2 hidden"
+          aria-labelledby="calc-menu-button"
+        >
+          {calculators.map((c) => (
+            <li>
+              <a href={c.href} class="block px-4 py-2 text-sm hover:bg-[var(--cream-warm)] hover:text-[var(--accent-gold)] focus:bg-[var(--cream-warm)] focus:outline-none" data-tool-link="nav">{c.label}</a>
+            </li>
+          ))}
+        </ul>
+      </div>
       <a href="/guides/" class="text-sm hover:text-[var(--accent-gold)] transition-colors">Guides</a>
       <a href="/recipes/" class="text-sm hover:text-[var(--accent-gold)] transition-colors">Recipes</a>
       <a href="/about/" class="text-sm hover:text-[var(--accent-gold)] transition-colors">About</a>
@@ -41,6 +72,11 @@ const isHome = pathname === '/' || pathname === '';
 
   <div id="mobile-nav" class="md:hidden hidden border-t border-[var(--border-light)] bg-[var(--cream-flour)]">
     <div class="container flex flex-col py-4 gap-4">
+      <p class="text-xs uppercase tracking-[0.2em] font-medium text-[var(--accent-gold)] pt-2">Calculators</p>
+      {calculators.map((c) => (
+        <a href={c.href} class="py-2" data-tool-link="nav_mobile">{c.label}</a>
+      ))}
+      <div class="border-t border-[var(--border-light)]" aria-hidden="true"></div>
       <a href="/guides/" class="py-2">Guides</a>
       <a href="/recipes/" class="py-2">Recipes</a>
       <a href="/about/" class="py-2">About</a>
@@ -59,5 +95,60 @@ const isHome = pathname === '/' || pathname === '';
       const open = panel.classList.toggle('hidden');
       toggle.setAttribute('aria-expanded', open ? 'false' : 'true');
     });
+    // Close the mobile menu when one of its links is followed, so an in-page jump to
+    // #calculator doesn't leave the panel covering the page.
+    panel.addEventListener('click', (e) => {
+      if (e.target.closest && e.target.closest('a')) {
+        panel.classList.add('hidden');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+    });
   })();
+
+</script>
+
+<script>
+  // Calculators dropdown (desktop). The rules live in src/lib/calc-menu.ts; this applies them.
+  import { CLOSED, menuReducer, type MenuEvent, type MenuState } from '../lib/calc-menu';
+
+  const root = document.getElementById('calc-menu');
+  const button = document.getElementById('calc-menu-button');
+  const list = document.getElementById('calc-menu-list');
+  if (root && button && list) {
+    let state: MenuState = CLOSED;
+    const links = () => Array.from(list.querySelectorAll<HTMLAnchorElement>('a'));
+    const dispatch = (event: MenuEvent) => {
+      state = menuReducer(state, event);
+      list.classList.toggle('hidden', !state.open);
+      button.setAttribute('aria-expanded', state.open ? 'true' : 'false');
+      if (state.focus !== null) links()[state.focus]?.focus();
+      if (state.focusButton) button.focus();
+    };
+
+    button.addEventListener('click', () => dispatch({ type: 'button-click' }));
+    button.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        dispatch({ type: 'button-key', key: e.key });
+      }
+    });
+    list.addEventListener('keydown', (e) => {
+      if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return;
+      e.preventDefault();
+      const items = links();
+      dispatch({ type: 'list-key', key: e.key, index: items.indexOf(document.activeElement as HTMLAnchorElement), count: items.length });
+    });
+    root.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && state.open) dispatch({ type: 'escape' });
+    });
+    root.addEventListener('focusout', (e) => {
+      if (state.open && !root.contains(e.relatedTarget as Node | null)) dispatch({ type: 'focus-left' });
+    });
+    list.addEventListener('click', (e) => {
+      if ((e.target as Element).closest('a')) dispatch({ type: 'link-click' });
+    });
+    document.addEventListener('click', (e) => {
+      if (state.open && !root.contains(e.target as Node)) dispatch({ type: 'outside-click' });
+    });
+  }
 </script>

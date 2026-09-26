@@ -52,7 +52,13 @@ export const EVENTS = {
   // Fired by the "Open in the full bread calculator" links on the calculator pages.
   // Properties: from_page, to_page, tab. Fixed strings only, never form values.
   calculatorHandoff: 'calculator_handoff',
+  // Fired by links to the calculators from the nav, the mobile menu, the homepage "More
+  // tools" line and the footer. Properties: link_location, destination (the link's path).
+  toolLinkClick: 'tool_link_click',
 } as const;
+
+/** Where a tool link sits; the value of data-tool-link on the anchor. */
+export const TOOL_LINK_LOCATIONS = ['nav', 'nav_mobile', 'homepage_more_tools', 'footer'] as const;
 
 /**
  * The data attributes an affiliate link needs for the delegated click listener in

@@ -68,6 +68,17 @@ import {
           return;
         }
 
+        // Links to the calculator pages. destination is the path as written on the link
+        // ('/#calculator', '/hydration-calculator/'), so nothing about the visitor is sent.
+        var toolLink = el.closest('a[data-tool-link]');
+        if (toolLink) {
+          capture(events.toolLinkClick, {
+            link_location: toolLink.dataset.toolLink,
+            destination: toolLink.getAttribute('href'),
+          });
+          return;
+        }
+
         var tab = el.closest('.advanced-tab[data-tab]');
         if (tab) {
           capture(events.calculatorTab, { tab: tab.dataset.tab });
