@@ -68,10 +68,10 @@ Concentration matters more than coverage at ~800 visits a month: each program ho
 - **Commission:** 10% per sale
 - **Product:** The Challenger Bread Pan, $299 at signup. Reference only: no price appears on the site.
 - **Link format:** `https://challengerbreadware.com/product/the-challenger-bread-pan/?ref=probuilddigital&campaign=<tag>`
-- **Campaign tags:** `recipe` (featured card on recipe pages), `recipe-step` (the one-sentence mention in the bake step), `calculator` (featured card in the calculator gear blocks)
+- **Campaign tags:** `recipe` (featured card on recipe pages), `recipe-step` (the one-sentence mention in the bake step), `calculator` (featured card in the calculator pages' gear blocks), `homepage` (featured card in the homepage calculator's gear block, from 2026-09-26). PostHog's `affiliate_click` reports the same value as `tracking_id`.
 - **Images:** official media kit images only. The site uses `src/assets/gear/challenger-bread-pan.jpg` from the kit.
 - **Restrictions:** no paid search bidding on the Challenger brand
-- **On the site:** `challenger-bread-pan` in `src/data/equipment.ts`, shown through `FEATURED_GEAR['dutch-oven']` as a featured card on the sourdough, country loaf and no-knead recipe pages and in the gear block on both calculator pages. Never on the homepage. It is not in any plain gear list.
+- **On the site:** `challenger-bread-pan` in `src/data/equipment.ts`, shown through `FEATURED_GEAR['dutch-oven']` as a featured card on the sourdough, country loaf and no-knead recipe pages, in the gear block on both calculator pages, and (from 2026-09-26) in the homepage calculator's gear block when the selected style bakes in a Dutch oven (Sourdough, No-Knead). It is not in any plain gear list.
 
 ### King Arthur Baking
 

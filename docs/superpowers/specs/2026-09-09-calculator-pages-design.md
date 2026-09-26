@@ -108,6 +108,21 @@ Rows can be added and removed; defaults show a four-line sourdough (flour, water
 - Within eight weeks of indexing: `bread hydration calculator` and at least one baker's-percentage spelling on page one; CTR at or above 10% for any of the target queries that reaches the top four.
 - The homepage's position for `bread calculator` stays within ±1 of its pre-launch 28-day average. If it drops more than that for two consecutive weeks, the footer links are the first suspect and come out.
 
+### Homepage promotion shipped early (2026-09-26)
+
+On Zack's decision, the homepage promotion shipped before the two-week observation window closed, instead of waiting it out. Beyond the footer Tools group, the homepage now carries:
+
+- a **Calculators** menu in the site header (desktop dropdown and mobile menu) linking the homepage calculator and both new pages, on every page;
+- a "More tools" line under the homepage calculator's recipe output linking both new pages;
+- the Challenger featured card in the homepage calculator's gear block, for Dutch oven styles.
+
+**Rollback guard.** Baseline for the exact query `bread calculator`: homepage position **2.2** (Search Console, 2026-09-09 to 2026-09-23; 2.3 for 2026-08-12 to 2026-09-08). Check weekly, 7-day windows, exact query, page `https://thedoughformula.com/`. If the position is worse than **3.2** for two consecutive weekly windows:
+
+1. Remove the header **Calculators** menu first (desktop and mobile, `SiteNav.astro`).
+2. Re-measure for two more weekly windows. If it is still worse than 3.2, remove the footer **Tools** links (`SiteFooter.astro`).
+
+The calculator pages, their hand-off buttons, the article cross-links, the "More tools" line and the featured card stay unless a later review says otherwise.
+
 ## Out of scope
 
 Any homepage title change, `noindex` or consolidation of recipe pages, and the calculator-in-article embed approach considered and rejected in the September 7 brainstorm.
