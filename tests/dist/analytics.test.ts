@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { distFile, allDistHtml } from './helpers';
-import { EVENTS, POSTHOG_KEY, PRODUCTION_HOST, RESERVED_EVENTS } from '../../src/config/analytics';
+import { EVENTS, POSTHOG_KEY, PRODUCTION_HOST } from '../../src/config/analytics';
 
 const PAGES = {
   homepage: 'index.html',
@@ -64,9 +64,19 @@ describe('PostHog snippet', () => {
         expect(script).toContain('location.hostname');
       });
 
-      it('wires every implemented event and none of the reserved ones', () => {
+      it('wires every implemented event', () => {
         for (const name of Object.values(EVENTS)) expect(script).toContain(name);
-        for (const name of Object.values(RESERVED_EVENTS)) expect(html).not.toContain(name);
+      });
+
+      it('sends calculator_handoff with from_page, to_page and tab read from the link, and nothing typed', () => {
+        const start = script.indexOf("closest('a[data-handoff]')");
+        expect(start).toBeGreaterThan(-1);
+        const branch = script.slice(start, script.indexOf('return;', start));
+        expect(branch).toContain('events.calculatorHandoff');
+        expect(branch).toContain('from_page: h.fromPage');
+        expect(branch).toContain('to_page: h.toPage');
+        expect(branch).toContain('tab: h.tab');
+        expect(branch).not.toMatch(/email|value|input/i);
       });
     });
   }

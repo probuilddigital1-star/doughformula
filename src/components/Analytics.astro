@@ -59,6 +59,15 @@ import {
           return;
         }
 
+        // Calculator page hand-off to the homepage calculator. The anchor's data attributes
+        // are fixed page and tab ids, so nothing typed into the calculator is sent.
+        var handoff = el.closest('a[data-handoff]');
+        if (handoff) {
+          var h = handoff.dataset;
+          capture(events.calculatorHandoff, { from_page: h.fromPage, to_page: h.toPage, tab: h.tab });
+          return;
+        }
+
         var tab = el.closest('.advanced-tab[data-tab]');
         if (tab) {
           capture(events.calculatorTab, { tab: tab.dataset.tab });

@@ -49,12 +49,8 @@ export const EVENTS = {
   calculatorTab: 'calculator_tab',
   planBakeOpened: 'plan_bake_opened',
   newsletterSubmitted: 'newsletter_submitted',
-} as const;
-
-// Reserved for Phase 2 (the hydration and baker's percentage calculator pages). The name is
-// settled here so the two pages and the homepage agree when the hand-off ships. Nothing
-// captures it yet, and tests/dist/analytics.test.ts asserts it stays out of the built pages.
-export const RESERVED_EVENTS = {
+  // Fired by the "Open in the full bread calculator" links on the calculator pages.
+  // Properties: from_page, to_page, tab. Fixed strings only, never form values.
   calculatorHandoff: 'calculator_handoff',
 } as const;
 

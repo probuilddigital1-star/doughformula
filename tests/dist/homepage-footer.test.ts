@@ -33,3 +33,14 @@ describe('footer newsletter link', () => {
     }
   });
 });
+
+describe('site-wide JSON-LD', () => {
+  it('pages without their own schema keep the one default WebApplication block', () => {
+    for (const rel of ['index.html', 'about/index.html']) {
+      const blocks = distFile(rel).match(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g) ?? [];
+      const apps = blocks.filter((b) => b.includes('"@type":"WebApplication"'));
+      expect(apps, rel).toHaveLength(1);
+      expect(apps[0], rel).toContain('"name":"The Dough Formula"');
+    }
+  });
+});

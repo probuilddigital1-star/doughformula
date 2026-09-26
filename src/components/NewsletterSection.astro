@@ -1,0 +1,79 @@
+---
+// The homepage newsletter section as a component, for the calculator pages. The homepage
+// keeps its own inline copy for now (spec: consolidating the two is a later like-for-like
+// task), so keep the markup and copy here in step with src/pages/index.astro.
+import { KIT_FORM_ID, KIT_PUBLIC_API_KEY, NEWSLETTER_ENABLED } from '../config/newsletter';
+---
+
+{NEWSLETTER_ENABLED && (
+<section id="newsletter" class="section-dark py-16 mt-16">
+  <div class="container max-w-2xl text-center">
+    <h2 class="font-display text-2xl md:text-3xl mb-3">
+      Level Up Your <span class="text-[var(--wheat-gold)]">Sourdough</span> Game
+    </h2>
+    <p class="text-[var(--cream-warm)] mb-8">
+      An occasional email when a new recipe or tool goes up. Unsubscribe anytime.
+    </p>
+    <form
+      class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+      id="newsletter-form"
+      data-kit-form-id={KIT_FORM_ID}
+      data-kit-api-key={KIT_PUBLIC_API_KEY}
+    >
+      <input
+        type="email"
+        name="email"
+        autocomplete="email"
+        placeholder="your@email.com"
+        aria-label="Email address"
+        class="input flex-1"
+        required
+      />
+      <button type="submit" class="btn btn-gold whitespace-nowrap">
+        Get Bread Tips
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+        </svg>
+      </button>
+    </form>
+    <p id="newsletter-status" class="text-sm text-[var(--cream-warm)] mt-4 min-h-[1.25rem]" role="status" aria-live="polite"></p>
+    <p class="text-sm text-[var(--crust-brown)] mt-1">
+      No spam, ever.
+    </p>
+  </div>
+</section>
+)}
+
+<script>
+  // Same Kit v3 public-key subscribe as the homepage. The email goes to Kit only; the
+  // analytics event carries no properties (Analytics.astro listens for df:newsletter-submitted).
+  const form = document.getElementById('newsletter-form') as HTMLFormElement | null;
+  const status = document.getElementById('newsletter-status');
+  if (form && status) {
+    const kitFormId = form.dataset.kitFormId || '';
+    const kitApiKey = form.dataset.kitApiKey || '';
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = form.querySelector('input[type="email"]') as HTMLInputElement | null;
+      const email = input?.value.trim() || '';
+      if (!email || !kitFormId || !kitApiKey) return;
+      const button = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+      if (button) button.disabled = true;
+      try {
+        const res = await fetch(`https://api.convertkit.com/v3/forms/${kitFormId}/subscribe`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ api_key: kitApiKey, email }),
+        });
+        if (!res.ok) throw new Error(`Kit responded ${res.status}`);
+        document.dispatchEvent(new CustomEvent('df:newsletter-submitted'));
+        status.textContent = "You're in! Check your inbox to confirm.";
+        if (input) input.value = '';
+      } catch {
+        status.textContent = 'Something went wrong. Try again in a moment.';
+      } finally {
+        if (button) button.disabled = false;
+      }
+    });
+  }
+</script>

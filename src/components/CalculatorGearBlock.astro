@@ -1,0 +1,30 @@
+---
+// The gear block for the calculator pages: the homepage aside's markup without the style
+// toggle (these pages have no style selector, so one family shows and nothing is hidden).
+// A family with a featured direct-merchant product shows its photo card above the lists.
+import EquipmentGrid from './EquipmentGrid.astro';
+import AffiliateDisclosure from './AffiliateDisclosure.astro';
+import FeaturedGearCard from './FeaturedGearCard.astro';
+import { FEATURED_GEAR, GEAR_SETS, TRACKING_IDS, hasDirectMerchant, type GearFamily } from '../data/equipment';
+
+interface Props {
+  family?: GearFamily;
+}
+
+const { family = 'dutch-oven' } = Astro.props;
+const featured = FEATURED_GEAR[family];
+const listed = family === 'universal' ? GEAR_SETS.universal : [...GEAR_SETS.universal, ...GEAR_SETS[family]];
+const hasDirect = hasDirectMerchant(featured ? [...listed, featured] : listed);
+---
+
+<aside id="gear-block" class="mt-10">
+  <h2 class="font-display text-xl mb-4">Gear for this bake</h2>
+  {featured && <FeaturedGearCard productId={featured} trackingId={TRACKING_IDS.calculator} />}
+  <EquipmentGrid compact disclosure={false} productIds={GEAR_SETS.universal} trackingId={TRACKING_IDS.calculator} />
+  {family !== 'universal' && (
+    <div class="mt-2">
+      <EquipmentGrid compact disclosure={false} productIds={GEAR_SETS[family]} trackingId={TRACKING_IDS.calculator} />
+    </div>
+  )}
+  <AffiliateDisclosure compact hasDirect={hasDirect} />
+</aside>

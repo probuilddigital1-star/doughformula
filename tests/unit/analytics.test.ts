@@ -4,7 +4,6 @@ import {
   EVENTS,
   POSTHOG_KEY,
   POSTHOG_OPTIONS,
-  RESERVED_EVENTS,
   affiliateLinkAttributes,
   placementForTrackingId,
 } from '../../src/config/analytics';
@@ -99,8 +98,7 @@ describe('PostHog configuration', () => {
     expect(POSTHOG_OPTIONS.persistence).toBe('localStorage+cookie');
   });
 
-  it('keeps the Phase 2 hand-off event reserved and separate', () => {
-    expect(RESERVED_EVENTS.calculatorHandoff).toBe('calculator_handoff');
-    expect(Object.values(EVENTS)).not.toContain('calculator_handoff');
+  it('has the Phase 2 hand-off event live', () => {
+    expect(EVENTS.calculatorHandoff).toBe('calculator_handoff');
   });
 });
