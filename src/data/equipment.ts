@@ -13,12 +13,19 @@ export interface Product {
   href?: string;
   /** Link text, e.g. 'Breadtopia'. Defaults to 'Amazon' for amazon products. */
   merchantLabel?: string;
+  /** Direct merchants: short id reported as `merchant` on affiliate_click, e.g. 'challenger'. */
+  merchantId?: string;
+  /** Direct merchants whose program reads a campaign tag: productUrl appends
+   *  &campaign=<placement> to href, so each placement reports separately. */
+  campaignTagged?: boolean;
+  /** Alt text for the product photo. Only direct merchants with a media-kit image have one;
+   *  Amazon items stay text-only (Amazon's terms don't allow self-hosted product images). */
+  imageAlt?: string;
 }
 
-// All ten products are Amazon today. The `direct` shape exists so links from other
-// programs (Brød & Taylor, Breadtopia, Challenger) can join a gear set later with a
-// data edit and no model change. No prices: Amazon requires they come from its API
-// or not appear at all.
+// Ten Amazon products plus one direct merchant (Challenger). No prices: Amazon requires
+// they come from its API or not appear at all, and the direct merchant's price changes
+// without notice.
 export const PRODUCTS: Record<string, Product> = {
   'lodge-combo-cooker': {
     id: 'lodge-combo-cooker',
@@ -90,6 +97,17 @@ export const PRODUCTS: Record<string, Product> = {
     merchant: 'amazon',
     asin: 'B002UNMZOO',
   },
+  'challenger-bread-pan': {
+    id: 'challenger-bread-pan',
+    name: 'Challenger Bread Pan',
+    blurb: 'Cast iron with a shallow base you load dough onto instead of dropping it into a hot pot. The tall lid traps steam over a round or oval loaf.',
+    merchant: 'direct',
+    merchantId: 'challenger',
+    merchantLabel: 'Challenger',
+    href: 'https://challengerbreadware.com/product/the-challenger-bread-pan/?ref=probuilddigital',
+    campaignTagged: true,
+    imageAlt: 'A baked loaf sitting in the cast iron base of the Challenger Bread Pan, with the lid set to one side',
+  },
 };
 
 export type GearFamily = ShapeFamily | 'universal';
@@ -101,6 +119,13 @@ export const GEAR_SETS: Record<GearFamily, string[]> = {
   'steam-stone': ['thermichef-steel', 'saint-germain-couche', 'ufo-lame'],
   'sheet-pan': ['usa-pan-9x13'],
   'loaf-pan': ['usa-pan-loaf'],
+};
+
+/** One featured direct-merchant product per family, shown as a photo card above the plain
+ *  gear list on recipe pages and the calculator pages. Never on the homepage, and never
+ *  also listed in GEAR_SETS, so the plain lists and the homepage stay Amazon only. */
+export const FEATURED_GEAR: Partial<Record<GearFamily, string>> = {
+  'dutch-oven': 'challenger-bread-pan',
 };
 
 /** The homepage grid, in the exact order the hardcoded version used. */
@@ -122,8 +147,27 @@ export const TRACKING_IDS = {
   calculator: 'tdf-calc-20',
 } as const;
 
-export function productUrl(p: Product, trackingId: string): string {
+/** Where an affiliate link sits. The first three map one to one onto Amazon tracking ids;
+ *  recipe_step is the in-text mention inside a recipe's bake step. */
+export type Placement = 'homepage' | 'recipe' | 'recipe_step' | 'calculator' | 'unknown';
+
+/** Tracking ids map one to one onto placements, so the placement needs no extra prop. */
+export function placementForTrackingId(trackingId: string): Placement {
+  if (trackingId === TRACKING_IDS.homepage) return 'homepage';
+  if (trackingId === TRACKING_IDS.recipe) return 'recipe';
+  if (trackingId === TRACKING_IDS.calculator) return 'calculator';
+  return 'unknown';
+}
+
+/** Campaign tag for a placement: recipe_step becomes recipe-step. */
+export function campaignFor(placement: Placement): string {
+  return placement.replace('_', '-');
+}
+
+/** Pass `placement` when it isn't implied by the tracking id (recipe_step). */
+export function productUrl(p: Product, trackingId: string, placement?: Placement): string {
   if (p.merchant === 'amazon') return `https://www.amazon.com/dp/${p.asin}?tag=${trackingId}`;
+  if (p.campaignTagged) return `${p.href}&campaign=${campaignFor(placement ?? placementForTrackingId(trackingId))}`;
   return p.href!;
 }
 

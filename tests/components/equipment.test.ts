@@ -2,6 +2,8 @@ import { experimental_AstroContainer as AstroContainer } from 'astro/container';
 import { describe, it, expect, beforeAll } from 'vitest';
 import EquipmentGrid from '../../src/components/EquipmentGrid.astro';
 import AffiliateDisclosure from '../../src/components/AffiliateDisclosure.astro';
+import FeaturedGearCard from '../../src/components/FeaturedGearCard.astro';
+import { TRACKING_IDS } from '../../src/data/equipment';
 
 let container: AstroContainer;
 beforeAll(async () => {
@@ -83,5 +85,53 @@ describe('AffiliateDisclosure', () => {
     const html = await container.renderToString(AffiliateDisclosure, { props: {} });
     expect(html).toContain('<strong>Affiliate Disclosure:</strong>');
     expect(html).toContain('Thank you for supporting The Dough Formula!');
+  });
+});
+
+describe('EquipmentGrid with a featured card nearby', () => {
+  it('adds the other-retailers sentence when directNearby is set', async () => {
+    const html = await container.renderToString(EquipmentGrid, {
+      props: { productIds: ['thermapen'], trackingId: 't-20', directNearby: true },
+    });
+    expect(html).toContain('Some links go to other retailers who also pay me a commission.');
+  });
+});
+
+describe('FeaturedGearCard', () => {
+  const BASE = 'https://challengerbreadware.com/product/the-challenger-bread-pan/?ref=probuilddigital';
+
+  it('renders the Challenger card with label, name, blurb, image and a tagged sponsored button', async () => {
+    const html = await container.renderToString(FeaturedGearCard, {
+      props: { productId: 'challenger-bread-pan', trackingId: TRACKING_IDS.recipe },
+    });
+    expect(html).toContain('Featured pick');
+    expect(html).toContain('Challenger Bread Pan');
+    expect(html).toContain('shallow base you load dough onto');
+    expect(html).toContain('See it at Challenger');
+    expect(html).toContain(`href="${BASE}&campaign=recipe"`);
+    expect(html).toMatch(/rel="sponsored nofollow[^"]*"/);
+    expect(html).toContain('data-merchant="challenger"');
+    expect(html).toContain('data-placement="recipe"');
+    const img = html.match(/<img[^>]*>/)?.[0] ?? '';
+    expect(img).toMatch(/ width="360"/);
+    expect(img).toMatch(/ height="240"/);
+    expect(img).toContain('loading="lazy"');
+    expect(img).toMatch(/ alt="[^"]{10,}"/);
+  });
+
+  it('tags the calculator placement', async () => {
+    const html = await container.renderToString(FeaturedGearCard, {
+      props: { productId: 'challenger-bread-pan', trackingId: TRACKING_IDS.calculator },
+    });
+    expect(html).toContain(`href="${BASE}&campaign=calculator"`);
+    expect(html).toContain('data-placement="calculator"');
+  });
+
+  it('renders nothing for an Amazon product', async () => {
+    const html = await container.renderToString(FeaturedGearCard, {
+      props: { productId: 'lodge-combo-cooker', trackingId: TRACKING_IDS.recipe },
+    });
+    expect(html).not.toContain('Featured pick');
+    expect(html).not.toContain('<img');
   });
 });

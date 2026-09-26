@@ -12,21 +12,26 @@ interface Props {
   compact?: boolean;
   /** Set false when the caller renders one disclosure for several grids. */
   disclosure?: boolean;
+  /** True when a direct-merchant link (a featured card) sits in the same placement, so the
+   *  disclosure still carries the other-retailers sentence. */
+  directNearby?: boolean;
 }
 
-const { productIds, trackingId, heading, intro, compact = false, disclosure = true } = Astro.props;
+const { productIds, trackingId, heading, intro, compact = false, disclosure = true, directNearby = false } = Astro.props;
 
 const products = productIds.map((id) => {
   const p = PRODUCTS[id];
   if (!p) throw new Error(`EquipmentGrid: unknown product id "${id}"`);
   return p;
 });
-const hasDirect = products.some((p) => p.merchant === 'direct');
+const hasDirect = directNearby || products.some((p) => p.merchant === 'direct');
 const labelFor = (label?: string) => label ?? 'Amazon';
 ---
 
 {heading && <h2 class="font-display text-2xl md:text-3xl text-center mb-3">{heading}</h2>}
 {intro && <p class="text-center text-[var(--crust-brown)] mb-10">{intro}</p>}
+
+<slot name="featured" />
 
 {compact ? (
   <ul class="space-y-2">

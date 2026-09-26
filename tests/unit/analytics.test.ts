@@ -49,6 +49,21 @@ describe('affiliateLinkAttributes', () => {
     expect(affiliateLinkAttributes(direct, TRACKING_IDS.recipe)['data-merchant']).toBe('direct');
   });
 
+  it('reports Challenger as merchant challenger, with the placement from the tracking id', () => {
+    const c = PRODUCTS['challenger-bread-pan'];
+    expect(affiliateLinkAttributes(c, TRACKING_IDS.recipe)).toMatchObject({
+      'data-merchant': 'challenger',
+      'data-placement': 'recipe',
+      'data-product-id': 'challenger-bread-pan',
+    });
+    expect(affiliateLinkAttributes(c, TRACKING_IDS.calculator)['data-placement']).toBe('calculator');
+  });
+
+  it('takes an explicit placement for the in-step mention', () => {
+    const c = PRODUCTS['challenger-bread-pan'];
+    expect(affiliateLinkAttributes(c, TRACKING_IDS.recipe, 'recipe_step')['data-placement']).toBe('recipe_step');
+  });
+
   it('never emits an empty required attribute', () => {
     for (const p of Object.values(PRODUCTS)) {
       const attrs = affiliateLinkAttributes(p, TRACKING_IDS.recipe);

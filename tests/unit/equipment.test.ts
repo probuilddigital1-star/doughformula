@@ -8,6 +8,7 @@ import {
   productUrl,
   hasDirectMerchant,
   ALL_GEAR_PRODUCT_IDS,
+  FEATURED_GEAR,
 } from '../../src/data/equipment';
 
 const ASIN = /^[A-Z0-9]{10}$/;
@@ -130,7 +131,7 @@ describe('CALCULATOR_STYLE_FAMILY', () => {
 });
 
 describe('hasDirectMerchant', () => {
-  it('is false for every gear product today (all Amazon)', () => {
+  it('is false for every plain gear list (all Amazon; direct merchants are featured separately)', () => {
     expect(hasDirectMerchant(ALL_GEAR_PRODUCT_IDS)).toBe(false);
     expect(hasDirectMerchant([])).toBe(false);
   });
@@ -148,5 +149,47 @@ describe('hasDirectMerchant', () => {
     const all = Object.values(GEAR_SETS).flat();
     for (const id of all) expect(ALL_GEAR_PRODUCT_IDS).toContain(id);
     expect(new Set(ALL_GEAR_PRODUCT_IDS).size).toBe(ALL_GEAR_PRODUCT_IDS.length);
+  });
+});
+
+describe('Challenger Bread Pan', () => {
+  const BASE = 'https://challengerbreadware.com/product/the-challenger-bread-pan/?ref=probuilddigital';
+  const p = PRODUCTS['challenger-bread-pan'];
+
+  it('is a direct merchant reported as challenger, with no ASIN', () => {
+    expect(p.merchant).toBe('direct');
+    expect(p.merchantId).toBe('challenger');
+    expect(p.merchantLabel).toBe('Challenger');
+    expect(p.asin).toBeUndefined();
+    expect(p.imageAlt).toBeTruthy();
+  });
+
+  it('carries the approved blurb and no price', () => {
+    expect(p.blurb).toBe(
+      'Cast iron with a shallow base you load dough onto instead of dropping it into a hot pot. The tall lid traps steam over a round or oval loaf.',
+    );
+    expect(`${p.name} ${p.blurb}`).not.toMatch(/\$\d/);
+  });
+
+  it('tags each placement with its own campaign', () => {
+    expect(productUrl(p, TRACKING_IDS.recipe)).toBe(`${BASE}&campaign=recipe`);
+    expect(productUrl(p, TRACKING_IDS.calculator)).toBe(`${BASE}&campaign=calculator`);
+    expect(productUrl(p, TRACKING_IDS.recipe, 'recipe_step')).toBe(`${BASE}&campaign=recipe-step`);
+  });
+
+  it('is featured for the dutch-oven family only and never in a plain gear list', () => {
+    expect(FEATURED_GEAR).toEqual({ 'dutch-oven': 'challenger-bread-pan' });
+    for (const ids of Object.values(GEAR_SETS)) expect(ids).not.toContain('challenger-bread-pan');
+    expect(HOMEPAGE_PRODUCTS).not.toContain('challenger-bread-pan');
+  });
+
+  it('leaves the Dutch oven list as it was, Lodge included', () => {
+    expect(GEAR_SETS['dutch-oven']).toEqual(['lodge-combo-cooker', 'banneton-set', 'ufo-lame']);
+  });
+});
+
+describe('Amazon tracking ids', () => {
+  it('are unchanged', () => {
+    expect(TRACKING_IDS).toEqual({ homepage: 'probuild20-20', recipe: 'tdf-recipe-20', calculator: 'tdf-calc-20' });
   });
 });

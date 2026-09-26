@@ -3,7 +3,9 @@
 // It is a client-side key, documented as safe to ship in the browser, and lives here the same
 // way KIT_PUBLIC_API_KEY lives in newsletter.ts. Never put a personal API key or the project's
 // secret key in this file.
-import { TRACKING_IDS, type Product } from '../data/equipment';
+import { placementForTrackingId, type Placement, type Product } from '../data/equipment';
+
+export { placementForTrackingId, type Placement };
 
 export const POSTHOG_KEY = 'phc_mbbaNJmZTt8YAacD7VyeuMoYMfEd67UmNtkrWrpPHyHg';
 export const POSTHOG_API_HOST = 'https://us.i.posthog.com';
@@ -56,27 +58,22 @@ export const RESERVED_EVENTS = {
   calculatorHandoff: 'calculator_handoff',
 } as const;
 
-export type Placement = 'homepage' | 'recipe' | 'calculator' | 'unknown';
-
-/** Tracking ids map one to one onto placements, so the placement needs no extra prop. */
-export function placementForTrackingId(trackingId: string): Placement {
-  if (trackingId === TRACKING_IDS.homepage) return 'homepage';
-  if (trackingId === TRACKING_IDS.recipe) return 'recipe';
-  if (trackingId === TRACKING_IDS.calculator) return 'calculator';
-  return 'unknown';
-}
-
 /**
  * The data attributes an affiliate link needs for the delegated click listener in
  * Analytics.astro to turn it into an affiliate_click event. Spread onto the anchor.
  */
-export function affiliateLinkAttributes(p: Product, trackingId: string): Record<string, string> {
+export function affiliateLinkAttributes(
+  p: Product,
+  trackingId: string,
+  placement: Placement = placementForTrackingId(trackingId),
+): Record<string, string> {
   return {
     'data-affiliate': 'true',
     'data-product-id': p.id,
     'data-product-name': p.name,
-    'data-merchant': p.merchant,
-    'data-placement': placementForTrackingId(trackingId),
+    // Amazon reports as 'amazon'; direct merchants report their own id ('challenger').
+    'data-merchant': p.merchant === 'amazon' ? 'amazon' : (p.merchantId ?? 'direct'),
+    'data-placement': placement,
     'data-tracking-id': trackingId,
   };
 }

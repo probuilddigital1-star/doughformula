@@ -1,0 +1,61 @@
+---
+// A photo card for a direct-merchant product that has a media-kit image. Amazon items never
+// get one: Amazon's terms don't allow self-hosted product images, so they stay text-only.
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import challengerBreadPan from '../assets/gear/challenger-bread-pan.jpg';
+import { PRODUCTS, productUrl } from '../data/equipment';
+import { affiliateLinkAttributes } from '../config/analytics';
+
+/** Product id to its media-kit image. A direct product without an entry renders no card. */
+const IMAGES: Record<string, ImageMetadata> = {
+  'challenger-bread-pan': challengerBreadPan,
+};
+
+interface Props {
+  productId: string;
+  trackingId: string;
+}
+
+const { productId, trackingId } = Astro.props;
+const p = PRODUCTS[productId];
+if (!p) throw new Error(`FeaturedGearCard: unknown product id "${productId}"`);
+const image = IMAGES[productId];
+const show = p.merchant === 'direct' && image !== undefined;
+
+// Display width at sm and up; below that the image spans the card, so the 2x file covers phones.
+const DISPLAY_W = 360;
+const DISPLAY_H = 240;
+---
+
+{show && (
+  <div class="card featured-gear overflow-hidden flex flex-col sm:flex-row mb-8" data-featured-gear={p.id}>
+    <div class="sm:w-[360px] sm:flex-shrink-0 bg-[var(--cream-warm)]">
+      <Image
+        src={image}
+        alt={p.imageAlt ?? p.name}
+        width={DISPLAY_W}
+        height={DISPLAY_H}
+        widths={[DISPLAY_W, DISPLAY_W * 2]}
+        sizes={`(min-width: 640px) ${DISPLAY_W}px, 100vw`}
+        format="webp"
+        quality={75}
+        loading="lazy"
+        decoding="async"
+        class="block w-full h-auto aspect-[3/2] object-cover"
+      />
+    </div>
+    <div class="p-5 sm:p-6 flex flex-col justify-center">
+      <p class="text-xs uppercase tracking-[0.2em] font-medium text-[var(--accent-gold)] mb-2">Featured pick</p>
+      <h3 class="font-display text-xl mb-2">{p.name}</h3>
+      <p class="text-sm text-[var(--crust-brown)] mb-4">{p.blurb}</p>
+      <a
+        href={productUrl(p, trackingId)}
+        target="_blank"
+        rel="sponsored nofollow noopener noreferrer"
+        class="btn btn-primary self-start text-sm"
+        {...affiliateLinkAttributes(p, trackingId)}
+      >See it at {p.merchantLabel}</a>
+    </div>
+  </div>
+)}

@@ -6,7 +6,8 @@ import RecipeStatBlock from '../components/RecipeStatBlock.astro';
 import RecipeIngredients from '../components/RecipeIngredients.astro';
 import RecipeSchedule from '../components/RecipeSchedule.astro';
 import EquipmentGrid from '../components/EquipmentGrid.astro';
-import { GEAR_SETS, TRACKING_IDS } from '../data/equipment';
+import FeaturedGearCard from '../components/FeaturedGearCard.astro';
+import { FEATURED_GEAR, GEAR_SETS, TRACKING_IDS } from '../data/equipment';
 import type { Combo } from '../data/recipes';
 import { STYLE_META, allCombos } from '../data/recipes';
 import type { Ingredient, ScheduleStep, MethodStep, RecipeMeta } from '../lib/recipe-formula';
@@ -30,6 +31,7 @@ interface Props {
 const { combo, ingredients, schedule, method, meta, intro, hydrationFraming, scheduleFraming, resultDescriptor, styleTweak } = Astro.props;
 
 const styleMeta = STYLE_META[combo.style];
+const featuredGear = FEATURED_GEAR[styleMeta.shapeFamily];
 const scheduleLabel = SCHEDULE_LABELS[combo.schedule];
 const title = comboTitle(combo, styleMeta.displayName, scheduleLabel);
 // Unique-per-combo meta description composed from the matrix dimensions.
@@ -172,7 +174,10 @@ if (bodyWords < 150) {
           productIds={[...GEAR_SETS.universal, ...GEAR_SETS[styleMeta.shapeFamily]]}
           trackingId={TRACKING_IDS.recipe}
           heading="What you'll need for this bake"
-        />
+          directNearby={featuredGear !== undefined}
+        >
+          {featuredGear && <FeaturedGearCard slot="featured" productId={featuredGear} trackingId={TRACKING_IDS.recipe} />}
+        </EquipmentGrid>
       </section>
 
       <div class="max-w-3xl mx-auto my-10 text-center">
