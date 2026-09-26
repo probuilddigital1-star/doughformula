@@ -29,6 +29,8 @@ This is a baker's percentage, meaning flour is always 100% and every other ingre
 
 One thing to watch: hydration refers specifically to the water in the formula. If you use a sourdough starter, the water inside the starter counts toward total hydration. A 100g starter at 100% hydration contributes 50g of water and 50g of flour. Ignore that and your stated hydration is lower than the real hydration, which affects how the dough behaves during fermentation.
 
+The [hydration calculator](/hydration-calculator/) does that split for you and returns the real total.
+
 ## The Practical Range: 60% to 90%
 
 Most bread falls between 60% and 85% hydration. Below 60% you get cracker-like doughs. Above 85% you are usually working with pourable batters. Here is what each level of the range actually produces.

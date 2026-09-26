@@ -272,3 +272,18 @@ describe('footer Tools group', () => {
     });
   }
 });
+
+describe('article cross-links to the calculator pages', () => {
+  const cases: [string, string][] = [
+    ['fundamentals/hydration-60-to-90/index.html', '/hydration-calculator/'],
+    ['fundamentals/bakers-percentages-explained/index.html', '/bakers-percentage-calculator/'],
+    ['ingredients/role-of-salt-in-bread/index.html', '/bakers-percentage-calculator/#salt'],
+  ];
+  for (const [rel, href] of cases) {
+    it(`${rel} links ${href}`, () => {
+      const html = distFile(rel);
+      const main = html.slice(html.indexOf('<main'), html.indexOf('</main>'));
+      expect(main).toContain(`href="${href}"`);
+    });
+  }
+});

@@ -91,6 +91,8 @@ For a deeper look at hydration ranges and how to choose the right level, see the
 
 The fastest way to internalize baker's percentages is to convert something you already make. Pull out a recipe you know well, weigh every ingredient, set the flour to 100%, and calculate the rest. Then bake it twice using the percentages rather than the original gram amounts. By the second bake you will no longer need to convert; you will think in the ratios directly.
 
+To convert one right now, enter its gram weights in the [baker's percentage calculator](/bakers-percentage-calculator/) and it returns the percentages.
+
 From there, try the [Dough Formula calculator](/#calculator) to see how it presents formulas in percentage form alongside gram weights. Enter any flour amount and your target percentages, and the gram amounts follow automatically. That workflow, percent-first, is how every serious bread baker operates.
 
 Next up: [Hydration In Bread Dough, From 60% To 90%](/fundamentals/hydration-60-to-90/) takes the hydration percentage and shows you what it actually means for how your dough handles, shapes, and bakes.

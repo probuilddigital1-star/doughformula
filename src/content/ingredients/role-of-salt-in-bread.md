@@ -51,6 +51,8 @@ Above 2.5%, salt begins to inhibit fermentation significantly. Yeast activity ca
 
 The calculator at [the home page](/) includes a salt percentage field where you can see how the number fits into your overall formula.
 
+For a quick salt weight at any percentage, use the [salt calculator](/bakers-percentage-calculator/#salt).
+
 ## Salt Type and Measurement
 
 This is where a common mistake lives. Table salt and fine sea salt are not interchangeable by volume, and even by weight they can differ because of grain size and additives.
