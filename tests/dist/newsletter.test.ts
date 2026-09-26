@@ -17,4 +17,10 @@ describe('newsletter section', () => {
       expect(home).not.toContain('id="newsletter-form"');
     }
   });
+
+  it('describes the send cadence honestly', () => {
+    if (!NEWSLETTER_ENABLED) return;
+    expect(home).toContain('An occasional email when a new recipe or tool goes up. Unsubscribe anytime.');
+    expect(home).not.toMatch(/weekly tips/i);
+  });
 });

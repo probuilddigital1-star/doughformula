@@ -24,3 +24,12 @@ describe('homepage footer', () => {
     expect(home).toContain('id="newsletter"');
   });
 });
+
+describe('footer newsletter link', () => {
+  it('links to the Kit landing page on the homepage and on a recipe page', () => {
+    for (const rel of ['index.html', 'recipes/sourdough-75-overnight/index.html']) {
+      const footer = distFile(rel).match(/<footer\b[^>]*>[\s\S]*?<\/footer>/)![0];
+      expect(footer, rel).toMatch(/<a href="https:\/\/thedoughformula\.kit\.com"[^>]*>Newsletter<\/a>/);
+    }
+  });
+});
