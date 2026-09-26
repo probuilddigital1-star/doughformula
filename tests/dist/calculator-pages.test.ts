@@ -46,6 +46,29 @@ const PAGES: PageSpec[] = [
       '/recipes/focaccia-82-overnight/',
     ],
   },
+  {
+    path: '/bakers-percentage-calculator/',
+    slug: 'bakers-percentage-calculator',
+    footerLabel: "Baker's Percentage Calculator",
+    title: "Baker's Percentage Calculator | The Dough Formula",
+    h1: "Baker's Percentage Calculator",
+    description:
+      "Convert any bread recipe to baker's percentages, or turn percentages into gram weights for a chosen flour amount. Includes a salt calculator.",
+    faq: [
+      "What is a baker's percentage?",
+      'Why is flour 100%?',
+      'How do I convert a recipe?',
+      'How much salt per 500g of flour?',
+      'How do I handle a preferment?',
+    ],
+    tabs: ['recipe-to-percentages', 'percentages-to-grams'],
+    handoffHref: '/?loaves=1&weight=960&hydration=72.7#calculator',
+    links: [
+      '/fundamentals/bakers-percentages-explained/',
+      '/fundamentals/preferments-101/',
+      '/ingredients/role-of-salt-in-bread/',
+    ],
+  },
 ];
 
 const decode = (s: string) =>
@@ -199,6 +222,39 @@ function describeCalculatorPage(p: PageSpec) {
 }
 
 for (const p of PAGES) describeCalculatorPage(p);
+
+describe('/bakers-percentage-calculator/ specifics', () => {
+  const html = distFile('bakers-percentage-calculator/index.html');
+
+  it('has the #salt section with its H2 and a 1.5 to 2.5 input defaulting to 2.0', () => {
+    const start = html.indexOf('id="salt"');
+    expect(start).toBeGreaterThan(-1);
+    const salt = html.slice(start, html.indexOf('</section>', start));
+    expect(text(salt.match(/<h2\b[^>]*>[\s\S]*?<\/h2>/)![0])).toBe('Salt in bread calculator');
+    const input = salt.match(/<input[^>]*id="salt-pct"[^>]*>/)![0];
+    expect(input).toContain('value="2.0"');
+    expect(input).toContain('min="1.5"');
+    expect(input).toContain('max="2.5"');
+    expect(input).toContain('step="0.1"');
+    expect(salt).toMatch(/id="salt-grams">10</);
+    expect(salt).toContain('href="/ingredients/role-of-salt-in-bread/"');
+  });
+
+  it('salt sits between the tool and the gear block', () => {
+    expect(html.indexOf('id="tool"')).toBeLessThan(html.indexOf('id="salt"'));
+    expect(html.indexOf('id="salt"')).toBeLessThan(html.indexOf('id="gear-block"'));
+  });
+
+  it('server-renders the four-line sourdough at 100 / 70 / 2 / 20', () => {
+    const panel = html.slice(html.indexOf('id="panel-recipe-to-percentages"'), html.indexOf('id="panel-percentages-to-grams"'));
+    const list = panel.slice(0, panel.indexOf('<template'));
+    expect(list.match(/class="[^"]*calc-row/g)).toHaveLength(4);
+    for (const n of ['Bread flour', 'Water', 'Salt', 'Starter']) expect(list).toContain(`value="${n}"`);
+    const outs = [...list.matchAll(/<output[^>]*>([^<]*)<\/output>/g)].map((m) => m[1]);
+    expect(outs).toEqual(['100%', '70%', '2%', '20%']);
+    for (const g of ['500', '350', '10', '100']) expect(list).toContain(`value="${g}"`);
+  });
+});
 
 describe('footer Tools group', () => {
   for (const rel of ['index.html', 'recipes/sourdough-75-overnight/index.html']) {

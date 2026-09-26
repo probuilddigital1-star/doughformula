@@ -1,0 +1,378 @@
+---
+import Layout from '../layouts/Layout.astro';
+import CalculatorGearBlock from '../components/CalculatorGearBlock.astro';
+import NewsletterSection from '../components/NewsletterSection.astro';
+import {
+  DEFAULT_ROWS,
+  SALT_DEFAULT,
+  SALT_MAX,
+  SALT_MIN,
+  rowsHydration,
+  saltGrams,
+  toGrams,
+  toPercentages,
+  type RowKind,
+} from '../lib/bakers-percentage';
+import { handoffHref } from '../lib/handoff';
+
+const SITE = 'https://thedoughformula.com';
+const PATH = '/bakers-percentage-calculator/';
+const title = "Baker's Percentage Calculator | The Dough Formula";
+const description =
+  "Convert any bread recipe to baker's percentages, or turn percentages into gram weights for a chosen flour amount. Includes a salt calculator.";
+
+// Defaults shown before any input (and without JS).
+const DEFAULT_FLOUR = 500;
+const defaultPcts = toPercentages(DEFAULT_ROWS);
+const defaultGramsFromPct = toGrams(DEFAULT_FLOUR, defaultPcts);
+const defaultWeight = DEFAULT_ROWS.reduce((t, r) => t + r.grams, 0);
+const defaultHandoff = handoffHref({ hydration: rowsHydration(DEFAULT_ROWS), weight: defaultWeight });
+const defaultSalt = saltGrams(DEFAULT_FLOUR, SALT_DEFAULT);
+
+const KINDS: { value: RowKind; label: string }[] = [
+  { value: 'flour', label: 'Flour' },
+  { value: 'water', label: 'Water' },
+  { value: 'starter', label: 'Starter' },
+  { value: 'other', label: 'Other' },
+];
+
+const tabs = [
+  { id: 'recipe-to-percentages', label: 'Recipe to percentages' },
+  { id: 'percentages-to-grams', label: 'Percentages to grams' },
+];
+
+// Mode 1 rows take grams and show percent; mode 2 rows take percent and show grams.
+const gRows = DEFAULT_ROWS.map((r, i) => ({ name: r.name, kind: r.kind, amount: r.grams, out: `${defaultPcts[i].pct}%` }));
+const pRows = defaultPcts.map((r, i) => ({ name: r.name, kind: r.kind, amount: r.pct, out: `${defaultGramsFromPct[i].grams} g` }));
+
+const faq = [
+  {
+    q: "What is a baker's percentage?",
+    a: "It is the weight of an ingredient divided by the total flour weight, times 100. Flour is always 100% and every other ingredient is written as a share of it, so 350 g of water with 500 g of flour is 70%.",
+  },
+  {
+    q: 'Why is flour 100%?',
+    a: 'Flour is the ingredient every other amount depends on, so it becomes the fixed reference. Measuring everything against it means a formula scales by changing one number, and the percentages stay the same at any batch size. It is also why the percentages for a whole recipe add up to more than 100.',
+  },
+  {
+    q: 'How do I convert a recipe?',
+    a: 'Weigh everything in grams first. Add up all the flour, then divide each ingredient by that total and multiply by 100. Enter the rows in the Recipe to percentages tab and it does the division for you, including recipes with more than one flour.',
+  },
+  {
+    q: 'How much salt per 500g of flour?',
+    a: "10 g, which is 2%. Most bread sits between 1.8% and 2.2%, so 9 to 11 g for 500 g of flour. Go lower for a faster ferment or a salty topping, and don't go much above 2.5%, where salt starts to hold fermentation back.",
+  },
+  {
+    q: 'How do I handle a preferment?',
+    a: 'The simplest way is to list the starter or poolish as its own ingredient at its own percentage, the way most recipes do. For exact hydration, split it into its flour and water and add those to the flour and water lines. A 100 g starter at 100% hydration is 50 g of each, and the hydration calculator on this site does that split for you.',
+  },
+];
+
+const schema = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: "Baker's Percentage Calculator",
+    description,
+    url: `${SITE}${PATH}`,
+    applicationCategory: 'UtilityApplication',
+    operatingSystem: 'Any',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    creator: { '@type': 'Organization', name: 'The Dough Formula' },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faq.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE}/` },
+      { '@type': 'ListItem', position: 2, name: "Baker's Percentage Calculator", item: `${SITE}${PATH}` },
+    ],
+  },
+];
+
+const labelCls = 'block text-sm text-[var(--crust-brown)] mb-2';
+const rowGrid = 'grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:grid-cols-[minmax(0,1fr)_7rem_6.5rem_5.5rem_2.5rem] gap-2 items-center';
+---
+
+<Layout title={title} description={description} schema={schema}>
+  <main id="main-content" class="py-12 md:py-16">
+    <div class="container"><div class="max-w-3xl mx-auto">
+      <nav aria-label="Breadcrumb" class="text-sm text-[var(--crust-brown)] mb-6">
+        <a href="/" class="hover:text-[var(--accent-gold)]">Home</a>
+        <span aria-hidden="true"> / </span>
+        <span aria-current="page">Baker's Percentage Calculator</span>
+      </nav>
+
+      <header class="mb-8">
+        <h1 class="font-display text-4xl md:text-5xl leading-tight mb-4">Baker's Percentage Calculator</h1>
+        <p class="text-lg text-[var(--crust-brown)]">Turn a recipe into percentages of its flour, or turn a set of percentages back into grams for any batch size.</p>
+      </header>
+
+      <section id="tool" class="card p-5 sm:p-6" aria-label="Baker's percentage calculator">
+        <div role="tablist" aria-label="Calculator mode" class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-6">
+          {tabs.map((t, i) => (
+            <button
+              type="button"
+              role="tab"
+              id={`tab-${t.id}`}
+              aria-controls={`panel-${t.id}`}
+              aria-selected={i === 0 ? 'true' : 'false'}
+              tabindex={i === 0 ? '0' : '-1'}
+              data-mode={t.id}
+              class="calc-mode-tab rounded-md border border-[var(--border-light)] px-3 py-2 text-sm font-medium transition-colors aria-selected:bg-[var(--espresso)] aria-selected:text-[var(--cream-flour)] aria-selected:border-[var(--espresso)] hover:border-[var(--accent-gold)]"
+            >{t.label}</button>
+          ))}
+        </div>
+
+        {[
+          { id: 'recipe-to-percentages', unit: 'g', rows: gRows, amountLabel: 'Grams', outLabel: 'Percent', step: '1' },
+          { id: 'percentages-to-grams', unit: 'pct', rows: pRows, amountLabel: 'Percent', outLabel: 'Grams', step: '0.1' },
+        ].map((panel, pi) => (
+          <div role="tabpanel" id={`panel-${panel.id}`} aria-labelledby={`tab-${panel.id}`} data-panel={panel.id} data-unit={panel.unit} hidden={pi !== 0}>
+            {panel.unit === 'pct' && (
+              <div class="mb-5 max-w-xs">
+                <label for="pg-flour" class={labelCls}>Total flour (g)</label>
+                <input id="pg-flour" class="input w-full" type="number" inputmode="decimal" min="0" step="10" value={DEFAULT_FLOUR} />
+              </div>
+            )}
+            <div class={`${rowGrid} hidden sm:grid text-xs uppercase tracking-wider text-[var(--crust-brown)] mb-2`} aria-hidden="true">
+              <span>Ingredient</span><span>Type</span><span>{panel.amountLabel}</span><span class="text-right">{panel.outLabel}</span><span></span>
+            </div>
+            <ol class="space-y-3 sm:space-y-2" data-rows>
+              {panel.rows.map((r) => (
+                <li class={`${rowGrid} calc-row pb-3 sm:pb-0 border-b sm:border-b-0 border-[var(--border-light)]`}>
+                  <input class="input w-full col-span-2 sm:col-span-1" type="text" aria-label="Ingredient name" value={r.name} data-field="name" />
+                  <select class="input w-full" aria-label="Ingredient type" data-field="kind">
+                    {KINDS.map((k) => <option value={k.value} selected={k.value === r.kind}>{k.label}</option>)}
+                  </select>
+                  <input class="input w-full" type="number" inputmode="decimal" min="0" step={panel.step} aria-label={panel.amountLabel} value={r.amount} data-field="amount" />
+                  <output class="font-display text-lg sm:text-right pl-1 sm:pl-0" data-field="out">{r.out}</output>
+                  <button type="button" class="text-[var(--crust-brown)] hover:text-[var(--espresso)] text-xl leading-none justify-self-end sm:justify-self-center px-2" aria-label="Remove ingredient" data-remove>&times;</button>
+                </li>
+              ))}
+            </ol>
+            <template data-row-template>
+              <li class={`${rowGrid} calc-row pb-3 sm:pb-0 border-b sm:border-b-0 border-[var(--border-light)]`}>
+                <input class="input w-full col-span-2 sm:col-span-1" type="text" aria-label="Ingredient name" value="" placeholder="Ingredient" data-field="name" />
+                <select class="input w-full" aria-label="Ingredient type" data-field="kind">
+                  {KINDS.map((k) => <option value={k.value} selected={k.value === 'other'}>{k.label}</option>)}
+                </select>
+                <input class="input w-full" type="number" inputmode="decimal" min="0" step={panel.step} aria-label={panel.amountLabel} value="" data-field="amount" />
+                <output class="font-display text-lg sm:text-right pl-1 sm:pl-0" data-field="out">{panel.unit === 'g' ? '0%' : '0 g'}</output>
+                <button type="button" class="text-[var(--crust-brown)] hover:text-[var(--espresso)] text-xl leading-none justify-self-end sm:justify-self-center px-2" aria-label="Remove ingredient" data-remove>&times;</button>
+              </li>
+            </template>
+            <button type="button" class="btn btn-outline text-sm mt-4" data-add>Add ingredient</button>
+            <p class="text-sm text-[var(--crust-brown)] mt-4" aria-live="polite" data-summary>
+              {panel.unit === 'g'
+                ? <>Flour total: <span data-flour-total>{DEFAULT_FLOUR} g</span> (100%). Dough weight: <span data-dough-total>{defaultWeight} g</span>.</>
+                : <>Flour rows add up to <span data-flour-total>100%</span>. Dough weight: <span data-dough-total>{defaultWeight} g</span>.</>}
+            </p>
+          </div>
+        ))}
+
+        <p class="text-xs text-[var(--crust-brown)] mt-3">Mark every flour as Flour so they share the 100%. A starter is treated as equal parts flour and water when the hydration goes over to the full calculator.</p>
+
+        <div class="mt-8 pt-6 border-t border-[var(--border-light)]">
+          <a
+            id="handoff"
+            href={defaultHandoff}
+            class="btn btn-primary inline-block"
+            data-handoff
+            data-from-page="bakers-percentage-calculator"
+            data-to-page="homepage-calculator"
+            data-tab="recipe-to-percentages"
+          >Open in the full bread calculator</a>
+          <p class="text-sm text-[var(--crust-brown)] mt-3">Takes this dough's hydration and total weight to the main calculator, which builds the rest of the formula and a baking schedule.</p>
+        </div>
+      </section>
+
+      <section id="salt" class="card p-5 sm:p-6 mt-8" aria-labelledby="salt-heading">
+        <h2 id="salt-heading" class="font-display text-2xl mb-2">Salt in bread calculator</h2>
+        <p class="text-[var(--crust-brown)] mb-5">Near 1.5% the dough ferments faster and tastes flatter, while toward 2.5% fermentation slows noticeably and the crumb firms up, so most loaves sit between 1.8% and 2.2%.</p>
+        <div class="grid sm:grid-cols-3 gap-4 items-end">
+          <div>
+            <label for="salt-flour" class={labelCls}>Flour (g)</label>
+            <input id="salt-flour" class="input w-full" type="number" inputmode="decimal" min="0" step="10" value={DEFAULT_FLOUR} />
+          </div>
+          <div>
+            <label for="salt-pct" class={labelCls}>Salt (%)</label>
+            <input id="salt-pct" class="input w-full" type="number" inputmode="decimal" min={SALT_MIN} max={SALT_MAX} step="0.1" value={SALT_DEFAULT.toFixed(1)} />
+          </div>
+          <div aria-live="polite">
+            <p class="text-sm text-[var(--crust-brown)]">Salt</p>
+            <p class="font-display text-3xl"><span id="salt-grams">{defaultSalt}</span> g</p>
+          </div>
+        </div>
+        <p class="text-sm text-[var(--crust-brown)] mt-4">More on what salt does to a dough in <a href="/ingredients/role-of-salt-in-bread/" class="underline decoration-[var(--accent-gold)] underline-offset-2">the role of salt in bread</a>.</p>
+      </section>
+
+      <CalculatorGearBlock />
+    </div></div>
+
+    <NewsletterSection />
+
+    <div class="container"><div class="max-w-3xl mx-auto">
+      <section id="guide" class="prose mt-16">
+        <h2>Why flour is always 100%</h2>
+        <p>
+          Every ingredient in a bread formula is measured against the flour, so the flour itself is the fixed point at 100%. If a recipe uses two flours, they share the 100% between them: 400 g of bread flour and 100 g of whole wheat come out as 80% and 20%. Everything else is a share of that flour total, which is why the full list of percentages usually adds up to well over 100.
+        </p>
+
+        <h2>Scaling and comparing recipes</h2>
+        <p>
+          Percentages make a recipe independent of batch size. A formula of 100% flour, 70% water, 2% salt and 20% starter bakes one loaf from 500 g of flour or four loaves from 2 kg, and the dough behaves the same way in both. The "Percentages to grams" tab does that multiplication for any flour weight you enter.
+        </p>
+        <p>
+          Percentages also let you compare recipes that look nothing alike on the page. Two sourdough recipes, one written in cups and one in grams, can turn out to be the same dough once you convert them. Or the conversion shows that one carries twice the salt of the other.
+        </p>
+
+        <h2>A worked example</h2>
+        <p>
+          Say a recipe calls for 800 g of bread flour, 200 g of whole wheat, 720 g of water, 20 g of salt and 150 g of starter. The flour total is 1000 g, so bread flour is 80% and whole wheat is 20%. Water is 720 ÷ 1000, or 72%. Salt is 2% and starter is 15%.
+        </p>
+        <p>
+          To bake a smaller batch from 600 g of flour, multiply each percentage by 6: 480 g of bread flour, 120 g of whole wheat, 432 g of water, 12 g of salt and 90 g of starter. The dough is the same, only smaller.
+        </p>
+
+        <h2>Where the system bends</h2>
+        <p>
+          Preferments are the first place the simple version gets fuzzy. A starter or poolish holds its own flour and water, so a dough listed at 70% water with 20% starter is closer to 73% once the starter is counted. This calculator lists the starter as its own line, the way most recipes are written, and splits it into flour and water only when it works out the hydration for the full calculator. <a href="/fundamentals/preferments-101/">Preferments 101</a> covers how bakers account for them in more detail.
+        </p>
+        <p>
+          Enriched doughs bend it too. Milk and eggs both carry water, so a brioche with 20% milk and 30% eggs is wetter than its water line suggests, and bakers judge those doughs by feel as much as by the number. For the full background on the system, see <a href="/fundamentals/bakers-percentages-explained/">baker's percentages explained</a>.
+        </p>
+      </section>
+
+      <section id="faq" class="mt-16">
+        <h2 class="font-display text-3xl mb-6">Baker's percentage questions</h2>
+        <div class="space-y-6">
+          {faq.map((f) => (
+            <div class="border-b border-[var(--border-light)] pb-6">
+              <h3 class="font-medium text-lg mb-2">{f.q}</h3>
+              <p class="text-[var(--crust-brown)] leading-relaxed">{f.a}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div></div>
+  </main>
+</Layout>
+
+<script>
+  import { rowsHydration, saltGrams, toGrams, toPercentages, type Row, type RowKind } from '../lib/bakers-percentage';
+  import { handoffHref } from '../lib/handoff';
+
+  const handoff = document.getElementById('handoff') as HTMLAnchorElement | null;
+  const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('.calc-mode-tab'));
+  const panels = Array.from(document.querySelectorAll<HTMLElement>('[data-panel]'));
+  let mode = 'recipe-to-percentages';
+
+  const num = (el: Element | null) => parseFloat((el as HTMLInputElement | null)?.value ?? '');
+
+  function readRows(panel: HTMLElement) {
+    return Array.from(panel.querySelectorAll<HTMLElement>('.calc-row')).map((li) => ({
+      li,
+      name: (li.querySelector('[data-field="name"]') as HTMLInputElement).value,
+      kind: (li.querySelector('[data-field="kind"]') as HTMLSelectElement).value as RowKind,
+      amount: num(li.querySelector('[data-field="amount"]')),
+    }));
+  }
+
+  function setText(root: ParentNode, sel: string, v: string) {
+    const el = root.querySelector(sel);
+    if (el) el.textContent = v;
+  }
+
+  /** Recomputes one panel and returns its rows in grams. */
+  function computePanel(panel: HTMLElement): Row[] {
+    const rows = readRows(panel);
+    if (panel.dataset.unit === 'g') {
+      const gramRows: Row[] = rows.map((r) => ({ name: r.name, kind: r.kind, grams: Number.isFinite(r.amount) ? r.amount : 0 }));
+      toPercentages(gramRows).forEach((p, i) => setText(rows[i].li, '[data-field="out"]', `${p.pct}%`));
+      const flour = gramRows.filter((r) => r.kind === 'flour').reduce((t, r) => t + r.grams, 0);
+      setText(panel, '[data-flour-total]', `${Math.round(flour)} g`);
+      setText(panel, '[data-dough-total]', `${Math.round(gramRows.reduce((t, r) => t + r.grams, 0))} g`);
+      return gramRows;
+    }
+    const pctRows = rows.map((r) => ({ name: r.name, kind: r.kind, pct: Number.isFinite(r.amount) ? r.amount : 0 }));
+    const gramRows = toGrams(num(document.getElementById('pg-flour')), pctRows);
+    gramRows.forEach((g, i) => setText(rows[i].li, '[data-field="out"]', `${g.grams} g`));
+    const flourPct = pctRows.filter((r) => r.kind === 'flour').reduce((t, r) => t + r.pct, 0);
+    setText(panel, '[data-flour-total]', `${Math.round(flourPct * 10) / 10}%`);
+    setText(panel, '[data-dough-total]', `${gramRows.reduce((t, r) => t + r.grams, 0)} g`);
+    return gramRows;
+  }
+
+  function update() {
+    const active = panels.find((p) => p.dataset.panel === mode);
+    if (!active) return;
+    const gramRows = computePanel(active);
+    if (handoff) {
+      handoff.href = handoffHref({
+        hydration: rowsHydration(gramRows),
+        weight: gramRows.reduce((t, r) => t + r.grams, 0),
+      });
+      handoff.dataset.tab = mode;
+    }
+  }
+
+  function updateSalt() {
+    setText(document, '#salt-grams', String(saltGrams(num(document.getElementById('salt-flour')), num(document.getElementById('salt-pct')))));
+  }
+
+  function select(tab: HTMLButtonElement, focus = false) {
+    mode = tab.dataset.mode || mode;
+    for (const t of tabs) {
+      const on = t === tab;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.tabIndex = on ? 0 : -1;
+    }
+    for (const p of panels) p.hidden = p.dataset.panel !== mode;
+    if (focus) tab.focus();
+    update();
+  }
+
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => select(tab));
+    tab.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      e.preventDefault();
+      select(tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length], true);
+    });
+  });
+
+  for (const panel of panels) {
+    const list = panel.querySelector('[data-rows]');
+    const template = panel.querySelector<HTMLTemplateElement>('[data-row-template]');
+    panel.querySelector('[data-add]')?.addEventListener('click', () => {
+      if (!list || !template) return;
+      const row = template.content.firstElementChild?.cloneNode(true) as HTMLElement | undefined;
+      if (!row) return;
+      list.appendChild(row);
+      (row.querySelector('[data-field="name"]') as HTMLInputElement | null)?.focus();
+      update();
+    });
+    list?.addEventListener('click', (e) => {
+      const btn = (e.target as Element).closest('[data-remove]');
+      if (!btn) return;
+      btn.closest('.calc-row')?.remove();
+      update();
+    });
+  }
+
+  document.getElementById('tool')?.addEventListener('input', update);
+  document.getElementById('tool')?.addEventListener('change', update);
+  document.getElementById('salt')?.addEventListener('input', updateSalt);
+  update();
+  updateSalt();
+</script>
