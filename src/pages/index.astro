@@ -7,10 +7,13 @@ import EquipmentGrid from '../components/EquipmentGrid.astro';
 import AffiliateDisclosure from '../components/AffiliateDisclosure.astro';
 import { HOMEPAGE_PRODUCTS, TRACKING_IDS, GEAR_SETS, CALCULATOR_STYLE_FAMILY, ALL_GEAR_PRODUCT_IDS, hasDirectMerchant } from '../data/equipment';
 
-const heroWidths = [480, 768, 1200, 1600];
+// 750 covers the common 375-412px phones at 1.75 to 2x; 1080 covers 3x phones and tablets.
+// The 4000x6000 source never ships. Quality 50 is invisible under the hero's cream overlay.
+const heroWidths = [480, 750, 1080, 1600];
+const HERO_QUALITY = 50;
 const heroVariants = await Promise.all(
   heroWidths.map((w) =>
-    getImage({ src: heroImage, width: w, quality: 70, format: 'webp' })
+    getImage({ src: heroImage, width: w, quality: HERO_QUALITY, format: 'webp' })
   )
 );
 const heroPreloadSrcset = heroVariants
@@ -228,12 +231,12 @@ const breadStyles = [
         alt="Freshly baked artisan sourdough bread with beautiful open crumb, sliced and displayed with rosemary"
         loading="eager"
         fetchpriority="high"
-        decoding="sync"
+        decoding="async"
         width={1600}
         height={2400}
         widths={heroWidths}
         sizes="100vw"
-        quality={70}
+        quality={HERO_QUALITY}
         format="webp"
       />
     </div>
