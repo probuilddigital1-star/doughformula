@@ -3,7 +3,7 @@
 // It is a client-side key, documented as safe to ship in the browser, and lives here the same
 // way KIT_PUBLIC_API_KEY lives in newsletter.ts. Never put a personal API key or the project's
 // secret key in this file.
-import { placementForTrackingId, type Placement, type Product } from '../data/equipment';
+import { campaignFor, placementForTrackingId, type Placement, type Product } from '../data/equipment';
 
 export { placementForTrackingId, type Placement };
 
@@ -70,6 +70,9 @@ export function affiliateLinkAttributes(
     // Amazon reports as 'amazon'; direct merchants report their own id ('challenger').
     'data-merchant': p.merchant === 'amazon' ? 'amazon' : (p.merchantId ?? 'direct'),
     'data-placement': placement,
-    'data-tracking-id': trackingId,
+    // Amazon links report their Associates tag. Campaign-tagged direct merchants report the
+    // campaign value their link carries (recipe, recipe-step, calculator) instead, so no
+    // Challenger event shows an Amazon tag.
+    'data-tracking-id': p.merchant !== 'amazon' && p.campaignTagged ? campaignFor(placement) : trackingId,
   };
 }

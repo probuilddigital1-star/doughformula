@@ -39,6 +39,7 @@ describe('Challenger featured card on recipe pages', () => {
       expect(c, slug).toMatch(/rel="[^"]*\bnofollow\b[^"]*"/);
       expect(c, slug).toContain('data-merchant="challenger"');
       expect(c, slug).toContain('data-placement="recipe"');
+      expect(c, slug).toContain('data-tracking-id="recipe"');
     }
   });
 
@@ -100,6 +101,7 @@ describe('Challenger mention in the Dutch oven bake step', () => {
       expect(attrs, slug).toMatch(/rel="[^"]*\bsponsored\b[^"]*\bnofollow\b[^"]*"/);
       expect(attrs, slug).toContain('data-merchant="challenger"');
       expect(attrs, slug).toContain('data-placement="recipe_step"');
+      expect(attrs, slug).toContain('data-tracking-id="recipe-step"');
       expect(attrs, slug).toContain('data-affiliate="true"');
       // Same list item as the bake instruction, directly after it.
       const at = html.search(SENTENCE);
@@ -118,5 +120,24 @@ describe('Challenger mention in the Dutch oven bake step', () => {
 
   it('never appears on other recipe families', () => {
     for (const slug of others) expect(recipe(slug), slug).not.toMatch(SENTENCE);
+  });
+});
+
+describe('Amazon links keep their Associates tag as tracking_id', () => {
+  it('every Amazon affiliate link reports the tag its URL carries', () => {
+    for (const { path, html } of allDistHtml()) {
+      for (const a of html.match(/<a [^>]*data-merchant="amazon"[^>]*>/g) ?? []) {
+        const tag = a.match(/[?&]tag=([^"&]+)/)![1];
+        expect(a, path).toContain(`data-tracking-id="${tag}"`);
+      }
+    }
+  });
+
+  it('no Challenger link reports an Amazon tag', () => {
+    for (const { path, html } of allDistHtml()) {
+      for (const a of html.match(/<a [^>]*data-merchant="challenger"[^>]*>/g) ?? []) {
+        expect(a, path).toMatch(/data-tracking-id="(recipe|recipe-step|calculator)"/);
+      }
+    }
   });
 });

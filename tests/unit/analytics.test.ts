@@ -58,6 +58,21 @@ describe('affiliateLinkAttributes', () => {
     expect(affiliateLinkAttributes(c, TRACKING_IDS.calculator)['data-placement']).toBe('calculator');
   });
 
+  it('reports the campaign value, never an Amazon tag, as tracking_id for Challenger', () => {
+    const c = PRODUCTS['challenger-bread-pan'];
+    expect(affiliateLinkAttributes(c, TRACKING_IDS.recipe)['data-tracking-id']).toBe('recipe');
+    expect(affiliateLinkAttributes(c, TRACKING_IDS.recipe, 'recipe_step')['data-tracking-id']).toBe('recipe-step');
+    expect(affiliateLinkAttributes(c, TRACKING_IDS.calculator)['data-tracking-id']).toBe('calculator');
+  });
+
+  it('keeps the Associates tag as tracking_id for every Amazon product and placement', () => {
+    for (const p of Object.values(PRODUCTS).filter((p) => p.merchant === 'amazon')) {
+      for (const tag of Object.values(TRACKING_IDS)) {
+        expect(affiliateLinkAttributes(p, tag)['data-tracking-id'], p.id).toBe(tag);
+      }
+    }
+  });
+
   it('takes an explicit placement for the in-step mention', () => {
     const c = PRODUCTS['challenger-bread-pan'];
     expect(affiliateLinkAttributes(c, TRACKING_IDS.recipe, 'recipe_step')['data-placement']).toBe('recipe_step');
