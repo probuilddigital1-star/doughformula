@@ -17,6 +17,9 @@ export interface Ingredient {
 export interface ScheduleStep {
   when: string;       // e.g. "Day 1, 8:00 AM" or "Hour 0"
   action: string;      // e.g. "Mix flour and water; autolyse 30 minutes"
+  /** Set on the Dutch oven bake step. RecipeSchedule appends a one-sentence gear mention
+   *  after `action`; the action text itself (and so the Recipe JSON-LD) stays unchanged. */
+  gearMention?: 'challenger';
 }
 
 export interface MethodStep {
@@ -185,6 +188,10 @@ function shapeStepSameDay(c: Combo): string {
 
 export function computeSchedule(c: Combo): ScheduleStep[] {
   const meta = STYLE_META[c.style];
+  const bake = (when: string): ScheduleStep =>
+    meta.shapeFamily === 'dutch-oven'
+      ? { when, action: bakeStep(c), gearMention: 'challenger' }
+      : { when, action: bakeStep(c) };
 
   if (c.schedule === 'same-day') {
     return [
@@ -195,7 +202,7 @@ export function computeSchedule(c: Combo): ScheduleStep[] {
       { when: 'Hour 1:30', action: 'Third fold.' },
       { when: 'Hour 2:00', action: 'Bulk ferment until visibly puffy.' },
       { when: 'Hour 3:30', action: shapeStepSameDay(c) },
-      { when: 'Hour 5:00', action: bakeStep(c) },
+      bake('Hour 5:00'),
     ];
   }
 
@@ -207,7 +214,7 @@ export function computeSchedule(c: Combo): ScheduleStep[] {
       { when: 'Day 1, 9:00 PM', action: 'Bulk ferment 1-2 more hours at room temperature.' },
       { when: 'Day 1, 10:30 PM', action: `${shapeStep(c)} Cover and refrigerate overnight.` },
       { when: 'Day 2, 7:00 AM', action: preheatVessel(c) },
-      { when: 'Day 2, 8:00 AM', action: bakeStep(c) },
+      bake('Day 2, 8:00 AM'),
     ];
   }
 
@@ -221,7 +228,7 @@ export function computeSchedule(c: Combo): ScheduleStep[] {
     { when: 'Day 2, midday', action: `Pre-shape, rest 30 minutes. ${shapeStep(c)}` },
     { when: 'Day 2, afternoon', action: 'Cover and refrigerate the shaped dough overnight.' },
     { when: 'Day 3, morning', action: preheatVessel(c) },
-    { when: 'Day 3, morning', action: bakeStep(c) },
+    bake('Day 3, morning'),
   ];
 }
 

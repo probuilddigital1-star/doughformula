@@ -1,5 +1,11 @@
 ---
 import type { ScheduleStep } from '../lib/recipe-formula';
+import { PRODUCTS, TRACKING_IDS, productUrl } from '../data/equipment';
+import { affiliateLinkAttributes } from '../config/analytics';
+
+const challenger = PRODUCTS['challenger-bread-pan'];
+const challengerHref = productUrl(challenger, TRACKING_IDS.recipe, 'recipe_step');
+const challengerAttrs = affiliateLinkAttributes(challenger, TRACKING_IDS.recipe, 'recipe_step');
 
 interface Props {
   schedule: ScheduleStep[];
@@ -18,6 +24,9 @@ const { schedule } = Astro.props;
         </div>
         <div class="flex-1 text-[var(--espresso)]">
           {step.action}
+          {step.gearMention === 'challenger' && (
+            <> A bread pan like the <a href={challengerHref} target="_blank" rel="sponsored nofollow noopener noreferrer" class="underline decoration-[var(--accent-gold)] underline-offset-2 hover:text-[var(--accent-gold)]" {...challengerAttrs}>Challenger</a> works here too.</>
+          )}
         </div>
       </li>
     ))}

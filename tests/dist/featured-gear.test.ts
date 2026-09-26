@@ -84,3 +84,39 @@ describe('Challenger featured card on recipe pages', () => {
     }
   });
 });
+
+describe('Challenger mention in the Dutch oven bake step', () => {
+  const SENTENCE = /A bread pan like the <a ([^>]*)>Challenger<\/a> works here too\./;
+  const dutch = recipeSlugs.filter((s) => DUTCH_OVEN.includes(styleOf(s)));
+  const others = recipeSlugs.filter((s) => !DUTCH_OVEN.includes(styleOf(s)));
+
+  it('appears once, inside the bake step, with the recipe-step campaign and tracking attributes', () => {
+    for (const slug of dutch) {
+      const html = recipe(slug);
+      const matches = html.match(new RegExp(SENTENCE.source, 'g'));
+      expect(matches?.length, slug).toBe(1);
+      const attrs = html.match(SENTENCE)![1];
+      expect(attrs, slug).toContain(`href="${BASE}&campaign=recipe-step"`);
+      expect(attrs, slug).toMatch(/rel="[^"]*\bsponsored\b[^"]*\bnofollow\b[^"]*"/);
+      expect(attrs, slug).toContain('data-merchant="challenger"');
+      expect(attrs, slug).toContain('data-placement="recipe_step"');
+      expect(attrs, slug).toContain('data-affiliate="true"');
+      // Same list item as the bake instruction, directly after it.
+      const at = html.search(SENTENCE);
+      const li = html.slice(html.lastIndexOf('<li', at), at);
+      expect(li, slug).toMatch(/Score the loaf\. Bake at \d+°F covered for 25 minutes, then uncovered for \d+ more minutes\.\s*$/);
+    }
+  });
+
+  it('stays out of the Recipe JSON-LD', () => {
+    for (const slug of dutch) {
+      for (const block of recipe(slug).match(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g) ?? []) {
+        expect(block, slug).not.toContain('Challenger');
+      }
+    }
+  });
+
+  it('never appears on other recipe families', () => {
+    for (const slug of others) expect(recipe(slug), slug).not.toMatch(SENTENCE);
+  });
+});
