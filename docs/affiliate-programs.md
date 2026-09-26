@@ -1,14 +1,14 @@
 # Affiliate programs for bread gear
 
-Research date: 2026-09-09. Figures marked *primary* come from the merchant's or network's own page; figures marked *directory* come from affiliate directories and should be confirmed on the application page before relying on them. Nothing here has been applied to.
+Research date: 2026-09-09; Challenger Breadware section updated 2026-09-26 after the program went live. Figures marked *primary* come from the merchant's or network's own page; figures marked *directory* come from affiliate directories and should be confirmed on the application page before relying on them. Nothing here has been applied to, except where a section says the program is live.
 
 ## Summary
 
 | Merchant | Fit for this site | Runs through | Commission | Cookie | Payout minimum | Source quality |
 |---|---|---|---|---|---|---|
-| ThermoWorks | Thermapen already listed | Own (Post Affiliate Pro) | 10% | 30 days | $10 direct deposit, $100 check | primary |
+| ThermoWorks | Thermapen already listed | Impact (moved from Post Affiliate Pro; confirmed 2026-09-09) | 10% | 30 days | Impact terms (threshold set by publisher, $10 minimum) | primary |
 | Brød & Taylor | Proofer, bread steel | Own portal (US portal currently broken) | 7% of net (EU terms) | 30 days (EU) | not stated | primary (EU), US unconfirmed |
-| Challenger Breadware | Cast-iron bread pan, high ticket | Own portal; also Admitad | ~6% | not stated | not stated | directory |
+| Challenger Breadware | Cast-iron bread pan, high ticket (**live since 2026-09-25**) | Own portal (AffiliateWP) | 10% | not stated | not stated | primary (signed agreement) |
 | King Arthur Baking | Flour, bannetons, Dutch ovens | Awin (merchant 98207) | 5% new customer, 2% coupon/loyalty | 30 days | $50 (Awin) | primary (network profile) |
 | Baking Steel | Alternative to the ThermiChef steel | UpPromote | 10% | 30 days | not stated | primary |
 | Cultures for Health | Sourdough starters | UpPromote direct; FlexOffers listing | 10% direct; 7% via FlexOffers | not stated direct; 30 days FlexOffers | not stated | primary |
@@ -29,7 +29,7 @@ Apply to three, in this order:
 
 1. **ThermoWorks.** The Thermapen is already on every page's universal gear list at Amazon's 4.5%. Moving that one link to ThermoWorks direct more than doubles the rate, adds a 30-day cookie in place of Amazon's 24 hours, and the $10 direct-deposit threshold means it actually pays out at this traffic level. Approval criteria are published and this site meets them.
 2. **Brød & Taylor.** The folding proofer is the single most on-brand product for a calculator that deals in fermentation temperature, and nothing like it is on the site today. The US affiliate portal is showing an app error as of this writing, so the path is to email them; the EU program's terms (7% of net, 30-day cookie, paid two months after month end) are the best available indication of what the US program looks like.
-3. **Challenger Breadware.** One high-ticket item (~$300) on the sourdough and country-loaf pages. Roughly 6% of $300 is about four Amazon Dutch-oven sales' worth of commission per conversion.
+3. **Challenger Breadware.** Joined; live since 2026-09-25. One high-ticket item ($299 at signup) on the Dutch-oven recipe pages and the calculator pages. 10% of $299 is about $30 per sale.
 
 **A fourth, if you are willing to open an Awin publisher account:** King Arthur Baking. Awin also hosts Ooni and Etsy, so one account unlocks three merchants. Awin's publisher signup takes a small refundable deposit (historically $5; confirm on the signup page) and King Arthur requires a US audience, which this site has (48% US impressions).
 
@@ -40,14 +40,14 @@ Concentration matters more than coverage at ~800 visits a month: each program ho
 ### ThermoWorks
 
 - **Program page:** https://www.thermoworks.com/pages/affiliate
-- **Sign-up:** https://thermoworks.postaffiliatepro.com/accounts/default1/affiliates/signup.php
-- **Runs through:** own program on Post Affiliate Pro (no network)
+- **Sign-up:** "Apply Today" button on the program page, which goes to Impact (the Post Affiliate Pro signup URL now returns 404, observed 2026-09-09)
+- **Runs through:** Impact (publisher account required; same network as OXO)
 - **Commission:** 10% of sale value
 - **Cookie:** 30 days from the initial click
 - **Payout:** $10 minimum by direct deposit, $100 by check; paid approximately 30 days after the end of each calendar month
 - **Approval requirements:** site content must be relevant to ThermoWorks products. Rejected: incomplete or under-construction sites, sites without unique content, sites irrelevant to the core products, explicit or discriminatory content, illegal activity or spam, IP violations, links to prohibited sites.
 - **Fit:** replace the Thermapen Amazon link in `GEAR_SETS.universal` with a `merchant: 'direct'` entry. The data model already supports it.
-- Source: program FAQ at https://thermoworks.postaffiliatepro.com/affiliates/faq.php
+- Source: program page (10%, 30 days); the old Post Affiliate Pro FAQ is gone
 
 ### Brød & Taylor
 
@@ -62,14 +62,16 @@ Concentration matters more than coverage at ~800 visits a month: each program ho
 
 ### Challenger Breadware
 
-- **Program page / sign-up:** https://challengerbreadware.com/affiliate-area/ (registration form: name, username, email, payment email, website URL, promotion method)
-- **Runs through:** own portal (the form shape matches AffiliateWP); also listed on Admitad
-- **Commission:** about 6% per sale (directory figure)
-- **Cookie:** not stated; directories describe it as "favorable"
-- **Payout:** not stated; the "payment email" field implies PayPal
-- **Approval:** application reviewed in "a few days" (directory)
-- **Fit:** sourdough, country loaf, and no-knead recipe pages (the dutch-oven family)
-- Sources: affiliate-area page; https://getlasso.co/affiliate/challenger-breadware/ ; https://www.admitad.com/store/offers/challenger-breadware-affiliate-program/ (the last two block automated fetches; figures via search summaries)
+- **Status:** active since 2026-09-25 (agreement signed as ProBuild Digital)
+- **Program page:** https://challengerbreadware.com/affiliate-area/
+- **Runs through:** own AffiliateWP portal
+- **Commission:** 10% per sale
+- **Product:** The Challenger Bread Pan, $299 at signup. Reference only: no price appears on the site.
+- **Link format:** `https://challengerbreadware.com/product/the-challenger-bread-pan/?ref=probuilddigital&campaign=<tag>`
+- **Campaign tags:** `recipe` (featured card on recipe pages), `recipe-step` (the one-sentence mention in the bake step), `calculator` (featured card in the calculator gear blocks)
+- **Images:** official media kit images only. The site uses `src/assets/gear/challenger-bread-pan.jpg` from the kit.
+- **Restrictions:** no paid search bidding on the Challenger brand
+- **On the site:** `challenger-bread-pan` in `src/data/equipment.ts`, shown through `FEATURED_GEAR['dutch-oven']` as a featured card on the sourdough, country loaf and no-knead recipe pages and in the gear block on both calculator pages. Never on the homepage. It is not in any plain gear list.
 
 ### King Arthur Baking
 
