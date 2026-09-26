@@ -4,6 +4,8 @@ import SiteNav from '../components/SiteNav.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import Analytics from '../components/Analytics.astro';
 
+const DEFAULT_PRELOAD_FONTS = ['fraunces-latin-normal', 'dm-sans-latin-normal'];
+
 interface Props {
   title?: string;
   description?: string;
@@ -12,6 +14,8 @@ interface Props {
   /** JSON-LD objects for this page. When given, they replace the site-wide WebApplication
    *  block, so a page with its own WebApplication doesn't end up with two. */
   schema?: object[];
+  /** Font files (without extension) to preload. Defaults to the faces every page header uses. */
+  preloadFonts?: string[];
 }
 
 const {
@@ -20,6 +24,7 @@ const {
   image = "/og-image.jpg",
   canonical,
   schema,
+  preloadFonts = DEFAULT_PRELOAD_FONTS,
 } = Astro.props;
 
 const siteUrl = "https://thedoughformula.com";
@@ -97,25 +102,11 @@ const jsonLd = {
       <script type="application/ld+json" set:html={JSON.stringify(block)} />
     ))}
 
-    <!-- Preconnect for fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-
-    <!-- Load Google Fonts without blocking render -->
-    <link
-      rel="preload"
-      as="style"
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500;1,9..144,600&display=swap"
-    />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500;1,9..144,600&display=swap"
-      media="print"
-      onload="this.media='all'"
-    />
-    <noscript>
-      <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500;1,9..144,600&display=swap" rel="stylesheet" />
-    </noscript>
+    <!-- Self-hosted fonts (src/styles/fonts.css). Preload only faces that render above the fold;
+         the rest load on first use. -->
+    {preloadFonts.map((f) => (
+      <link rel="preload" as="font" type="font/woff2" href={`/fonts/${f}.woff2`} crossorigin />
+    ))}
 
 
     <meta name="generator" content={Astro.generator} />
