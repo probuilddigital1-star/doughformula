@@ -1,0 +1,339 @@
+---
+import Layout from '../layouts/Layout.astro';
+import CalculatorGearBlock from '../components/CalculatorGearBlock.astro';
+import NewsletterSection from '../components/NewsletterSection.astro';
+import { waterFromFlour, hydrationFromRecipe, splitDough } from '../lib/hydration';
+import { handoffHref } from '../lib/handoff';
+
+const SITE = 'https://thedoughformula.com';
+const PATH = '/hydration-calculator/';
+const title = 'Bread Hydration Calculator | The Dough Formula';
+const description =
+  'Work out water from flour and hydration, hydration from a recipe, or the flour and water split for a target dough weight. Accounts for starter water.';
+
+// Defaults shown before any input (and without JS).
+const D = { flour: 500, hydration: 75, rFlour: 450, rWater: 300, rStarter: 100, rStarterH: 100, total: 900, tHydration: 75 };
+const d1Water = waterFromFlour(D.flour, D.hydration);
+const d2 = hydrationFromRecipe({ flour: D.rFlour, water: D.rWater, starter: D.rStarter, starterHydration: D.rStarterH });
+const d3 = splitDough(D.total, D.tHydration);
+const defaultHandoff = handoffHref({ hydration: D.hydration, weight: D.flour + d1Water });
+
+const tabs = [
+  { id: 'water-from-flour', label: 'Water from flour' },
+  { id: 'hydration-from-recipe', label: 'Hydration from a recipe' },
+  { id: 'split-dough-weight', label: 'Split a dough weight' },
+];
+
+const faq = [
+  {
+    q: 'How do I calculate hydration?',
+    a: 'Divide the weight of the water by the weight of the flour and multiply by 100. 350 g of water with 500 g of flour is 350 ÷ 500 × 100 = 70%. If the recipe uses a starter, add the starter\'s flour to the flour and its water to the water before you divide.',
+  },
+  {
+    q: 'Does starter count toward hydration?',
+    a: 'Yes. A starter is part flour and part water, and both end up in the dough. A 100% hydration starter is half flour and half water by weight, so 100 g of it adds 50 g to each side. A stiff 50% starter is two parts flour to one part water.',
+  },
+  {
+    q: 'What hydration should I use for sourdough?',
+    a: 'Start around 70 to 75% with bread flour. That range is wet enough for an open crumb and firm enough to shape without much practice. Move up in small steps once shaping feels routine, because doughs at 80% and above need confident handling.',
+  },
+  {
+    q: 'Why does my 75% dough feel like 85%?',
+    a: 'Most often the flour is weaker than the recipe assumed. All-purpose flour and low-protein bread flours hold less water, so the same percentage feels wetter. Uncounted starter water adds a few more points, and a warm, humid kitchen makes any dough slacker. Check the protein on the bag and count the starter before you cut the water by 3 to 5 points.',
+  },
+  {
+    q: 'Can I change hydration after mixing?',
+    a: 'You can add water but you can\'t take it out. Add extra water in small splashes during the first folds and squeeze it in with your hand until the dough takes it up; bakers call this bassinage. Adding flour to a dough that is too wet works early in mixing, but it shifts the salt and starter percentages. More folds are usually the better fix, since they build the strength the dough needs to hold its shape.',
+  },
+];
+
+const schema = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: 'Bread Hydration Calculator',
+    description,
+    url: `${SITE}${PATH}`,
+    applicationCategory: 'UtilityApplication',
+    operatingSystem: 'Any',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    creator: { '@type': 'Organization', name: 'The Dough Formula' },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faq.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE}/` },
+      { '@type': 'ListItem', position: 2, name: 'Bread Hydration Calculator', item: `${SITE}${PATH}` },
+    ],
+  },
+];
+
+const labelCls = 'block text-sm text-[var(--crust-brown)] mb-2';
+const resultCls = 'font-display text-3xl text-[var(--espresso)]';
+---
+
+<Layout title={title} description={description} schema={schema}>
+  <main id="main-content" class="py-12 md:py-16">
+    <div class="container"><div class="max-w-3xl mx-auto">
+      <nav aria-label="Breadcrumb" class="text-sm text-[var(--crust-brown)] mb-6">
+        <a href="/" class="hover:text-[var(--accent-gold)]">Home</a>
+        <span aria-hidden="true"> / </span>
+        <span aria-current="page">Hydration Calculator</span>
+      </nav>
+
+      <header class="mb-8">
+        <h1 class="font-display text-4xl md:text-5xl leading-tight mb-4">Bread Hydration Calculator</h1>
+        <p class="text-lg text-[var(--crust-brown)]">Enter your weights in grams and the results update as you type, with starter water counted.</p>
+      </header>
+
+      <section id="tool" class="card p-5 sm:p-6" aria-label="Hydration calculator">
+        <div role="tablist" aria-label="Calculator mode" class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-6">
+          {tabs.map((t, i) => (
+            <button
+              type="button"
+              role="tab"
+              id={`tab-${t.id}`}
+              aria-controls={`panel-${t.id}`}
+              aria-selected={i === 0 ? 'true' : 'false'}
+              tabindex={i === 0 ? '0' : '-1'}
+              data-mode={t.id}
+              class="calc-mode-tab rounded-md border border-[var(--border-light)] px-3 py-2 text-sm font-medium transition-colors aria-selected:bg-[var(--espresso)] aria-selected:text-[var(--cream-flour)] aria-selected:border-[var(--espresso)] hover:border-[var(--accent-gold)]"
+            >{t.label}</button>
+          ))}
+        </div>
+
+        <div role="tabpanel" id="panel-water-from-flour" aria-labelledby="tab-water-from-flour" data-panel="water-from-flour">
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label for="wf-flour" class={labelCls}>Flour (g)</label>
+              <input id="wf-flour" class="input w-full" type="number" inputmode="decimal" min="0" step="1" value={D.flour} />
+            </div>
+            <div>
+              <label for="wf-hydration" class={labelCls}>Hydration (%)</label>
+              <input id="wf-hydration" class="input w-full" type="number" inputmode="decimal" min="0" max="150" step="0.5" value={D.hydration} />
+            </div>
+          </div>
+          <div class="mt-6" aria-live="polite">
+            <p class="text-sm text-[var(--crust-brown)]">Water</p>
+            <p class={resultCls}><span id="wf-water">{d1Water}</span> g</p>
+          </div>
+        </div>
+
+        <div role="tabpanel" id="panel-hydration-from-recipe" aria-labelledby="tab-hydration-from-recipe" data-panel="hydration-from-recipe" hidden>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label for="hr-flour" class={labelCls}>Flour (g)</label>
+              <input id="hr-flour" class="input w-full" type="number" inputmode="decimal" min="0" step="1" value={D.rFlour} />
+            </div>
+            <div>
+              <label for="hr-water" class={labelCls}>Water (g)</label>
+              <input id="hr-water" class="input w-full" type="number" inputmode="decimal" min="0" step="1" value={D.rWater} />
+            </div>
+            <div>
+              <label for="hr-starter" class={labelCls}>Starter (g, optional)</label>
+              <input id="hr-starter" class="input w-full" type="number" inputmode="decimal" min="0" step="1" value={D.rStarter} />
+            </div>
+            <div>
+              <label for="hr-starter-h" class={labelCls}>Starter hydration (%)</label>
+              <input id="hr-starter-h" class="input w-full" type="number" inputmode="decimal" min="0" max="200" step="5" value={D.rStarterH} />
+            </div>
+          </div>
+          <div class="mt-6 grid sm:grid-cols-3 gap-4" aria-live="polite">
+            <div>
+              <p class="text-sm text-[var(--crust-brown)]">Total hydration</p>
+              <p class={resultCls}><span id="hr-hydration">{d2.hydration}</span>%</p>
+            </div>
+            <div>
+              <p class="text-sm text-[var(--crust-brown)]">Flour in starter</p>
+              <p class="font-display text-xl"><span id="hr-starter-flour">{d2.starterFlour}</span> g</p>
+            </div>
+            <div>
+              <p class="text-sm text-[var(--crust-brown)]">Water in starter</p>
+              <p class="font-display text-xl"><span id="hr-starter-water">{d2.starterWater}</span> g</p>
+            </div>
+          </div>
+          <p class="text-sm text-[var(--crust-brown)] mt-3">Totals: <span id="hr-total-flour">{d2.totalFlour}</span> g flour, <span id="hr-total-water">{d2.totalWater}</span> g water.</p>
+        </div>
+
+        <div role="tabpanel" id="panel-split-dough-weight" aria-labelledby="tab-split-dough-weight" data-panel="split-dough-weight" hidden>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label for="sd-total" class={labelCls}>Dough weight (g)</label>
+              <input id="sd-total" class="input w-full" type="number" inputmode="decimal" min="0" step="10" value={D.total} />
+            </div>
+            <div>
+              <label for="sd-hydration" class={labelCls}>Hydration (%)</label>
+              <input id="sd-hydration" class="input w-full" type="number" inputmode="decimal" min="0" max="150" step="0.5" value={D.tHydration} />
+            </div>
+          </div>
+          <div class="mt-6 grid grid-cols-2 gap-4" aria-live="polite">
+            <div>
+              <p class="text-sm text-[var(--crust-brown)]">Flour</p>
+              <p class={resultCls}><span id="sd-flour">{d3.flour}</span> g</p>
+            </div>
+            <div>
+              <p class="text-sm text-[var(--crust-brown)]">Water</p>
+              <p class={resultCls}><span id="sd-water">{d3.water}</span> g</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-[var(--border-light)]">
+          <a
+            id="handoff"
+            href={defaultHandoff}
+            class="btn btn-primary inline-block"
+            data-handoff
+            data-from-page="hydration-calculator"
+            data-to-page="homepage-calculator"
+            data-tab="water-from-flour"
+          >Open in the full bread calculator</a>
+          <p class="text-sm text-[var(--crust-brown)] mt-3">Takes this hydration and dough weight to the main calculator, which builds the rest of the formula and a baking schedule.</p>
+        </div>
+      </section>
+
+      <CalculatorGearBlock />
+    </div></div>
+
+    <NewsletterSection />
+
+    <div class="container"><div class="max-w-3xl mx-auto">
+      <section id="guide" class="prose mt-16">
+        <h2>What hydration means</h2>
+        <p>
+          Hydration is the weight of the water in a dough divided by the weight of the flour, written as a percentage. 500 g of flour with 375 g of water is a 75% dough. Because it is a ratio, the number holds when you scale a recipe up or down, which is why bakers describe a dough by its hydration rather than by how much water went in.
+        </p>
+
+        <h2>Why starter water counts</h2>
+        <p>
+          A sourdough starter is flour and water, and both halves end up in the dough. A 100 g starter kept at 100% hydration brings 50 g of flour and 50 g of water with it. Leave that out and a dough you think of as 70% is really closer to 72%, which is enough to change how it handles on the bench. The "Hydration from a recipe" tab splits the starter for you and shows both parts.
+        </p>
+        <p>
+          Other liquids count too. Milk is roughly 87% water, so 100 g of milk adds about 87 g of water to the total, and whole eggs are about 75% water.
+        </p>
+
+        <h2>What 65, 75 and 82 percent feel like</h2>
+        <p>
+          At <a href="/recipes/sourdough-65-overnight/">65%</a> the dough is smooth and holds its shape after a few folds. It shapes easily, and the crumb comes out even and fairly tight, which suits sandwiches and toast.
+        </p>
+        <p>
+          At <a href="/recipes/sourdough-75-overnight/">75%</a> the dough is soft and a little tacky. It wants wet hands and a firm pre-shape, and it gives you a more open, irregular crumb for the effort. Most home sourdough lives here.
+        </p>
+        <p>
+          At <a href="/recipes/sourdough-82-overnight/">82%</a> the dough spreads if you let it. You build strength with coil folds instead of kneading, and shaping takes practice. This is the range for a very open crumb, and for <a href="/recipes/focaccia-82-overnight/">focaccia</a>, where the pan does the shaping for you.
+        </p>
+
+        <h2>Working back from a dough weight</h2>
+        <p>
+          If you know the size of loaf you want, start from the total. A 900 g dough at 75% needs 514 g of flour and 386 g of water. Salt and starter sit on top of that, so for an exact finished weight, take their grams off the total before you split it.
+        </p>
+
+        <h2>Change the hydration or change the flour?</h2>
+        <p>
+          If a dough feels wetter than its number, look at the flour before you cut the water. All-purpose flour absorbs less than bread flour and whole grain absorbs more, so the same percentage can feel very different from one bag to the next. Drop hydration 3 to 5 points when you swap bread flour for all-purpose, and raise it a few points when whole wheat makes up a large share.
+        </p>
+        <p>
+          Change the water when the flour is right but the loaf isn't: a tight crumb you want more open, or a loaf that spreads and won't hold a score. Move in steps of 2 or 3 percent so you can tell what each change did. The <a href="/fundamentals/hydration-60-to-90/">full guide to hydration from 60% to 90%</a> goes further into flour protein and whole grains.
+        </p>
+      </section>
+
+      <section id="faq" class="mt-16">
+        <h2 class="font-display text-3xl mb-6">Hydration questions</h2>
+        <div class="space-y-6">
+          {faq.map((f) => (
+            <div class="border-b border-[var(--border-light)] pb-6">
+              <h3 class="font-medium text-lg mb-2">{f.q}</h3>
+              <p class="text-[var(--crust-brown)] leading-relaxed">{f.a}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div></div>
+  </main>
+</Layout>
+
+<script>
+  import { waterFromFlour, hydrationFromRecipe, splitDough } from '../lib/hydration';
+  import { handoffHref } from '../lib/handoff';
+
+  const $ = (id: string) => document.getElementById(id);
+  const val = (id: string) => parseFloat(($(id) as HTMLInputElement | null)?.value ?? '');
+  const put = (id: string, v: number) => {
+    const el = $(id);
+    if (el) el.textContent = String(v);
+  };
+
+  const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('.calc-mode-tab'));
+  const handoff = $('handoff') as HTMLAnchorElement | null;
+  let mode = 'water-from-flour';
+
+  function update() {
+    let hydration = 75;
+    let weight = 900;
+    if (mode === 'water-from-flour') {
+      const flour = val('wf-flour');
+      hydration = val('wf-hydration');
+      const water = waterFromFlour(flour, hydration);
+      put('wf-water', water);
+      weight = (Number.isFinite(flour) ? flour : 0) + water;
+    } else if (mode === 'hydration-from-recipe') {
+      const flour = val('hr-flour');
+      const water = val('hr-water');
+      const starter = val('hr-starter');
+      const r = hydrationFromRecipe({ flour, water, starter: Number.isFinite(starter) ? starter : 0, starterHydration: val('hr-starter-h') });
+      put('hr-hydration', r.hydration);
+      put('hr-starter-flour', r.starterFlour);
+      put('hr-starter-water', r.starterWater);
+      put('hr-total-flour', r.totalFlour);
+      put('hr-total-water', r.totalWater);
+      hydration = r.hydration;
+      weight = r.totalFlour + r.totalWater;
+    } else {
+      hydration = val('sd-hydration');
+      const s = splitDough(val('sd-total'), hydration);
+      put('sd-flour', s.flour);
+      put('sd-water', s.water);
+      weight = s.flour + s.water;
+    }
+    if (handoff) {
+      handoff.href = handoffHref({ hydration, weight });
+      handoff.dataset.tab = mode;
+    }
+  }
+
+  function select(tab: HTMLButtonElement, focus = false) {
+    mode = tab.dataset.mode || mode;
+    for (const t of tabs) {
+      const on = t === tab;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.tabIndex = on ? 0 : -1;
+      const panel = document.querySelector<HTMLElement>(`[data-panel="${t.dataset.mode}"]`);
+      if (panel) panel.hidden = !on;
+    }
+    if (focus) tab.focus();
+    update();
+  }
+
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => select(tab));
+    tab.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      e.preventDefault();
+      const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+      select(next, true);
+    });
+  });
+
+  $('tool')?.addEventListener('input', update);
+  update();
+</script>
