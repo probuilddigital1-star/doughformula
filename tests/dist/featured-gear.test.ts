@@ -65,23 +65,27 @@ describe('Challenger featured card on recipe pages', () => {
     expect(img).toMatch(/srcset="[^"]*720w/);
   });
 
-  it('never appears on other recipe families or the homepage', () => {
+  it('never appears on other recipe families', () => {
     for (const slug of others) {
       const html = recipe(slug);
       expect(html, slug).not.toContain('data-featured-gear');
       expect(html, slug).not.toContain('challengerbreadware.com');
       expect(html, slug).not.toContain(OTHER_RETAILERS);
     }
+  });
+
+  it('appears on the homepage only inside the calculator gear block (tests/dist/homepage-promo.test.ts)', () => {
     const home = distFile('index.html');
-    expect(home).not.toContain('data-featured-gear');
-    expect(home).not.toContain('challengerbreadware.com');
-    expect(home).not.toContain(OTHER_RETAILERS);
+    expect(home.match(/data-featured-gear=/g)).toHaveLength(1);
+    const block = home.slice(home.indexOf('id="gear-block"'), home.indexOf('</aside>', home.indexOf('id="gear-block"')));
+    expect(block).toContain('data-featured-gear=');
+    expect(home.match(/challengerbreadware\.com/g)).toHaveLength(1);
   });
 
   it('every Challenger link on the site carries ref and a campaign tag', () => {
     for (const { path, html } of allDistHtml()) {
       const links = html.match(/https:\/\/challengerbreadware\.com[^"]*/g) ?? [];
-      for (const l of links) expect(l, path).toMatch(/\?ref=probuilddigital&campaign=(recipe|recipe-step|calculator)$/);
+      for (const l of links) expect(l, path).toMatch(/\?ref=probuilddigital&campaign=(recipe|recipe-step|calculator|homepage)$/);
     }
   });
 });
@@ -136,7 +140,7 @@ describe('Amazon links keep their Associates tag as tracking_id', () => {
   it('no Challenger link reports an Amazon tag', () => {
     for (const { path, html } of allDistHtml()) {
       for (const a of html.match(/<a [^>]*data-merchant="challenger"[^>]*>/g) ?? []) {
-        expect(a, path).toMatch(/data-tracking-id="(recipe|recipe-step|calculator)"/);
+        expect(a, path).toMatch(/data-tracking-id="(recipe|recipe-step|calculator|homepage)"/);
       }
     }
   });

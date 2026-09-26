@@ -90,6 +90,7 @@ describe('calculator gear block', () => {
 
   it('uses the calculator tracking id and one compact disclosure', () => {
     expect(block).toContain(`?tag=${TRACKING_IDS.calculator}`);
+    for (const tag of block.match(/amazon\.com\/dp\/[A-Z0-9]+\?tag=[^"]+/g) ?? []) expect(tag).toMatch(new RegExp(`tag=${TRACKING_IDS.calculator}$`));
     expect(block.match(/As an Amazon Associate I earn from qualifying purchases\./g)).toHaveLength(1);
     expect(block).not.toContain('Affiliate Disclosure:');
   });

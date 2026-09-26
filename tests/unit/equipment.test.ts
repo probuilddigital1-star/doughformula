@@ -175,6 +175,7 @@ describe('Challenger Bread Pan', () => {
     expect(productUrl(p, TRACKING_IDS.recipe)).toBe(`${BASE}&campaign=recipe`);
     expect(productUrl(p, TRACKING_IDS.calculator)).toBe(`${BASE}&campaign=calculator`);
     expect(productUrl(p, TRACKING_IDS.recipe, 'recipe_step')).toBe(`${BASE}&campaign=recipe-step`);
+    expect(productUrl(p, TRACKING_IDS.homepage, 'homepage_calculator')).toBe(`${BASE}&campaign=homepage`);
   });
 
   it('is featured for the dutch-oven family only and never in a plain gear list', () => {

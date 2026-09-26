@@ -122,8 +122,9 @@ export const GEAR_SETS: Record<GearFamily, string[]> = {
 };
 
 /** One featured direct-merchant product per family, shown as a photo card above the plain
- *  gear list on recipe pages and the calculator pages. Never on the homepage, and never
- *  also listed in GEAR_SETS, so the plain lists and the homepage stay Amazon only. */
+ *  gear list on recipe pages, the calculator pages, and the homepage calculator's gear block
+ *  (for Dutch oven styles). Never also listed in GEAR_SETS, so every plain list stays Amazon
+ *  only. */
 export const FEATURED_GEAR: Partial<Record<GearFamily, string>> = {
   'dutch-oven': 'challenger-bread-pan',
 };
@@ -148,8 +149,9 @@ export const TRACKING_IDS = {
 } as const;
 
 /** Where an affiliate link sits. The first three map one to one onto Amazon tracking ids;
- *  recipe_step is the in-text mention inside a recipe's bake step. */
-export type Placement = 'homepage' | 'recipe' | 'recipe_step' | 'calculator' | 'unknown';
+ *  recipe_step is the in-text mention inside a recipe's bake step, and homepage_calculator is
+ *  the featured card in the homepage calculator's gear block. */
+export type Placement = 'homepage' | 'recipe' | 'recipe_step' | 'calculator' | 'homepage_calculator' | 'unknown';
 
 /** Tracking ids map one to one onto placements, so the placement needs no extra prop. */
 export function placementForTrackingId(trackingId: string): Placement {
@@ -159,12 +161,19 @@ export function placementForTrackingId(trackingId: string): Placement {
   return 'unknown';
 }
 
-/** Campaign tag for a placement: recipe_step becomes recipe-step. */
+/** Campaign tags that differ from the placement name. */
+const CAMPAIGNS: Partial<Record<Placement, string>> = {
+  recipe_step: 'recipe-step',
+  homepage_calculator: 'homepage',
+};
+
+/** Campaign tag for a placement: recipe_step is recipe-step, homepage_calculator is homepage,
+ *  and the rest use their own name. */
 export function campaignFor(placement: Placement): string {
-  return placement.replace('_', '-');
+  return CAMPAIGNS[placement] ?? placement;
 }
 
-/** Pass `placement` when it isn't implied by the tracking id (recipe_step). */
+/** Pass `placement` when it isn't implied by the tracking id (recipe_step, homepage_calculator). */
 export function productUrl(p: Product, trackingId: string, placement?: Placement): string {
   if (p.merchant === 'amazon') return `https://www.amazon.com/dp/${p.asin}?tag=${trackingId}`;
   if (p.campaignTagged) return `${p.href}&campaign=${campaignFor(placement ?? placementForTrackingId(trackingId))}`;

@@ -5,7 +5,8 @@ import heroImage from '../assets/hero-bread.jpg';
 import { KIT_FORM_ID, KIT_PUBLIC_API_KEY, NEWSLETTER_ENABLED } from '../config/newsletter';
 import EquipmentGrid from '../components/EquipmentGrid.astro';
 import AffiliateDisclosure from '../components/AffiliateDisclosure.astro';
-import { HOMEPAGE_PRODUCTS, TRACKING_IDS, GEAR_SETS, CALCULATOR_STYLE_FAMILY, ALL_GEAR_PRODUCT_IDS, hasDirectMerchant } from '../data/equipment';
+import FeaturedGearCard from '../components/FeaturedGearCard.astro';
+import { HOMEPAGE_PRODUCTS, TRACKING_IDS, GEAR_SETS, CALCULATOR_STYLE_FAMILY, ALL_GEAR_PRODUCT_IDS, FEATURED_GEAR, hasDirectMerchant } from '../data/equipment';
 
 // 750 covers the common 375-412px phones at 1.75 to 2x; 1080 covers 3x phones and tablets.
 // The 4000x6000 source never ships. Quality 50 is invisible under the hero's cream overlay.
@@ -209,6 +210,15 @@ const breadStyles = [
     ]
   }
 ];
+
+// Styles whose own method bakes in a Dutch oven. Read from the instructions rather than listed,
+// so a style that gains or loses a Dutch oven step gains or loses the featured card with it.
+const DUTCH_OVEN_STYLES = breadStyles
+  .filter((style) => style.instructions.some((step) => /dutch oven/i.test(step)))
+  .map((style) => style.id);
+const featuredGear = FEATURED_GEAR['dutch-oven'];
+// breadStyles[0] is selected on load; its card state is server-rendered so nothing shifts.
+const featuredOnLoad = DUTCH_OVEN_STYLES.includes(breadStyles[0].id);
 ---
 
 <Layout>
@@ -1162,8 +1172,23 @@ const breadStyles = [
             </div>
           </div>
 
-          <aside id="gear-block" class="mt-6" data-style-family={JSON.stringify(CALCULATOR_STYLE_FAMILY)}>
+          <p id="more-tools" class="text-sm text-[var(--crust-brown)] mt-4">
+            Also try the <a href="/hydration-calculator/" class="underline decoration-[var(--accent-gold)] underline-offset-2 hover:text-[var(--accent-gold)]" data-tool-link="homepage_more_tools">hydration calculator</a> and the <a href="/bakers-percentage-calculator/" class="underline decoration-[var(--accent-gold)] underline-offset-2 hover:text-[var(--accent-gold)]" data-tool-link="homepage_more_tools">baker's percentage calculator</a>.
+          </p>
+
+          <aside id="gear-block" class="mt-6" data-style-family={JSON.stringify(CALCULATOR_STYLE_FAMILY)} data-featured-styles={JSON.stringify(DUTCH_OVEN_STYLES)}>
             <h4 class="font-medium text-lg mb-3">Gear for this bake</h4>
+            {featuredGear && (
+              <div data-featured-wrap class:list={[!featuredOnLoad && 'hidden']}>
+                <FeaturedGearCard
+                  productId={featuredGear}
+                  trackingId={TRACKING_IDS.homepage}
+                  placement="homepage_calculator"
+                  stacked
+                  sizes="(min-width: 1024px) 544px, (min-width: 768px) 705px, 100vw"
+                />
+              </div>
+            )}
             <EquipmentGrid compact disclosure={false} productIds={GEAR_SETS.universal} trackingId={TRACKING_IDS.calculator} />
             <div data-gear-family="dutch-oven" class="mt-2">
               <EquipmentGrid compact disclosure={false} productIds={GEAR_SETS['dutch-oven']} trackingId={TRACKING_IDS.calculator} />
@@ -1177,7 +1202,7 @@ const breadStyles = [
             <div data-gear-family="loaf-pan" class="mt-2 hidden">
               <EquipmentGrid compact disclosure={false} productIds={GEAR_SETS['loaf-pan']} trackingId={TRACKING_IDS.calculator} />
             </div>
-            <AffiliateDisclosure compact hasDirect={hasDirectMerchant(ALL_GEAR_PRODUCT_IDS)} />
+            <AffiliateDisclosure compact hasDirect={featuredGear !== undefined || hasDirectMerchant(ALL_GEAR_PRODUCT_IDS)} />
           </aside>
         </div>
       </div>
@@ -2186,6 +2211,13 @@ const breadStyles = [
       const family = familyMap[state.style] ?? 'universal';
       gearBlock.querySelectorAll<HTMLElement>('[data-gear-family]').forEach((el) => {
         el.classList.toggle('hidden', el.dataset.gearFamily !== family);
+      });
+      // The featured card, and the disclosure's other-retailers sentence that goes with it,
+      // show only for styles that bake in a Dutch oven.
+      const featuredStyles = JSON.parse(gearBlock.dataset.featuredStyles || '[]') as string[];
+      const showFeatured = featuredStyles.includes(state.style);
+      gearBlock.querySelectorAll<HTMLElement>('[data-featured-wrap], [data-other-retailers]').forEach((el) => {
+        el.classList.toggle('hidden', !showFeatured);
       });
     }
 

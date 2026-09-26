@@ -4,7 +4,7 @@
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 import challengerBreadPan from '../assets/gear/challenger-bread-pan.jpg';
-import { PRODUCTS, productUrl } from '../data/equipment';
+import { PRODUCTS, productUrl, type Placement } from '../data/equipment';
 import { affiliateLinkAttributes } from '../config/analytics';
 
 /** Product id to its media-kit image. A direct product without an entry renders no card. */
@@ -15,29 +15,37 @@ const IMAGES: Record<string, ImageMetadata> = {
 interface Props {
   productId: string;
   trackingId: string;
+  /** Set when the placement isn't implied by the tracking id (homepage_calculator). */
+  placement?: Placement;
+  /** Image on top at every width, for narrow columns like the homepage calculator. */
+  stacked?: boolean;
+  /** The image's sizes attribute; defaults to the side-by-side layout's 360px column. */
+  sizes?: string;
 }
 
-const { productId, trackingId } = Astro.props;
+const { productId, trackingId, placement, stacked = false, sizes } = Astro.props;
 const p = PRODUCTS[productId];
 if (!p) throw new Error(`FeaturedGearCard: unknown product id "${productId}"`);
 const image = IMAGES[productId];
 const show = p.merchant === 'direct' && image !== undefined;
 
 // Display width at sm and up; below that the image spans the card, so the 2x file covers phones.
+// A stacked card spans its column, which the caller describes through `sizes`.
 const DISPLAY_W = 360;
 const DISPLAY_H = 240;
+const widths = stacked ? [DISPLAY_W, DISPLAY_W * 2, DISPLAY_W * 3] : [DISPLAY_W, DISPLAY_W * 2];
 ---
 
 {show && (
-  <div class="card featured-gear overflow-hidden flex flex-col sm:flex-row mb-8" data-featured-gear={p.id}>
-    <div class="sm:w-[360px] sm:flex-shrink-0 bg-[var(--cream-warm)]">
+  <div class:list={['card featured-gear overflow-hidden flex flex-col mb-8', !stacked && 'sm:flex-row']} data-featured-gear={p.id}>
+    <div class:list={['bg-[var(--cream-warm)]', !stacked && 'sm:w-[360px] sm:flex-shrink-0']}>
       <Image
         src={image}
         alt={p.imageAlt ?? p.name}
         width={DISPLAY_W}
         height={DISPLAY_H}
-        widths={[DISPLAY_W, DISPLAY_W * 2]}
-        sizes={`(min-width: 640px) ${DISPLAY_W}px, 100vw`}
+        widths={widths}
+        sizes={sizes ?? `(min-width: 640px) ${DISPLAY_W}px, 100vw`}
         format="webp"
         quality={75}
         loading="lazy"
@@ -50,11 +58,11 @@ const DISPLAY_H = 240;
       <h3 class="font-display text-xl mb-2">{p.name}</h3>
       <p class="text-sm text-[var(--crust-brown)] mb-4">{p.blurb}</p>
       <a
-        href={productUrl(p, trackingId)}
+        href={productUrl(p, trackingId, placement)}
         target="_blank"
         rel="sponsored nofollow noopener noreferrer"
         class="btn btn-primary self-start text-sm"
-        {...affiliateLinkAttributes(p, trackingId)}
+        {...affiliateLinkAttributes(p, trackingId, placement)}
       >See it at {p.merchantLabel}</a>
     </div>
   </div>

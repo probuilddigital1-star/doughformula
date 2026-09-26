@@ -64,6 +64,11 @@ describe('affiliateLinkAttributes', () => {
     expect(affiliateLinkAttributes(c, TRACKING_IDS.recipe)['data-tracking-id']).toBe('recipe');
     expect(affiliateLinkAttributes(c, TRACKING_IDS.recipe, 'recipe_step')['data-tracking-id']).toBe('recipe-step');
     expect(affiliateLinkAttributes(c, TRACKING_IDS.calculator)['data-tracking-id']).toBe('calculator');
+    expect(affiliateLinkAttributes(c, TRACKING_IDS.homepage, 'homepage_calculator')).toMatchObject({
+      'data-merchant': 'challenger',
+      'data-placement': 'homepage_calculator',
+      'data-tracking-id': 'homepage',
+    });
   });
 
   it('keeps the Associates tag as tracking_id for every Amazon product and placement', () => {
