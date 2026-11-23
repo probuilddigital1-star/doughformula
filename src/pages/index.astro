@@ -1433,7 +1433,11 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
 
   const state: RecipeState = calc.createDefaultState();
   const enrichmentState: EnrichmentState = calc.createDefaultEnrichments();
+  // The recipe is built on flourBlend. The Flour tab edits flourDraft, and the draft becomes
+  // the blend only when it adds up to 100%, so a half-typed blend can never print a recipe
+  // with negative flour.
   const flourBlend: FlourEntry[] = calc.createDefaultFlourBlend();
+  let flourDraft: FlourEntry[] = flourBlend.map((flour) => ({ ...flour }));
 
   // Get initial instructions from first style card
   const firstCard = document.querySelector('.style-card') as HTMLElement;
@@ -1445,7 +1449,6 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
   const formatTemp = (tempF: number) => calc.formatTemp(state, tempF);
   const formatWeight = (grams: number) => calc.formatWeight(state, grams);
   const estimateFermentationTimes = () => calc.estimateFermentationTimes(state);
-  const calculateWholeGrainPercent = () => calc.calculateWholeGrainPercent(flourBlend);
   const estimatePrefermentTiming = () => calc.estimatePrefermentTiming(state);
   const generateBakingSchedule = (targetDateTime: Date) => calc.generateBakingSchedule(state, targetDateTime);
   const calculateRecipe = () => calc.calculateRecipe(state, enrichmentState, flourBlend);
@@ -1462,8 +1465,7 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
     // Update recipe card title
     const titleEl = document.getElementById('recipe-title');
     if (titleEl) {
-      const styleName = state.style.charAt(0).toUpperCase() + state.style.slice(1).replace('-', ' ');
-      titleEl.textContent = `${styleName} Bread`;
+      titleEl.textContent = calc.recipeTitle(state);
     }
 
     // Show the gear list for the selected style's shape family. The map is server-rendered
@@ -1824,6 +1826,9 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
       (document.getElementById('whole-grain-slider') as HTMLInputElement).value = String(state.wholeGrain);
       (document.getElementById('salt-slider') as HTMLInputElement).value = String(state.salt);
       (document.getElementById('ddt-slider') as HTMLInputElement).value = String(state.ddt);
+
+      // The style's whole grain share becomes the flour blend, on bread flour
+      setWholeGrain(state.wholeGrain, 'bread');
 
       // The style's own enrichments go on (butter, eggs, milk and sugar for brioche, olive
       // oil for focaccia, butter for a sandwich loaf), and any others go off
@@ -2448,30 +2453,65 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
   // Flour Management Event Listeners
   // ============================================
 
-  let activeFlourSlots = 1;
+  // The flour each slot starts on when it is added
+  const FLOUR_SLOT_DEFAULTS = ['bread', 'whole-wheat', 'rye-light'];
+
+  // Puts the Flour tab's slots in line with flourDraft: one slot per flour in the draft
+  function showFlourDraft() {
+    for (let i = 0; i < 3; i++) {
+      if (i > 0) document.getElementById(`flour-slot-${i}`)?.classList.toggle('hidden', i >= flourDraft.length);
+      const typeSelect = document.querySelector(`.flour-type-select[data-flour="${i}"]`) as HTMLSelectElement | null;
+      const percentInput = document.querySelector(`.flour-percent-input[data-flour="${i}"]`) as HTMLInputElement | null;
+      if (typeSelect) typeSelect.value = flourDraft[i]?.type ?? FLOUR_SLOT_DEFAULTS[i];
+      if (percentInput) percentInput.value = String(flourDraft[i]?.percent ?? 0);
+    }
+    document.getElementById('add-flour-btn')?.classList.toggle('hidden', flourDraft.length >= 3);
+  }
+
+  // After any change to the draft: use it for the recipe if it adds up to 100%, and say so
+  // if it does not. The recipe keeps the last blend that did.
+  function applyFlourDraft() {
+    const total = flourDraft.reduce((sum, flour) => sum + flour.percent, 0);
+    const valid = calc.isValidBlend(flourDraft);
+    const validationEl = document.getElementById('flour-validation');
+    if (validationEl) {
+      validationEl.classList.toggle('hidden', valid);
+      if (!valid) {
+        validationEl.textContent = `Total flour must equal 100% (currently ${total}%). The recipe keeps your last blend until it does.`;
+      }
+    }
+    if (valid) {
+      flourBlend.splice(0, flourBlend.length, ...flourDraft.filter((flour) => flour.percent > 0).map((flour) => ({ ...flour })));
+      // The Whole Grain slider on the Basics tab follows the blend
+      state.wholeGrain = calc.calculateWholeGrainPercent(flourBlend);
+      const slider = document.getElementById('whole-grain-slider') as HTMLInputElement | null;
+      if (slider) slider.value = String(state.wholeGrain);
+    }
+    updateFlourDisplay();
+  }
+
+  // The Whole Grain slider and the style cards are the short way to set the blend: the main
+  // flour plus that share of whole wheat.
+  function setWholeGrain(percent: number, baseFlour?: string) {
+    const base = baseFlour ?? flourBlend.find((flour) => !calc.FLOUR_DATA[flour.type]?.wholeGrain)?.type ?? 'bread';
+    if (percent >= 100) {
+      flourDraft = [{ type: 'whole-wheat', percent: 100 }];
+    } else if (percent > 0) {
+      flourDraft = [{ type: base, percent: 100 - percent }, { type: 'whole-wheat', percent }];
+    } else {
+      flourDraft = [{ type: base, percent: 100 }];
+    }
+    showFlourDraft();
+    applyFlourDraft();
+  }
 
   // Add flour button
   document.getElementById('add-flour-btn')?.addEventListener('click', () => {
-    if (activeFlourSlots < 3) {
-      activeFlourSlots++;
-      const slot = document.getElementById(`flour-slot-${activeFlourSlots - 1}`);
-      if (slot) {
-        slot.classList.remove('hidden');
-        // Set default percent
-        const input = slot.querySelector('.flour-percent-input') as HTMLInputElement;
-        if (input) {
-          input.value = '0';
-          flourBlend[activeFlourSlots - 1] = {
-            type: (slot.querySelector('.flour-type-select') as HTMLSelectElement)?.value || 'whole-wheat',
-            percent: 0
-          };
-        }
-      }
-      // Hide add button if at max
-      if (activeFlourSlots >= 3) {
-        document.getElementById('add-flour-btn')?.classList.add('hidden');
-      }
-      validateFlourPercents();
+    if (flourDraft.length < 3) {
+      flourDraft.push({ type: FLOUR_SLOT_DEFAULTS[flourDraft.length], percent: 0 });
+      showFlourDraft();
+      applyFlourDraft();
+      updateUI();
     }
   });
 
@@ -2479,19 +2519,12 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
   document.querySelectorAll('.remove-flour-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const index = parseInt((btn as HTMLElement).dataset.flour || '0');
-      const slot = document.getElementById(`flour-slot-${index}`);
-      if (slot) {
-        slot.classList.add('hidden');
-        // Reset this flour entry
-        flourBlend[index] = { type: 'bread', percent: 0 };
-        // Reset input
-        const input = slot.querySelector('.flour-percent-input') as HTMLInputElement;
-        if (input) input.value = '0';
+      if (index > 0 && index < flourDraft.length) {
+        flourDraft.splice(index, 1);
+        showFlourDraft();
+        applyFlourDraft();
+        updateUI();
       }
-      activeFlourSlots--;
-      document.getElementById('add-flour-btn')?.classList.remove('hidden');
-      validateFlourPercents();
-      updateUI();
     });
   });
 
@@ -2499,9 +2532,9 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
   document.querySelectorAll('.flour-type-select').forEach(select => {
     select.addEventListener('change', (e) => {
       const index = parseInt((e.target as HTMLSelectElement).dataset.flour || '0');
-      flourBlend[index] = flourBlend[index] || { type: 'bread', percent: 0 };
-      flourBlend[index].type = (e.target as HTMLSelectElement).value;
-      updateFlourDisplay();
+      if (!flourDraft[index]) return;
+      flourDraft[index].type = (e.target as HTMLSelectElement).value;
+      applyFlourDraft();
       updateUI();
     });
   });
@@ -2510,31 +2543,16 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
   document.querySelectorAll('.flour-percent-input').forEach(input => {
     input.addEventListener('input', (e) => {
       const index = parseInt((e.target as HTMLInputElement).dataset.flour || '0');
-      flourBlend[index] = flourBlend[index] || { type: 'bread', percent: 0 };
-      flourBlend[index].percent = fieldNumber(e.target as HTMLInputElement, 0);
-      validateFlourPercents();
-      updateFlourDisplay();
+      if (!flourDraft[index]) return;
+      flourDraft[index].percent = fieldNumber(e.target as HTMLInputElement, 0);
+      applyFlourDraft();
       updateUI();
     });
   });
 
-  // Validate flour percentages sum to 100
-  function validateFlourPercents() {
-    const total = flourBlend.reduce((sum, f) => sum + (f?.percent || 0), 0);
-    const validationEl = document.getElementById('flour-validation');
-    if (validationEl) {
-      if (total !== 100) {
-        validationEl.classList.remove('hidden');
-        validationEl.textContent = `Total flour must equal 100% (currently ${total}%)`;
-      } else {
-        validationEl.classList.add('hidden');
-      }
-    }
-  }
-
-  // Update flour display (whole grain calculation)
+  // The whole grain summary under the blend
   function updateFlourDisplay() {
-    const wholeGrainPercent = calculateWholeGrainPercent();
+    const wholeGrainPercent = calc.calculateWholeGrainPercent(flourBlend);
     const totalWholeGrainEl = document.getElementById('total-whole-grain');
     if (totalWholeGrainEl) {
       totalWholeGrainEl.textContent = `${wholeGrainPercent}%`;
@@ -2550,50 +2568,21 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
         tipEl.textContent = 'Mostly white flour: Standard hydration should work well.';
       }
     }
-
-    // Update state.wholeGrain for recipe calculations
-    state.wholeGrain = wholeGrainPercent;
   }
 
   // Flour preset blends
+  const FLOUR_PRESETS: Record<string, FlourEntry[]> = {
+    classic: [{ type: 'bread', percent: 100 }],
+    country: [{ type: 'bread', percent: 90 }, { type: 'whole-wheat', percent: 10 }],
+    multigrain: [{ type: 'bread', percent: 70 }, { type: 'whole-wheat', percent: 20 }, { type: 'rye-light', percent: 10 }]
+  };
   document.querySelectorAll('.flour-preset-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const blend = (btn as HTMLElement).dataset.blend;
-
-      // Reset all flour slots
-      document.querySelectorAll('.flour-entry').forEach((entry, i) => {
-        if (i > 0) entry.classList.add('hidden');
-      });
-      activeFlourSlots = 1;
-
-      if (blend === 'classic') {
-        flourBlend[0] = { type: 'bread', percent: 100 };
-        flourBlend[1] = { type: 'whole-wheat', percent: 0 };
-      } else if (blend === 'country') {
-        flourBlend[0] = { type: 'bread', percent: 90 };
-        flourBlend[1] = { type: 'whole-wheat', percent: 10 };
-        document.getElementById('flour-slot-1')?.classList.remove('hidden');
-        activeFlourSlots = 2;
-      } else if (blend === 'multigrain') {
-        flourBlend[0] = { type: 'bread', percent: 70 };
-        flourBlend[1] = { type: 'whole-wheat', percent: 20 };
-        flourBlend[2] = { type: 'rye-light', percent: 10 };
-        document.getElementById('flour-slot-1')?.classList.remove('hidden');
-        document.getElementById('flour-slot-2')?.classList.remove('hidden');
-        activeFlourSlots = 3;
-      }
-
-      // Update UI inputs
-      flourBlend.forEach((flour, i) => {
-        const typeSelect = document.querySelector(`.flour-type-select[data-flour="${i}"]`) as HTMLSelectElement;
-        const percentInput = document.querySelector(`.flour-percent-input[data-flour="${i}"]`) as HTMLInputElement;
-        if (typeSelect) typeSelect.value = flour.type;
-        if (percentInput) percentInput.value = String(flour.percent);
-      });
-
-      document.getElementById('add-flour-btn')?.classList.toggle('hidden', activeFlourSlots >= 3);
-      validateFlourPercents();
-      updateFlourDisplay();
+      const preset = FLOUR_PRESETS[(btn as HTMLElement).dataset.blend || ''];
+      if (!preset) return;
+      flourDraft = preset.map((flour) => ({ ...flour }));
+      showFlourDraft();
+      applyFlourDraft();
       updateUI();
     });
   });
@@ -2605,7 +2594,7 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
   });
 
   document.getElementById('whole-grain-slider')?.addEventListener('input', (e) => {
-    state.wholeGrain = parseFloat((e.target as HTMLInputElement).value);
+    setWholeGrain(parseFloat((e.target as HTMLInputElement).value));
     updateUI();
   });
 
@@ -2650,7 +2639,7 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
 
   document.getElementById('btn-copy')?.addEventListener('click', async () => {
     const recipe = calculateRecipe();
-    const text = calc.recipeCopyText(state, recipe);
+    const text = calc.recipeCopyText(state, enrichmentState, recipe);
 
     try {
       await navigator.clipboard.writeText(text);
@@ -2757,6 +2746,7 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
   }
 
   // Initialize
+  setWholeGrain(state.wholeGrain, 'bread');
   loadFromURL();
   updateYeastTypeButtons();
   updateMixerButtons();

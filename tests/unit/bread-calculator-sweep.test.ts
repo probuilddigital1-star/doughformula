@@ -15,6 +15,7 @@ import {
   calculateWaterTemp,
   calculateWholeGrainPercent,
   clampToField,
+  createDefaultEnrichments,
   createDefaultState,
   estimateFermentationTimes,
   formatHourRange,
@@ -25,7 +26,9 @@ import {
   generateBakingSchedule,
   parseUrlRecipeParams,
   recipeCopyText,
+  recipeTitle,
   scheduleIcs,
+  starterHydrationNote,
   waterTempFormulaText,
   waterTempWarningText,
   yeastBloomNote,
@@ -526,21 +529,67 @@ describe('9. timing and schedule', () => {
 });
 
 describe('other printed outputs', () => {
-  it.fails('KNOWN ISSUE R: the copied recipe lists every row the card lists', () => {
+  it('the copied recipe lists every row the card lists, preferment box included (was KNOWN ISSUE R)', () => {
     const state = stateWith({ prefermentType: 'poolish' });
-    const p = printed(state);
-    const text = recipeCopyText(state, p.recipe);
-    for (const r of p.rows) expect(text, `${r.name} ${r.weight}g`).toContain(`${r.weight}g`);
+    const enrichments = createDefaultEnrichments();
+    enrichments.fat = { enabled: true, type: 'butter', percent: 5 };
+    const p = printed(state, enrichments);
+    const text = recipeCopyText(state, enrichments, p.recipe);
+    expect(p.rows.some((r) => r.name === 'Butter')).toBe(true);
+    for (const r of p.rows) expect(text, r.name).toContain(`- ${r.name}: ${r.weight}g${r.percent >= 0 ? ` (${r.percent}%)` : ''}`);
+    for (const r of p.prefermentRows) expect(text, r.name).toContain(`- ${r.name}: ${r.weight}g ${r.note}`);
+    expect(text).toContain('Poolish (make 8-12 hrs before):');
+    expect(text).toContain('Final Dough:');
+    expect(text).toContain(starterHydrationNote(state)!);
+    expect(text).toContain('Water temperature: 83°F');
+    expect(text).not.toMatch(/[–—]|--/);
   });
 
-  it.fails('KNOWN ISSUE R: the copied recipe says "1 loaf", not "1 loaves"', () => {
+  it('the copied recipe uses the unit picked', () => {
+    const state = stateWith({ unit: 'oz' });
+    const p = printed(state);
+    const text = recipeCopyText(state, p.enrichments, p.recipe);
+    expect(text).toContain('Makes 2 loaves at 31.7oz each (63.5oz total)');
+    expect(text).toContain('- Sourdough Starter: 6.5oz (20%)');
+    expect(text).not.toMatch(/\d+g\b/);
+  });
+
+  it('the copied recipe says "1 loaf", not "1 loaves" (was KNOWN ISSUE R)', () => {
     const state = stateWith({ numLoaves: 1 });
-    expect(recipeCopyText(state, printed(state).recipe)).not.toContain('1 loaves');
+    const p = printed(state);
+    const text = recipeCopyText(state, p.enrichments, p.recipe);
+    expect(text).not.toContain('1 loaves');
+    expect(text).toContain('Makes 1 loaf at 900g each (900g total)');
+  });
+
+  it('titles use the style name (was Z: "No knead Bread", "Sandwich Bread")', () => {
+    const title = (style: string) => recipeTitle(stateWith({ style }));
+    expect(BREAD_STYLES.map((s) => title(s.id))).toEqual([
+      'Sourdough Bread',
+      'Baguette Bread',
+      'Focaccia Bread',
+      'Sandwich Loaf',
+      'Ciabatta Bread',
+      'Brioche Bread',
+      'No-Knead Bread',
+      'Custom Bread',
+    ]);
+    expect(recipeCopyText(stateWith({ style: 'no-knead' }), createDefaultEnrichments(), printed(stateWith()).recipe).split('\n')[0]).toBe('No-Knead Bread');
   });
 });
 
 describe('page wiring that changes the numbers (checked in the page source)', () => {
   const src = readFileSync(join(process.cwd(), 'src/pages/index.astro'), 'utf8');
+
+  it('the Flour tab edits a draft, and the recipe only takes a blend that adds up to 100% (was KNOWN ISSUE T)', () => {
+    expect(src).toContain('const calculateRecipe = () => calc.calculateRecipe(state, enrichmentState, flourBlend);');
+    const apply = src.slice(src.indexOf('function applyFlourDraft() {'), src.indexOf('function setWholeGrain('));
+    expect(apply).toContain('const valid = calc.isValidBlend(flourDraft);');
+    expect(apply).toMatch(/if \(valid\) \{\s+flourBlend\.splice\(0, flourBlend\.length, /);
+    expect(apply).toContain('The recipe keeps your last blend until it does.');
+    // Nothing else writes the blend the recipe is built on.
+    expect(src.match(/flourBlend(\[\w+\])? = |flourBlend\.(push|splice)\(/g)).toEqual(['flourBlend.splice(']);
+  });
 
   it('the flour Quick Blends and schedule buttons are not also dough quantity presets (was KNOWN ISSUE N)', () => {
     // They share the .preset-pill look. The quantity presets used to listen on every
