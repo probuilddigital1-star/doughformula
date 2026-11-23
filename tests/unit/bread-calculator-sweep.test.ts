@@ -13,6 +13,7 @@ import {
   calculateWholeGrainPercent,
   createDefaultState,
   estimateFermentationTimes,
+  formatHourRange,
   formatScheduleTime,
   formatTemp,
   formatTempDifference,
@@ -360,7 +361,7 @@ describe('9. timing and schedule', () => {
   const ranges = (state: RecipeState) => {
     const t = estimateFermentationTimes(state);
     return [t.bulk, t.proof, t.total].map((text) => {
-      const m = text.match(/^(\d+)-(\d+) (hrs|min)$/);
+      const m = text.match(/^(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?) (hrs|min)$/);
       expect(m, text).not.toBeNull();
       return { text, min: Number(m![1]), max: Number(m![2]), unit: m![3] };
     });
@@ -396,9 +397,26 @@ describe('9. timing and schedule', () => {
     expect(at(80)).toBe(`${(12 * 0.93).toFixed(0)}-${(18 * 0.93).toFixed(0)} hrs`);
   });
 
-  it.fails('KNOWN ISSUE L: a time range never shows the same number twice, like "2-2 hrs"', () => {
+  it('a time range never shows the same number twice, like "2-2 hrs" (was KNOWN ISSUE L)', () => {
     for (const state of everyTimingState()) {
       for (const r of ranges(state)) expect(r.min, `${state.yeastType} ${state.yeastPercent}% at ${state.ddt}°F: ${r.text}`).toBeLessThan(r.max);
+    }
+  });
+
+  it('time ranges are rounded to a quarter hour and keep one unit (was "2-2 hrs", "43-86 min", "59-118 min")', () => {
+    // The three the audit quoted: Baguette bulk, Sandwich proof, Sourdough proof at 76°F.
+    expect(estimateFermentationTimes(styleState('baguette')).bulk).toBe('1.5-2 hrs');
+    expect(estimateFermentationTimes(styleState('sandwich')).proof).toBe('45-90 min');
+    expect(estimateFermentationTimes(styleState('sourdough')).proof).toBe('1-2 hrs');
+    expect(formatHourRange(1.9, 2.1)).toBe('2-2.25 hrs');
+    expect(formatHourRange(0.72, 1.43)).toBe('45-90 min');
+    expect(formatHourRange(3.94, 5.91)).toBe('4-6 hrs');
+    expect(formatHourRange(11.16, 16.74)).toBe('11-17 hrs');
+    for (const state of everyTimingState()) {
+      for (const r of ranges(state)) {
+        const quarterHours = r.unit === 'min' ? [r.min / 15, r.max / 15] : [r.min * 4, r.max * 4];
+        for (const q of quarterHours) expect(Number.isInteger(q), r.text).toBe(true);
+      }
     }
   });
 
@@ -438,12 +456,25 @@ describe('9. timing and schedule', () => {
     expect(sourdough).toContain('Preheat oven (with Dutch oven)');
   });
 
-  it.fails('KNOWN ISSUE M: the autolyse rest comes before the final mix', () => {
-    const order = tasks(stateWith({ autolyse: true }));
-    expect(order.indexOf('Autolyse (flour + water rest)')).toBeLessThan(order.indexOf('Mix final dough'));
+  it('the autolyse rest comes before the final mix (was KNOWN ISSUE M)', () => {
+    const schedule = generateBakingSchedule(stateWith({ autolyse: true, autolyseDuration: 30 }), target);
+    const order = schedule.map((s) => s.task);
+    expect(order.indexOf('Autolyse (flour + water rest)')).toBe(order.indexOf('Mix final dough') - 1);
+    expect(order.indexOf('Mix final dough')).toBe(order.indexOf('Bulk fermentation (stretch & fold)') - 1);
+    // Sourdough, ready at 9:00 AM: bulk at midnight, mix a quarter hour before, autolyse 30 minutes before that.
+    expect(schedule.slice(0, 3).map((s) => s.time)).toEqual(['11:15 PM', '11:45 PM', '12:00 AM']);
   });
 
-  it.fails('KNOWN ISSUE M: the calendar file puts each step at the time the schedule shows', () => {
+  it('each calendar event runs until the next step starts', () => {
+    const schedule = generateBakingSchedule(stateWith(), target);
+    const ics = scheduleIcs(schedule, target);
+    const stamps = (key: string) => [...ics.matchAll(new RegExp(`${key}:(\\d{8}T\\d{6}Z)`, 'g'))].map((m) => m[1]);
+    expect(stamps('DTEND').slice(0, -1)).toEqual(stamps('DTSTART').slice(1));
+    expect(stamps('DTEND').at(-1)).toBe(target.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z');
+    expect(stamps('DTSTART')).toEqual(schedule.map((s) => s.start.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'));
+  });
+
+  it('the calendar file puts each step at the time the schedule shows (was KNOWN ISSUE M)', () => {
     const schedule = generateBakingSchedule(stateWith(), target);
     const starts = [...scheduleIcs(schedule, target).matchAll(/DTSTART:(\d{4})(\d\d)(\d\d)T(\d\d)(\d\d)(\d\d)Z/g)].map((m) =>
       formatScheduleTime(new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]))),
@@ -481,7 +512,7 @@ describe('page wiring that changes the numbers (checked in the page source)', ()
     expect(updateUI).toContain('updateEnrichmentDisplay()');
   });
 
-  it.fails('KNOWN ISSUE U: the highlighted autolyse length is the one the schedule uses', () => {
+  it('the highlighted autolyse length is the one the schedule uses (was KNOWN ISSUE U)', () => {
     const active = src.match(/autolyse-duration-btn autolyse-duration-active" data-duration="(\d+)"/)!;
     expect(Number(active[1])).toBe(createDefaultState().autolyseDuration);
   });

@@ -11,6 +11,7 @@ import {
   BREAD_STYLES,
   calculateWaterTemp,
   createDefaultState,
+  estimateFermentationTimes,
   formatTemp,
   starterHydrationNote,
   waterTempFormulaText,
@@ -61,6 +62,7 @@ const defaultState = createDefaultState();
 const starterNoteOnLoad = starterHydrationNote(defaultState);
 // The same goes for the water temperature: the server HTML shows what the script will.
 const waterTempOnLoad = calculateWaterTemp(defaultState);
+const timesOnLoad = estimateFermentationTimes(defaultState);
 ---
 
 <Layout>
@@ -715,7 +717,7 @@ const waterTempOnLoad = calculateWaterTemp(defaultState);
                   <div class="bg-[var(--cream-warm)] rounded-lg p-4">
                     <div class="flex items-center justify-between mb-2">
                       <span class="font-medium text-[var(--espresso)]">Bulk Fermentation</span>
-                      <span class="text-lg font-display font-semibold text-[var(--accent-gold)]" id="bulk-time">4-6 hrs</span>
+                      <span class="text-lg font-display font-semibold text-[var(--accent-gold)]" id="bulk-time">{timesOnLoad.bulk}</span>
                     </div>
                     <p class="text-xs text-[var(--crust-brown)]" id="bulk-description">
                       Look for 50-75% rise with visible bubbles on the surface and sides.
@@ -726,7 +728,7 @@ const waterTempOnLoad = calculateWaterTemp(defaultState);
                   <div class="bg-[var(--cream-warm)] rounded-lg p-4">
                     <div class="flex items-center justify-between mb-2">
                       <span class="font-medium text-[var(--espresso)]">Final Proof</span>
-                      <span class="text-lg font-display font-semibold text-[var(--accent-gold)]" id="proof-time">1-2 hrs</span>
+                      <span class="text-lg font-display font-semibold text-[var(--accent-gold)]" id="proof-time">{timesOnLoad.proof}</span>
                     </div>
                     <p class="text-xs text-[var(--crust-brown)]" id="proof-description">
                       Poke test: dough should spring back slowly but not completely.
@@ -755,7 +757,7 @@ const waterTempOnLoad = calculateWaterTemp(defaultState);
                   <div class="bg-[var(--accent-gold)]/10 rounded-lg p-4 border border-[var(--accent-gold)]/20 mt-4">
                     <div class="flex items-center justify-between">
                       <span class="text-sm font-medium text-[var(--espresso)]">Total Active Time:</span>
-                      <span class="text-lg font-display font-semibold text-[var(--accent-gold)]" id="total-time">6-9 hrs</span>
+                      <span class="text-lg font-display font-semibold text-[var(--accent-gold)]" id="total-time">{timesOnLoad.total}</span>
                     </div>
                     <p class="text-xs text-[var(--crust-brown)] mt-1" id="total-time-note">
                       Excluding cold retard if enabled

@@ -71,7 +71,7 @@ export function createDefaultState(): RecipeState {
     prefermentPercent: 20,
     // Autolyse
     autolyse: false,
-    autolyseDuration: 30
+    autolyseDuration: 20
   };
 }
 
@@ -638,6 +638,20 @@ export function calculateStarterContribution(state: RecipeState, starterWeight: 
   return { flour: starterFlour, water: starterWater };
 }
 
+/**
+ * A time range as the Timing tab prints it. Times are rounded to a step a baker would use: a
+ * quarter hour for short ones, half an hour from 2 hours, a whole hour from 6. Both ends use
+ * one unit ("45-90 min", "1.5-2 hrs"), and the ends never round to the same number.
+ */
+export function formatHourRange(minHours: number, maxHours: number): string {
+  const step = minHours >= 6 ? 1 : minHours >= 2 ? 0.5 : 0.25;
+  const low = Math.max(step, Math.round(minHours / step) * step);
+  let high = Math.round(maxHours / step) * step;
+  if (high <= low) high = low + step;
+  if (low < 1) return `${low * 60}-${high * 60} min`;
+  return `${low}-${high} hrs`;
+}
+
 // Estimate fermentation times based on temperature and yeast type
 export function estimateFermentationTimes(state: RecipeState): { bulk: string; proof: string; total: string } {
   // Base times at 75°F (24°C)
@@ -667,14 +681,7 @@ export function estimateFermentationTimes(state: RecipeState): { bulk: string; p
   const adjustedProofMin = baseProofMin * tempFactor;
   const adjustedProofMax = baseProofMax * tempFactor;
 
-  // Format times
-  const formatTime = (min: number, max: number): string => {
-    if (min >= 1) {
-      return `${min.toFixed(0)}-${max.toFixed(0)} hrs`;
-    } else {
-      return `${Math.round(min * 60)}-${Math.round(max * 60)} min`;
-    }
-  };
+  const formatTime = formatHourRange;
 
   const totalMin = adjustedBulkMin + adjustedProofMin;
   const totalMax = adjustedBulkMax + adjustedProofMax;
@@ -966,6 +973,8 @@ export interface ScheduleItem {
   time: string;
   task: string;
   duration: string;
+  /** When the step starts. The calendar file is written from this. */
+  start: Date;
 }
 
 export function formatScheduleTime(date: Date): string {
@@ -978,30 +987,21 @@ export function generateBakingSchedule(state: RecipeState, targetDateTime: Date)
 
   // Work backwards from target time
   let currentTime = new Date(targetDateTime);
+  const addStep = (task: string, duration: string) => {
+    schedule.unshift({ time: formatScheduleTime(currentTime), task, duration, start: new Date(currentTime) });
+  };
 
   // Cooling time (1 hour)
   currentTime.setHours(currentTime.getHours() - 1);
-  schedule.unshift({
-    time: formatScheduleTime(currentTime),
-    task: 'Cool on wire rack',
-    duration: '1 hr'
-  });
+  addStep('Cool on wire rack', '1 hr');
 
   // Baking time (depends on style, but average 45 min)
   currentTime.setMinutes(currentTime.getMinutes() - 45);
-  schedule.unshift({
-    time: formatScheduleTime(currentTime),
-    task: 'Bake bread',
-    duration: '35-45 min'
-  });
+  addStep('Bake bread', '35-45 min');
 
   // Preheat (30-45 min for Dutch oven)
   currentTime.setMinutes(currentTime.getMinutes() - 45);
-  schedule.unshift({
-    time: formatScheduleTime(currentTime),
-    task: 'Preheat oven (with Dutch oven)',
-    duration: '45 min'
-  });
+  addStep('Preheat oven (with Dutch oven)', '45 min');
 
   // Final proof
   const fermentTimes = estimateFermentationTimes(state);
@@ -1009,54 +1009,29 @@ export function generateBakingSchedule(state: RecipeState, targetDateTime: Date)
   currentTime.setMinutes(currentTime.getMinutes() - proofHours * 60);
 
   if (state.coldRetard) {
-    schedule.unshift({
-      time: formatScheduleTime(currentTime),
-      task: 'Remove from fridge, let warm',
-      duration: '30 min'
-    });
+    addStep('Remove from fridge, let warm', '30 min');
     // Cold retard overnight
-    const coldRetardTime = new Date(currentTime);
-    coldRetardTime.setHours(coldRetardTime.getHours() - 12);
-    schedule.unshift({
-      time: formatScheduleTime(coldRetardTime),
-      task: 'Shape & refrigerate overnight',
-      duration: '8-12 hrs'
-    });
-    currentTime = coldRetardTime;
+    currentTime = new Date(currentTime);
+    currentTime.setHours(currentTime.getHours() - 12);
+    addStep('Shape & refrigerate overnight', '8-12 hrs');
   } else {
-    schedule.unshift({
-      time: formatScheduleTime(currentTime),
-      task: 'Shape and final proof',
-      duration: fermentTimes.proof
-    });
+    addStep('Shape and final proof', fermentTimes.proof);
   }
 
   // Bulk fermentation
   const bulkHours = state.yeastType === 'starter' ? 5 : (state.yeastPercent < 0.5 ? 15 : 2);
   currentTime.setMinutes(currentTime.getMinutes() - bulkHours * 60);
-  schedule.unshift({
-    time: formatScheduleTime(currentTime),
-    task: 'Bulk fermentation (stretch & fold)',
-    duration: fermentTimes.bulk
-  });
-
-  // Autolyse (if enabled)
-  if (state.autolyse) {
-    currentTime.setMinutes(currentTime.getMinutes() - state.autolyseDuration);
-    schedule.unshift({
-      time: formatScheduleTime(currentTime),
-      task: 'Autolyse (flour + water rest)',
-      duration: `${state.autolyseDuration} min`
-    });
-  }
+  addStep('Bulk fermentation (stretch & fold)', fermentTimes.bulk);
 
   // Mix dough
   currentTime.setMinutes(currentTime.getMinutes() - 15);
-  schedule.unshift({
-    time: formatScheduleTime(currentTime),
-    task: 'Mix final dough',
-    duration: '10-15 min'
-  });
+  addStep('Mix final dough', '10-15 min');
+
+  // Autolyse (if enabled): the flour and water rest comes before the final mix
+  if (state.autolyse) {
+    currentTime.setMinutes(currentTime.getMinutes() - state.autolyseDuration);
+    addStep('Autolyse (flour + water rest)', `${state.autolyseDuration} min`);
+  }
 
   // Preferment (if enabled)
   if (state.prefermentType !== 'none') {
@@ -1065,36 +1040,30 @@ export function generateBakingSchedule(state: RecipeState, targetDateTime: Date)
     if (prefData) {
       const prefHours = (prefData.fermentTimeMin + prefData.fermentTimeMax) / 2;
       currentTime.setMinutes(currentTime.getMinutes() - prefHours * 60);
-      schedule.unshift({
-        time: formatScheduleTime(currentTime),
-        task: `Mix ${prefData.name}`,
-        duration: prefTiming.fermentTime
-      });
+      addStep(`Mix ${prefData.name}`, prefTiming.fermentTime);
     }
   }
 
   return schedule;
 }
 
-/** The calendar file behind "Add to calendar": one event per schedule step. */
+/** The calendar file behind "Add to Calendar": one event per schedule step, at the time the
+ *  schedule shows. Each event runs until the next step starts, and the last until the bread
+ *  is ready. */
 export function scheduleIcs(schedule: ScheduleItem[], targetDate: Date): string {
-  // Generate ICS file content
+  const stamp = (date: Date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
   let icsContent = `BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//The Dough Formula//Baking Schedule//EN
 `;
 
   schedule.forEach((item, index) => {
-    const eventStart = new Date(targetDate);
-    // Rough time calculation (this is simplified)
-    eventStart.setMinutes(eventStart.getMinutes() - (schedule.length - index) * 30);
-
-    const dtStart = eventStart.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    const dtEnd = new Date(eventStart.getTime() + 30 * 60000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    const end = index + 1 < schedule.length ? schedule[index + 1].start : targetDate;
 
     icsContent += `BEGIN:VEVENT
-DTSTART:${dtStart}
-DTEND:${dtEnd}
+DTSTART:${stamp(item.start)}
+DTEND:${stamp(end)}
 SUMMARY:${item.task}
 DESCRIPTION:Duration: ${item.duration}
 END:VEVENT
