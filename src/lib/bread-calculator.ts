@@ -1075,21 +1075,24 @@ export function ingredientRows(
       percent: -1, // Special marker for no percentage
       note: ''
     });
-  } else {
-    // Yeast/Starter with appropriate naming (only when no preferment)
-    const yeastNames: Record<string, string> = {
-      'starter': 'Sourdough Starter',
-      'instant': 'Instant Yeast',
-      'active-dry': 'Active Dry Yeast',
-      'fresh': 'Fresh Yeast'
-    };
-    ingredients.push({
-      name: yeastNames[state.yeastType] || 'Yeast',
-      weight: recipe.yeastWeight,
-      percent: state.yeastPercent,
-      note: ''
-    });
   }
+
+  // Yeast/Starter with appropriate naming. It is listed with or without a preferment:
+  // calculateRecipe() sizes the flour with the yeast or starter inside the total dough, and a
+  // preferment only moves flour and water out of the rows above. Leaving this row off made
+  // the list come up short of the stated total by the starter's weight.
+  const yeastNames: Record<string, string> = {
+    'starter': 'Sourdough Starter',
+    'instant': 'Instant Yeast',
+    'active-dry': 'Active Dry Yeast',
+    'fresh': 'Fresh Yeast'
+  };
+  ingredients.push({
+    name: yeastNames[state.yeastType] || 'Yeast',
+    weight: recipe.yeastWeight,
+    percent: state.yeastPercent,
+    note: ''
+  });
 
   // Add enrichments if enabled
   if (enrichmentState.fat.enabled) {
@@ -1124,6 +1127,26 @@ export function ingredientRows(
   }
 
   return ingredients;
+}
+
+/**
+ * Hydration with the starter's own flour and water counted in, as a percentage, or null when
+ * the dough is not raised with a starter. The hydration slider stays water ÷ flour without
+ * the starter; this is the second number bakers ask for. It is worked from the percentages,
+ * not the rounded grams, so the same recipe reads the same at any batch size.
+ */
+export function hydrationWithStarter(state: RecipeState): number | null {
+  if (state.yeastType !== 'starter') return null;
+  const starterFlour = state.yeastPercent / (1 + state.starterHydration / 100);
+  const starterWater = state.yeastPercent - starterFlour;
+  return ((state.hydration + starterWater) / (100 + starterFlour)) * 100;
+}
+
+/** The small line under the ingredient list, or null when no starter is used. */
+export function starterHydrationNote(state: RecipeState): string | null {
+  const hydration = hydrationWithStarter(state);
+  if (hydration === null || !Number.isFinite(hydration)) return null;
+  return `With the starter's flour and water counted, hydration is ${Math.round(hydration * 10) / 10}%.`;
 }
 
 /** The text the "Copy" button puts on the clipboard. */

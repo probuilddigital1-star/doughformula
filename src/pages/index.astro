@@ -7,7 +7,7 @@ import EquipmentGrid from '../components/EquipmentGrid.astro';
 import AffiliateDisclosure from '../components/AffiliateDisclosure.astro';
 import FeaturedGearCard from '../components/FeaturedGearCard.astro';
 import { HOMEPAGE_PRODUCTS, TRACKING_IDS, GEAR_SETS, CALCULATOR_STYLE_FAMILY, ALL_GEAR_PRODUCT_IDS, FEATURED_GEAR, hasDirectMerchant } from '../data/equipment';
-import { BREAD_STYLES } from '../lib/bread-calculator';
+import { BREAD_STYLES, createDefaultState, starterHydrationNote } from '../lib/bread-calculator';
 
 // 750 covers the common 375-412px phones at 1.75 to 2x; 1080 covers 3x phones and tablets.
 // The 4000x6000 source never ships. Quality 50 is invisible under the hero's cream overlay.
@@ -47,6 +47,9 @@ const DUTCH_OVEN_STYLES = breadStyles
 const featuredGear = FEATURED_GEAR['dutch-oven'];
 // breadStyles[0] is selected on load; its card state is server-rendered so nothing shifts.
 const featuredOnLoad = DUTCH_OVEN_STYLES.includes(breadStyles[0].id);
+// The starter hydration line under the ingredient list, server-rendered for the default
+// recipe so nothing shifts when the script fills the list in.
+const starterNoteOnLoad = starterHydrationNote(createDefaultState());
 ---
 
 <Layout>
@@ -953,6 +956,7 @@ const featuredOnLoad = DUTCH_OVEN_STYLES.includes(breadStyles[0].id);
                 <div class="space-y-2" id="ingredients-list">
                   <!-- Populated by JS -->
                 </div>
+                <p id="starter-hydration-note" class:list={['text-xs text-[var(--crust-brown)] mt-3', { hidden: !starterNoteOnLoad }]}>{starterNoteOnLoad}</p>
               </div>
 
               <!-- Tips -->
@@ -1527,6 +1531,14 @@ const featuredOnLoad = DUTCH_OVEN_STYLES.includes(breadStyles[0].id);
           </span>
         </div>
       `).join('');
+    }
+
+    // With a starter, say what the hydration is once the starter's flour and water count
+    const starterNoteEl = document.getElementById('starter-hydration-note');
+    if (starterNoteEl) {
+      const starterNote = calc.starterHydrationNote(state);
+      starterNoteEl.textContent = starterNote ?? '';
+      starterNoteEl.classList.toggle('hidden', starterNote === null);
     }
 
     // Update tips - now show calculated water temperature
