@@ -25,3 +25,6 @@ pnpm-debug.log*
 
 # git worktrees
 .worktrees/
+
+# working notes and reports from Claude sessions
+Claude outputs/
