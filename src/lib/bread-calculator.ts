@@ -381,6 +381,13 @@ export const DEFAULT_YEAST_PERCENT: Record<YeastType, number> = {
   'fresh': 3
 };
 
+/** Picking a yeast type on the Yeast tab: switches the type and sets the amount to that
+ *  type's default. */
+export function applyYeastType(state: RecipeState, yeastType: YeastType): void {
+  state.yeastType = yeastType;
+  state.yeastPercent = DEFAULT_YEAST_PERCENT[yeastType];
+}
+
 // Flour types with properties
 export const FLOUR_DATA: Record<string, { name: string; protein: string; absorption: number; wholeGrain: boolean }> = {
   'bread': { name: 'Bread Flour', protein: '12-14%', absorption: 62, wholeGrain: false },

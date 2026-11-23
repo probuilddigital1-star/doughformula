@@ -1414,7 +1414,7 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
   import * as calc from '../lib/bread-calculator';
   import type { EnrichmentState, FlourEntry, RecipeState, YeastType } from '../lib/bread-calculator';
 
-  const { DEFAULT_YEAST_PERCENT, PREFERMENT_DATA, YEAST_TIPS } = calc;
+  const { PREFERMENT_DATA, YEAST_TIPS } = calc;
 
   const state: RecipeState = calc.createDefaultState();
   const enrichmentState: EnrichmentState = calc.createDefaultEnrichments();
@@ -1903,8 +1903,7 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
       const el = btn as HTMLElement;
       const yeastType = el.dataset.yeast as YeastType;
       if (yeastType) {
-        state.yeastType = yeastType;
-        state.yeastPercent = DEFAULT_YEAST_PERCENT[yeastType];
+        calc.applyYeastType(state, yeastType);
         updateYeastTypeButtons();
         updateUI();
       }
