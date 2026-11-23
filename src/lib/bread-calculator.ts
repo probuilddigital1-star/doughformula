@@ -22,7 +22,6 @@ export interface RecipeState {
   starterHydration: number;
   wholeGrain: number;
   flour: string;
-  waterTemp: string;
   instructions: string[];
   unit: 'g' | 'oz';
   // Temperature state
@@ -56,12 +55,11 @@ export function createDefaultState(): RecipeState {
     starterHydration: 100,
     wholeGrain: 10,
     flour: 'Bread Flour + Whole Wheat',
-    waterTemp: '78-82°F / 26-28°C',
     instructions: [],
     unit: 'g',
     // Temperature defaults
     tempUnit: 'F',
-    ddt: 75,
+    ddt: STYLE_DDT_DEFAULTS['sourdough'],
     roomTemp: 70,
     flourTemp: 70,
     mixerType: 'hand',
@@ -102,7 +100,6 @@ export interface BreadStyle {
   yeastPercent: number;
   wholeGrain: number;
   flour: string;
-  waterTemp: string;
   instructions: string[];
 }
 
@@ -117,7 +114,6 @@ export const BREAD_STYLES: BreadStyle[] = [
     yeastPercent: 20,
     wholeGrain: 10,
     flour: 'Bread Flour + Whole Wheat',
-    waterTemp: '78-82°F / 26-28°C',
     instructions: [
       'Mix flour and water, autolyse 30-60 minutes',
       'Add starter and salt, mix until combined',
@@ -137,7 +133,6 @@ export const BREAD_STYLES: BreadStyle[] = [
     yeastPercent: 0.5,
     wholeGrain: 0,
     flour: 'Bread Flour or T65',
-    waterTemp: '75-78°F / 24-26°C',
     instructions: [
       'Mix flour, water, yeast. Autolyse 20 minutes',
       'Add salt, mix until smooth',
@@ -158,7 +153,6 @@ export const BREAD_STYLES: BreadStyle[] = [
     yeastPercent: 0.8,
     wholeGrain: 0,
     flour: 'Bread Flour or All-Purpose',
-    waterTemp: '80-85°F / 27-29°C',
     // Olive oil in the dough, the usual 5% of the flour
     enrichments: { fat: { type: 'oil', percent: 5 } },
     instructions: [
@@ -181,13 +175,12 @@ export const BREAD_STYLES: BreadStyle[] = [
     yeastPercent: 1,
     wholeGrain: 0,
     flour: 'Bread Flour or All-Purpose',
-    waterTemp: '95-105°F / 35-40°C',
     // A soft sandwich loaf takes about 5% butter (2 tbsp for one loaf)
     enrichments: { fat: { type: 'butter', percent: 5 } },
     instructions: [
-      'Dissolve yeast in warm water, let bloom 5 minutes',
-      'Mix flour, salt, and the butter (or oil)',
-      'Add yeast mixture, knead 8-10 minutes',
+      'Mix flour, salt, and yeast',
+      'Add the water and the butter (or oil)',
+      'Knead 8-10 minutes until smooth',
       'Bulk ferment 1-1.5 hours until doubled',
       'Shape into loaf, place in greased pan',
       'Proof 45-60 minutes until risen above pan',
@@ -204,7 +197,6 @@ export const BREAD_STYLES: BreadStyle[] = [
     yeastPercent: 0.6,
     wholeGrain: 0,
     flour: 'Bread Flour',
-    waterTemp: '70-75°F / 21-24°C',
     instructions: [
       'Mix flour, water, yeast into shaggy dough',
       'Rest 30 minutes (autolyse)',
@@ -225,7 +217,6 @@ export const BREAD_STYLES: BreadStyle[] = [
     yeastPercent: 1.2,
     wholeGrain: 0,
     flour: 'All-Purpose Flour',
-    waterTemp: '80-85°F / 27-29°C',
     // The steps name butter at 25% and sugar at 8%. The liquid is all milk, and eggs come to
     // about a fifth of the flour: one large egg for every 250 g.
     enrichments: {
@@ -254,7 +245,6 @@ export const BREAD_STYLES: BreadStyle[] = [
     yeastPercent: 0.25,
     wholeGrain: 0,
     flour: 'Bread Flour or All-Purpose',
-    waterTemp: '70-75°F / 21-24°C',
     instructions: [
       'Mix flour, water, salt, and yeast until shaggy (2 min)',
       'Cover and let rise at room temperature 12-18 hours',
@@ -276,7 +266,6 @@ export const BREAD_STYLES: BreadStyle[] = [
     yeastPercent: 1,
     wholeGrain: 0,
     flour: 'Your choice',
-    waterTemp: 'Varies',
     instructions: [
       'Mix ingredients according to your method',
       'Knead or fold as needed',
@@ -302,7 +291,7 @@ export const STYLE_DDT_DEFAULTS: Record<string, number> = {
 /** The settings a style card carries. The page reads them off the card's data attributes. */
 export type StyleSettings = Pick<
   BreadStyle,
-  'hydration' | 'salt' | 'yeastType' | 'yeastPercent' | 'wholeGrain' | 'flour' | 'waterTemp' | 'instructions'
+  'hydration' | 'salt' | 'yeastType' | 'yeastPercent' | 'wholeGrain' | 'flour' | 'instructions'
 > & { style: string };
 
 /** Picking a style card: takes over the recipe basics and the style's dough temperature. */
@@ -314,7 +303,6 @@ export function applyStyle(state: RecipeState, s: StyleSettings): void {
   state.yeastPercent = s.yeastPercent;
   state.wholeGrain = s.wholeGrain;
   state.flour = s.flour;
-  state.waterTemp = s.waterTemp;
   state.instructions = s.instructions;
 
   // Update DDT based on bread style
@@ -560,9 +548,33 @@ export function formatTemp(state: RecipeState, tempF: number): string {
   return `${tempF}°F`;
 }
 
-// Calculate water temperature using DDT formula
+/** A temperature difference, like the friction factor. 11°F of friction is 6°C: a
+ *  difference converts by 5/9 alone, with no 32 to take off. */
+export function formatTempDifference(state: RecipeState, deltaF: number): string {
+  if (state.tempUnit === 'C') {
+    return `${Math.round(deltaF * 5 / 9)}°C`;
+  }
+  return `${deltaF}°F`;
+}
+
+/** A starter or a preferment goes into the mix at its own temperature, so it is a fourth
+ *  thing that sets the dough's temperature, next to the room, the flour and the water. */
+export function usesFourthFactor(state: RecipeState): boolean {
+  return state.yeastType === 'starter' || state.prefermentType !== 'none';
+}
+
+/**
+ * Water temperature by the desired dough temperature (DDT) method.
+ *
+ * A straight yeast dough has three factors: water = DDT × 3 - room - flour - friction. With a
+ * starter or preferment there are four: water = DDT × 4 - room - flour - preferment -
+ * friction. The calculator has no field for the starter's temperature, so it is counted at
+ * room temperature, where a starter or preferment on the counter sits.
+ */
 export function calculateWaterTemp(state: RecipeState): number {
-  // Formula: Water = (DDT × 3) - Room - Flour - Friction
+  if (usesFourthFactor(state)) {
+    return (state.ddt * 4) - state.roomTemp - state.flourTemp - state.roomTemp - state.frictionFactor;
+  }
   return (state.ddt * 3) - state.roomTemp - state.flourTemp - state.frictionFactor;
 }
 
@@ -574,15 +586,33 @@ export function waterTempText(state: RecipeState, calcTemp: number): string {
   return formatTemp(state, calcTemp);
 }
 
-/** The worked formula under "Use Water At" on the Temperature tab. */
+/**
+ * The worked formula under "Use Water At" on the Temperature tab. In Celsius each number
+ * keeps one decimal, so the working still adds up, and friction is converted as the
+ * difference it is.
+ */
 export function waterTempFormulaText(state: RecipeState, calculatedWaterTemp: number): string {
-  const unit = state.tempUnit === 'C' ? '°C' : '°F';
-  const ddt = state.tempUnit === 'C' ? fahrenheitToCelsius(state.ddt) : state.ddt;
-  const room = state.tempUnit === 'C' ? fahrenheitToCelsius(state.roomTemp) : state.roomTemp;
-  const flour = state.tempUnit === 'C' ? fahrenheitToCelsius(state.flourTemp) : state.flourTemp;
-  const friction = state.tempUnit === 'C' ? fahrenheitToCelsius(state.frictionFactor) : state.frictionFactor;
-  const result = state.tempUnit === 'C' ? fahrenheitToCelsius(calculatedWaterTemp) : calculatedWaterTemp;
-  return `(${ddt} × 3) - ${room} - ${flour} - ${friction} = ${result}${unit}`;
+  const celsius = state.tempUnit === 'C';
+  const temp = (f: number) => (celsius ? Math.round((f - 32) * 5 / 9 * 10) / 10 : f);
+  const difference = (f: number) => (celsius ? Math.round(f * 5 / 9 * 10) / 10 : f);
+  const unit = celsius ? '°C' : '°F';
+  const fourth = usesFourthFactor(state);
+  const parts = [temp(state.roomTemp), temp(state.flourTemp)];
+  if (fourth) parts.push(temp(state.roomTemp));
+  parts.push(difference(state.frictionFactor));
+  const formula = `(${temp(state.ddt)} × ${fourth ? 4 : 3}) - ${parts.join(' - ')} = ${temp(calculatedWaterTemp)}${unit}`;
+  if (!fourth) return formula;
+  const what = state.yeastType === 'starter'
+    ? (state.prefermentType !== 'none' ? 'starter and preferment are' : 'starter is')
+    : 'preferment is';
+  return `${formula}. Your ${what} counted at room temperature.`;
+}
+
+/** Active dry yeast has to be woken up in warm water first. The card's water temperature is
+ *  for the dough, so the card adds this line when active dry is picked. */
+export function yeastBloomNote(state: RecipeState): string | null {
+  if (state.yeastType !== 'active-dry') return null;
+  return 'Active dry yeast: first bloom it for 5 to 10 minutes in a little of the water, warmed to 100-110°F (38-43°C). Use the rest at the temperature above.';
 }
 
 /** The warning under the water temperature, or null when the water is in range. */

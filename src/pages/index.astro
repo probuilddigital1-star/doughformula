@@ -7,7 +7,15 @@ import EquipmentGrid from '../components/EquipmentGrid.astro';
 import AffiliateDisclosure from '../components/AffiliateDisclosure.astro';
 import FeaturedGearCard from '../components/FeaturedGearCard.astro';
 import { HOMEPAGE_PRODUCTS, TRACKING_IDS, GEAR_SETS, CALCULATOR_STYLE_FAMILY, ALL_GEAR_PRODUCT_IDS, FEATURED_GEAR, hasDirectMerchant } from '../data/equipment';
-import { BREAD_STYLES, createDefaultState, starterHydrationNote } from '../lib/bread-calculator';
+import {
+  BREAD_STYLES,
+  calculateWaterTemp,
+  createDefaultState,
+  formatTemp,
+  starterHydrationNote,
+  waterTempFormulaText,
+  waterTempText,
+} from '../lib/bread-calculator';
 
 // 750 covers the common 375-412px phones at 1.75 to 2x; 1080 covers 3x phones and tablets.
 // The 4000x6000 source never ships. Quality 50 is invisible under the hero's cream overlay.
@@ -49,7 +57,10 @@ const featuredGear = FEATURED_GEAR['dutch-oven'];
 const featuredOnLoad = DUTCH_OVEN_STYLES.includes(breadStyles[0].id);
 // The starter hydration line under the ingredient list, server-rendered for the default
 // recipe so nothing shifts when the script fills the list in.
-const starterNoteOnLoad = starterHydrationNote(createDefaultState());
+const defaultState = createDefaultState();
+const starterNoteOnLoad = starterHydrationNote(defaultState);
+// The same goes for the water temperature: the server HTML shows what the script will.
+const waterTempOnLoad = calculateWaterTemp(defaultState);
 ---
 
 <Layout>
@@ -139,7 +150,6 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
                   data-yeast-percent={style.yeastPercent}
                   data-whole-grain={style.wholeGrain}
                   data-flour={style.flour}
-                  data-water-temp={style.waterTemp}
                   data-instructions={JSON.stringify(style.instructions)}
                 >
                   <span class="w-8 h-8 mb-2 block text-[var(--accent-gold)]" set:html={style.icon}></span>
@@ -641,9 +651,9 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
                           </svg>
                         </button>
                       </span>
-                      <span class="font-medium" id="ddt-value">75°F</span>
+                      <span class="font-medium" id="ddt-value">{formatTemp(defaultState, defaultState.ddt)}</span>
                     </label>
-                    <input type="range" id="ddt-slider" min="68" max="86" value="75" class="w-full accent-[var(--accent-gold)]" />
+                    <input type="range" id="ddt-slider" min="68" max="86" value={defaultState.ddt} class="w-full accent-[var(--accent-gold)]" />
                   </div>
 
                   <!-- Room Temperature -->
@@ -686,11 +696,9 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
                   <div class="bg-[var(--accent-gold)]/10 rounded-lg p-4 border border-[var(--accent-gold)]/20">
                     <div class="flex items-center justify-between">
                       <span class="text-sm font-medium text-[var(--espresso)]">Use Water At:</span>
-                      <span class="text-2xl font-display font-semibold text-[var(--accent-gold)]" id="calc-water-temp">84°F</span>
+                      <span class="text-2xl font-display font-semibold text-[var(--accent-gold)]" id="calc-water-temp">{formatTemp(defaultState, waterTempOnLoad)}</span>
                     </div>
-                    <p class="text-xs text-[var(--crust-brown)] mt-2" id="water-temp-formula">
-                      (75 × 3) - 70 - 70 - 11 = 74°F
-                    </p>
+                    <p class="text-xs text-[var(--crust-brown)] mt-2" id="water-temp-formula">{waterTempFormulaText(defaultState, waterTempOnLoad)}</p>
                     <div id="water-temp-warning" class="hidden mt-2 text-xs text-red-600 font-medium">
                       ⚠️ Water temperature is outside safe range
                     </div>
@@ -964,8 +972,9 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
               <div class="bg-[var(--cream-warm)] rounded-lg p-4 space-y-2">
                 <p class="text-sm">
                   <span class="font-medium">Water temperature:</span>
-                  <span id="water-temp" class="text-[var(--crust-brown)]">78-82°F / 26-28°C</span>
+                  <span id="water-temp" class="text-[var(--crust-brown)]">{waterTempText(defaultState, waterTempOnLoad)}</span>
                 </p>
+                <p id="bloom-note" class="hidden text-sm text-[var(--crust-brown)]"></p>
                 <p class="text-sm">
                   <span class="font-medium">Recommended flour:</span>
                   <span id="flour-rec" class="text-[var(--crust-brown)]">Bread Flour + Whole Wheat</span>
@@ -1555,6 +1564,14 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
       waterTempEl.textContent = calc.waterTempText(state, recipe.calculatedWaterTemp);
     }
 
+    // Active dry yeast is bloomed in warm water first, whatever the dough's water temperature
+    const bloomNoteEl = document.getElementById('bloom-note');
+    if (bloomNoteEl) {
+      const bloomNote = calc.yeastBloomNote(state);
+      bloomNoteEl.textContent = bloomNote ?? '';
+      bloomNoteEl.classList.toggle('hidden', bloomNote === null);
+    }
+
     const flourRecEl = document.getElementById('flour-rec');
     if (flourRecEl) {
       flourRecEl.textContent = state.flour;
@@ -1642,7 +1659,7 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
     if (flourTempValue) flourTempValue.textContent = formatTemp(state.flourTemp);
 
     const frictionValue = document.getElementById('friction-value');
-    if (frictionValue) frictionValue.textContent = formatTemp(state.frictionFactor).replace('°', '°');
+    if (frictionValue) frictionValue.textContent = calc.formatTempDifference(state, state.frictionFactor);
 
     // Update calculated water temperature
     const calcWaterTemp = document.getElementById('calc-water-temp');
@@ -1794,7 +1811,6 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
         yeastPercent: parseFloat(el.dataset.yeastPercent || '20'),
         wholeGrain: parseFloat(el.dataset.wholeGrain || '10'),
         flour: el.dataset.flour || 'Bread Flour',
-        waterTemp: el.dataset.waterTemp || '78-82°F',
         instructions: JSON.parse(el.dataset.instructions || '[]')
       });
 

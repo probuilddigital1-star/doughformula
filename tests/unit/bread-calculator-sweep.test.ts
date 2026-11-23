@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import {
   BREAD_STYLES,
   DEFAULT_YEAST_PERCENT,
+  STYLE_DDT_DEFAULTS,
   YEAST_CONVERSIONS,
   applyStyle,
   applyUrlRecipeParams,
@@ -14,6 +15,7 @@ import {
   estimateFermentationTimes,
   formatScheduleTime,
   formatTemp,
+  formatTempDifference,
   formatWeight,
   generateBakingSchedule,
   parseUrlRecipeParams,
@@ -21,6 +23,7 @@ import {
   scheduleIcs,
   waterTempFormulaText,
   waterTempWarningText,
+  yeastBloomNote,
   yeastSliderRange,
   type RecipeState,
 } from '../../src/lib/bread-calculator';
@@ -251,21 +254,43 @@ describe('7. yeast: instant, active dry and fresh', () => {
 });
 
 describe('8. water temperature', () => {
-  it('FLAGGED: is the three-factor desired dough temperature formula, DDT x 3 - room - flour - friction', () => {
-    // The standard method adds a fourth factor (the preferment or starter temperature) when
-    // one is used. This calculator never does; see the audit.
+  it('a straight yeast dough uses the three-factor formula, DDT x 3 - room - flour - friction', () => {
     for (const ddt of [68, 75, 86]) {
       for (const roomTemp of [60, 70, 90]) {
         for (const flourTemp of [55, 70, 85]) {
           for (const frictionFactor of [11, 22, 32]) {
-            for (const prefermentType of ['none', 'poolish', 'levain'] as const) {
-              const state = stateWith({ ddt, roomTemp, flourTemp, frictionFactor, prefermentType });
+            for (const yeastType of ['instant', 'active-dry', 'fresh'] as const) {
+              const state = stateWith({ ddt, roomTemp, flourTemp, frictionFactor, yeastType, yeastPercent: 1 });
               expect(calculateWaterTemp(state)).toBe(ddt * 3 - roomTemp - flourTemp - frictionFactor);
             }
           }
         }
       }
     }
+  });
+
+  it('a starter or a preferment adds the fourth factor, counted at room temperature (J1)', () => {
+    for (const ddt of [68, 76, 86]) {
+      for (const roomTemp of [60, 70, 90]) {
+        for (const flourTemp of [55, 70, 85]) {
+          for (const frictionFactor of [11, 22, 32]) {
+            const four = ddt * 4 - roomTemp - flourTemp - roomTemp - frictionFactor;
+            expect(calculateWaterTemp(stateWith({ ddt, roomTemp, flourTemp, frictionFactor }))).toBe(four);
+            for (const prefermentType of ['poolish', 'biga', 'pate-fermentee', 'levain'] as const) {
+              expect(calculateWaterTemp(stateWith({ ddt, roomTemp, flourTemp, frictionFactor, prefermentType, yeastType: 'instant', yeastPercent: 1 }))).toBe(four);
+            }
+          }
+        }
+      }
+    }
+    // The audit's example: defaults at 75°F, room and flour at 70°F, by hand. Was 74°F.
+    expect(calculateWaterTemp(stateWith({ ddt: 75 }))).toBe(79);
+  });
+
+  it('Sourdough has one water temperature, on load and after picking its card (was V: 74°F, then 77°F)', () => {
+    expect(createDefaultState().ddt).toBe(STYLE_DDT_DEFAULTS.sourdough);
+    expect(calculateWaterTemp(createDefaultState())).toBe(calculateWaterTemp(styleState('sourdough')));
+    expect(calculateWaterTemp(createDefaultState())).toBe(83);
   });
 
   it('warns below 40°F and above 110°F', () => {
@@ -275,30 +300,59 @@ describe('8. water temperature', () => {
     expect(waterTempWarningText(111)).toContain('too hot');
   });
 
-  /** The worked formula as numbers: [ddt, room, flour, friction, result]. */
-  const formulaNumbers = (state: RecipeState) =>
-    waterTempFormulaText(state, calculateWaterTemp(state)).match(/-?\d+/g)!.map(Number).filter((_, i) => i !== 1);
+  /** The worked formula as numbers: desired dough temperature, how many factors, what comes off, and the result. */
+  const worked = (state: RecipeState) => {
+    const text = waterTempFormulaText(state, calculateWaterTemp(state));
+    const [ddt, factors, ...rest] = text.split('. ')[0].match(/\d+(?:\.\d+)?/g)!.map(Number);
+    return { text, ddt, factors, minus: rest.slice(0, -1), result: rest[rest.length - 1] };
+  };
+  const mixes = (): RecipeState[] =>
+    [11, 22, 32].flatMap((frictionFactor) => [
+      stateWith({ frictionFactor }),
+      stateWith({ frictionFactor, yeastType: 'instant', yeastPercent: 1 }),
+      stateWith({ frictionFactor, yeastType: 'instant', yeastPercent: 1, prefermentType: 'poolish', ddt: 86, roomTemp: 61, flourTemp: 57 }),
+    ]);
 
-  it('the worked formula adds up in Fahrenheit', () => {
-    for (const frictionFactor of [11, 22, 32]) {
-      const [ddt, room, flour, friction, result] = formulaNumbers(stateWith({ frictionFactor }));
-      expect(ddt * 3 - room - flour - friction).toBe(result);
+  it('the worked formula adds up in Fahrenheit, with three factors or four', () => {
+    for (const state of mixes()) {
+      const w = worked(state);
+      expect(w.factors).toBe(state.yeastType === 'starter' || state.prefermentType !== 'none' ? 4 : 3);
+      expect(w.minus.length).toBe(w.factors);
+      expect(w.ddt * w.factors - w.minus.reduce((a, b) => a + b, 0), w.text).toBe(w.result);
     }
+    expect(worked(stateWith()).text).toBe('(76 × 4) - 70 - 70 - 70 - 11 = 83°F. Your starter is counted at room temperature.');
+    expect(worked(stateWith({ yeastType: 'instant', yeastPercent: 1 })).text).toBe('(76 × 3) - 70 - 70 - 11 = 77°F');
   });
 
-  it.fails('KNOWN ISSUE I: the worked formula adds up in Celsius (within rounding)', () => {
-    for (const frictionFactor of [11, 22, 32]) {
-      const state = stateWith({ tempUnit: 'C', frictionFactor });
-      const [ddt, room, flour, friction, result] = formulaNumbers(state);
-      // Today: "(24 × 3) - 21 - 21 - -12 = 23°C". The friction factor is a temperature
-      // difference, so 11°F of friction is 6°C, not -12°C. Whole degrees leave up to 3° of
-      // rounding across the five numbers.
-      expect(Math.abs(ddt * 3 - room - flour - friction - result), waterTempFormulaText(state, calculateWaterTemp(state))).toBeLessThanOrEqual(3);
+  it('the worked formula adds up in Celsius too (was KNOWN ISSUE I: "- -12 = 23°C")', () => {
+    for (const base of mixes()) {
+      const w = worked({ ...base, tempUnit: 'C' });
+      // One decimal on each number, so the working is right to within a few tenths.
+      expect(Math.abs(w.ddt * w.factors - w.minus.reduce((a, b) => a + b, 0) - w.result), w.text).toBeLessThanOrEqual(0.45);
+      expect(w.text).not.toContain('- -');
     }
+    expect(worked(stateWith({ tempUnit: 'C', yeastType: 'instant', yeastPercent: 1 })).text).toBe('(24.4 × 3) - 21.1 - 21.1 - 6.1 = 25°C');
   });
 
-  it.fails('KNOWN ISSUE I: the friction factor shown in Celsius is a difference (11°F is 6°C)', () => {
-    expect(formatTemp(stateWith({ tempUnit: 'C' }), 11)).toBe('6°C');
+  it('the friction factor shown in Celsius is a difference: 11°F is 6°C (was KNOWN ISSUE I)', () => {
+    expect(formatTempDifference(stateWith({ tempUnit: 'C' }), 11)).toBe('6°C');
+    expect(formatTempDifference(stateWith({ tempUnit: 'C' }), 22)).toBe('12°C');
+    expect(formatTempDifference(stateWith(), 11)).toBe('11°F');
+    // A temperature still converts the usual way.
+    expect(formatTemp(stateWith({ tempUnit: 'C' }), 76)).toBe('24°C');
+  });
+
+  it('active dry yeast gets a bloom note, and no other yeast does (J3)', () => {
+    expect(yeastBloomNote(stateWith({ yeastType: 'active-dry', yeastPercent: 1.25 }))).toContain('100-110°F (38-43°C)');
+    for (const yeastType of ['starter', 'instant', 'fresh'] as const) expect(yeastBloomNote(stateWith({ yeastType }))).toBeNull();
+    expect(yeastBloomNote(stateWith({ yeastType: 'active-dry' }))).not.toMatch(/[–—]|--/);
+  });
+
+  it('no style states a water temperature of its own, so nothing disagrees with the card (J3)', () => {
+    for (const style of BREAD_STYLES) {
+      expect(Object.keys(style), style.id).not.toContain('waterTemp');
+      expect(style.instructions.join(' '), style.id).not.toMatch(/warm water|°[FC] water|water at \d/i);
+    }
   });
 });
 
