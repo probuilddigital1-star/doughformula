@@ -12,7 +12,6 @@ import {
   convertToOz,
   createDefaultEnrichments,
   createDefaultState,
-  formatPrefermentWeight,
   formatWeight,
   yieldText,
   type EnrichmentState,
@@ -242,7 +241,7 @@ function checkCase(c: SweepCase, p: Printed, out: SweepResult): void {
     if (!Number.isFinite(r.percent)) out.values.add('not a number', v(() => `${r.name} percent: ${r.percent}`));
   }
   for (const r of p.prefermentRows) {
-    const text = formatPrefermentWeight(r.weight);
+    const text = formatWeight(state, r.weight);
     if (!Number.isFinite(r.weight) || BAD_TEXT.test(text)) out.values.add('not a number', v(() => `preferment ${r.name}: ${text}`));
     else if (r.weight < 0) out.values.add('negative', v(() => `preferment ${r.name}: ${text}`));
     else if (r.weight === 0) out.values.add('preferment row prints 0 g', v(() => `preferment ${r.name}: ${text}`));
@@ -265,7 +264,7 @@ function checkCase(c: SweepCase, p: Printed, out: SweepResult): void {
     const type = state.prefermentType;
     const prefRow = rows.find((r) => r.name.startsWith('All of the '))!;
     const box = p.prefermentRows;
-    const boxText = () => box.map((r) => `${r.name} ${formatPrefermentWeight(r.weight)}`).join(', ');
+    const boxText = () => box.map((r) => `${r.name} ${formatWeight(state, r.weight)}`).join(', ');
     if (flourInRows + preferment.flour !== recipe.flourWeight || waterInRows + dairyInRows + preferment.water !== recipe.liquidWeight) {
       out.preferment.add(
         'flour or water not removed exactly once',
@@ -297,7 +296,7 @@ function checkCase(c: SweepCase, p: Printed, out: SweepResult): void {
 
     // Leavening: listed once, named for what the recipe uses.
     const boxLeaven = box.find((r) => /(Yeast|Starter)$/.test(r.name));
-    const leavenText = () => `box: ${boxLeaven ? `${boxLeaven.name} ${formatPrefermentWeight(boxLeaven.weight)}` : 'no leavening'} for ${preferment.flour} g flour; final dough: ${leavenName} ${mainLeaven} g; recipe ${state.yeastType} ${state.yeastPercent}%`;
+    const leavenText = () => `box: ${boxLeaven ? `${boxLeaven.name} ${formatWeight(state, boxLeaven.weight)}` : 'no leavening'} for ${preferment.flour} g flour; final dough: ${leavenName} ${mainLeaven} g; recipe ${state.yeastType} ${state.yeastPercent}%`;
     if (type === 'levain') {
       if (!boxLeaven || boxLeaven.name !== 'Active Starter' || Math.abs(boxLeaven.weight - (LEVAIN_SEED_PERCENT / 100) * preferment.flour) > 0.61) {
         out.preferment.add('levain seed is not 20% of its flour', v(leavenText));
@@ -333,10 +332,14 @@ function checkCase(c: SweepCase, p: Printed, out: SweepResult): void {
   // 5. Ounce values match the gram values.
   const ozState: RecipeState = { ...state, unit: 'oz' };
   let ozSum = 0;
-  for (const r of rows) {
+  for (const r of [...rows, ...p.prefermentRows]) {
     const text = formatWeight(ozState, r.weight);
     const oz = parseFloat(text);
-    ozSum += oz;
+    if (!('percent' in r)) {
+      // A preferment box row: checked like a list row, but not part of the list's total.
+    } else {
+      ozSum += oz;
+    }
     // A tenth of an ounce is the printed step, so 0.05 oz off is rounding (0.06 leaves room
     // for the 28.35 the page divides by).
     if (!text.endsWith('oz') || !Number.isFinite(oz) || Math.abs(oz * G_PER_OZ - r.weight) > 0.06 * G_PER_OZ) {

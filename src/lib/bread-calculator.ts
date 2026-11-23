@@ -1359,8 +1359,16 @@ export function calculateRecipe(state: RecipeState, enrichmentState: EnrichmentS
 // Printed values
 // ============================================
 
+/**
+ * Grams as ounces, the way the list prints them. From an ounce up, one decimal. Under an
+ * ounce a tenth is too coarse (2 g of yeast is 0.07 oz, not "0.1", and 1 g is not "0.0"), so
+ * small amounts keep two figures that mean something: 0.65, 0.071, 0.0035.
+ */
 export function convertToOz(grams: number): string {
-  return (grams / 28.35).toFixed(1);
+  const oz = grams / 28.35;
+  if (oz >= 1 || !(oz > 0)) return oz.toFixed(1);
+  const small = Number(oz.toPrecision(2));
+  return small >= 1 ? small.toFixed(1) : String(small);
 }
 
 export function formatWeight(state: RecipeState, grams: number): string {
@@ -1400,11 +1408,6 @@ export function prefermentRows(state: RecipeState, recipe: Recipe): PrefermentRo
     rows.push({ ...preferment.leaven });
   }
   return rows;
-}
-
-/** A preferment row's weight as printed. */
-export function formatPrefermentWeight(weight: number): string {
-  return `${weight}g`;
 }
 
 export interface IngredientRow {
@@ -1583,21 +1586,42 @@ export interface UrlRecipeParams {
   hydration?: number;
 }
 
-/** What a homepage URL asks for. Hydration counts only between 50 and 95. */
+/** The hydration slider's range. Links and hand-offs use the same one. */
+export const HYDRATION_MIN = 50;
+export const HYDRATION_MAX = 95;
+/** The "Weight per Loaf" field tops out here, and a link cannot ask for more. */
+export const LOAF_WEIGHT_MAX = 2000;
+
+/** A number typed into a field, held to the field's own limits. Anything that is not a
+ *  number becomes the fallback, so a typo can never print "NaNg" or a negative weight. */
+export function clampToField(value: number, min: number, max: number, fallback: number): number {
+  if (!Number.isFinite(value)) return fallback;
+  return Math.min(max, Math.max(min, value));
+}
+
+/**
+ * What a homepage URL asks for. Hydration counts only between 50 and 95. Loaves and weight
+ * count only as whole numbers from 1 up, so "loaves=abc" or "weight=-900" leaves the
+ * default in place. A weight over the field's 2000 g is held to 2000 g. The calculator
+ * hand-off links (src/lib/handoff.ts) stay inside all of this: a weight from 1 to 2000 g and
+ * as many loaves as the dough needs.
+ */
 export function parseUrlRecipeParams(params: URLSearchParams): UrlRecipeParams {
   const out: UrlRecipeParams = {};
   if (params.has('style')) {
     out.style = params.get('style') ?? undefined;
   }
   if (params.has('loaves')) {
-    out.loaves = parseInt(params.get('loaves') || '2');
+    const loaves = parseInt(params.get('loaves') || '');
+    if (Number.isFinite(loaves) && loaves >= 1) out.loaves = loaves;
   }
   if (params.has('weight')) {
-    out.weight = parseInt(params.get('weight') || '900');
+    const weight = parseInt(params.get('weight') || '');
+    if (Number.isFinite(weight) && weight >= 1) out.weight = Math.min(LOAF_WEIGHT_MAX, weight);
   }
   if (params.has('hydration')) {
     const h = parseFloat(params.get('hydration') || '75');
-    if (!isNaN(h) && h >= 50 && h <= 95) {
+    if (!isNaN(h) && h >= HYDRATION_MIN && h <= HYDRATION_MAX) {
       out.hydration = h;
     }
   }

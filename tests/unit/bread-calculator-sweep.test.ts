@@ -4,6 +4,9 @@ import { join } from 'node:path';
 import {
   BREAD_STYLES,
   DEFAULT_YEAST_PERCENT,
+  HYDRATION_MAX,
+  HYDRATION_MIN,
+  LOAF_WEIGHT_MAX,
   STYLE_DDT_DEFAULTS,
   YEAST_CONVERSIONS,
   applyStyle,
@@ -11,6 +14,7 @@ import {
   applyYeastType,
   calculateWaterTemp,
   calculateWholeGrainPercent,
+  clampToField,
   createDefaultState,
   estimateFermentationTimes,
   formatHourRange,
@@ -111,8 +115,27 @@ describe('bread calculator sweep: style x preferment x yeast x starter x enrichm
       expectOnlyKnown(sweep.values, []);
     });
 
-    it.fails('KNOWN ISSUE Q: a junk or negative loaf count in the link cannot reach the recipe', () => {
-      for (const query of ['loaves=abc', 'loaves=-2', 'weight=-900']) {
+    it('a number typed into a field is held to the field limits (Q)', () => {
+      expect(clampToField(-2, 1, 12, 1)).toBe(1);
+      expect(clampToField(40, 1, 12, 1)).toBe(12);
+      expect(clampToField(NaN, 200, 2000, 500)).toBe(500);
+      expect(clampToField(-5, 1, 30, 5)).toBe(1);
+      expect(clampToField(650, 200, 2000, 500)).toBe(650);
+      const src = readFileSync(join(process.cwd(), 'src/pages/index.astro'), 'utf8');
+      // Every number field is read through its limits: loaves, weight, butter, eggs, milk, sugar, flour blend.
+      expect(src.split('fieldNumber(e.target as HTMLInputElement').length - 1).toBe(7);
+      // The old pattern, "parseInt(field value) || fallback", let a minus sign through.
+      expect(src).not.toMatch(/\.value\) \|\| \d/);
+    });
+
+    it('a junk or negative loaf count in the link cannot reach the recipe (was KNOWN ISSUE Q)', () => {
+      const read = (query: string) => parseUrlRecipeParams(new URLSearchParams(query));
+      expect(read('loaves=abc&weight=-900')).toEqual({});
+      expect(read('loaves=0&weight=0')).toEqual({});
+      expect(read('weight=99999')).toEqual({ weight: LOAF_WEIGHT_MAX });
+      // Hand-off links can ask for a small weight or many loaves, and still get them.
+      expect(read('loaves=14&weight=97')).toEqual({ loaves: 14, weight: 97 });
+      for (const query of ['loaves=abc', 'loaves=-2', 'weight=-900', 'loaves=&weight=', 'loaves=1e9x&weight=NaN']) {
         const state = createDefaultState();
         applyUrlRecipeParams(state, parseUrlRecipeParams(new URLSearchParams(query)));
         for (const r of printed(state).rows) {
@@ -168,15 +191,34 @@ describe('bread calculator sweep: style x preferment x yeast x starter x enrichm
     it('every ounce value is its gram value converted, and the ounce rows stay within half an ounce of the ounce total', () => {
       expectClean(sweep.ounces, 'ounce value is not the gram value converted');
       expectClean(sweep.ounces, 'ounce rows drift from the ounce total');
-      expectOnlyKnown(sweep.ounces, ['tenth of an ounce is too coarse (more than 10% off)', 'prints 0.0oz for a real amount']);
     });
 
-    it.fails('KNOWN ISSUE E: a real amount never prints as 0.0oz', () => {
+    it('a real amount never prints as 0.0oz (was KNOWN ISSUE E)', () => {
       expectClean(sweep.ounces, 'prints 0.0oz for a real amount');
     });
 
-    it.fails('KNOWN ISSUE E: no ounce value is more than 10% away from its grams', () => {
+    it('no ounce value is more than 10% away from its grams, in the list or the preferment box (was KNOWN ISSUE E)', () => {
       expectClean(sweep.ounces, 'tenth of an ounce is too coarse (more than 10% off)');
+      expectOnlyKnown(sweep.ounces, []);
+    });
+
+    it('small amounts keep two figures under an ounce: 2 g is 0.071oz (was "0.1oz"), 1 g is 0.035oz (was "0.0oz")', () => {
+      const oz = stateWith({ unit: 'oz' });
+      expect(formatWeight(oz, 2)).toBe('0.071oz');
+      expect(formatWeight(oz, 1)).toBe('0.035oz');
+      expect(formatWeight(oz, 0.69)).toBe('0.024oz');
+      expect(formatWeight(oz, 18)).toBe('0.63oz');
+      expect(formatWeight(oz, 28.3)).toBe('1.0oz');
+      expect(formatWeight(oz, 183)).toBe('6.5oz');
+      expect(formatWeight(oz, 1800)).toBe('63.5oz');
+    });
+
+    it('the preferment box prints in ounces when ounces are picked (was E2: grams)', () => {
+      const p = printed(stateWith({ unit: 'oz', prefermentType: 'poolish' }));
+      expect(p.prefermentRows.map((r) => formatWeight(p.state, r.weight))).toEqual(['6.5oz', '6.5oz', '0.0063oz']);
+      const src = readFileSync(join(process.cwd(), 'src/pages/index.astro'), 'utf8');
+      const boxMarkup = src.slice(src.indexOf('const prefIngs = calc.prefermentRows(state, recipe);'), src.indexOf("ingredientsHeading.textContent = 'Ingredients';"));
+      expect(boxMarkup).toContain('<span>${formatWeight(ing.weight)}</span>');
     });
   });
 
@@ -500,11 +542,27 @@ describe('other printed outputs', () => {
 describe('page wiring that changes the numbers (checked in the page source)', () => {
   const src = readFileSync(join(process.cwd(), 'src/pages/index.astro'), 'utf8');
 
-  it.fails('KNOWN ISSUE N: the flour Quick Blends buttons are not also dough quantity presets', () => {
-    // The quantity presets listen on every .preset-pill and read data-loaves and data-weight.
-    // The blend buttons carry that class with neither, so a click resets to 2 loaves x 900 g.
-    expect(src).toContain("document.querySelectorAll('.preset-pill').forEach(pill => {");
-    expect(src).not.toMatch(/class="flour-preset-btn preset-pill/);
+  it('the flour Quick Blends and schedule buttons are not also dough quantity presets (was KNOWN ISSUE N)', () => {
+    // They share the .preset-pill look. The quantity presets used to listen on every
+    // .preset-pill and read data-loaves and data-weight, which those buttons do not carry, so
+    // a click on one reset the dough to 2 loaves x 900 g.
+    expect(src).toContain("const quantityPresets = document.querySelectorAll('.preset-pill[data-loaves][data-weight]');");
+    expect(src).not.toContain("document.querySelectorAll('.preset-pill')");
+    const pills = [...src.matchAll(/<button class="([^"]*\bpreset-pill\b[^"]*)"([^>]*)>/g)];
+    expect(pills.length).toBe(9);
+    for (const [, classes, attributes] of pills) {
+      const isQuantity = /data-loaves="\d+" data-weight="\d+"/.test(attributes);
+      expect(isQuantity, classes).toBe(!/(flour|schedule)-preset-btn/.test(classes));
+    }
+  });
+
+  it('the hydration slider covers the 50 to 95 that links accept (was W: 55 to 90)', () => {
+    expect([HYDRATION_MIN, HYDRATION_MAX]).toEqual([50, 95]);
+    expect(src).toContain('id="hydration-slider" min={HYDRATION_MIN} max={HYDRATION_MAX}');
+    for (const style of BREAD_STYLES) {
+      expect(style.hydration, style.id).toBeGreaterThanOrEqual(HYDRATION_MIN);
+      expect(style.hydration, style.id).toBeLessThanOrEqual(HYDRATION_MAX);
+    }
   });
 
   it('the effective hydration box is refreshed whenever the recipe is (was KNOWN ISSUE O)', () => {
