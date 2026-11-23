@@ -7,6 +7,7 @@ import EquipmentGrid from '../components/EquipmentGrid.astro';
 import AffiliateDisclosure from '../components/AffiliateDisclosure.astro';
 import FeaturedGearCard from '../components/FeaturedGearCard.astro';
 import { HOMEPAGE_PRODUCTS, TRACKING_IDS, GEAR_SETS, CALCULATOR_STYLE_FAMILY, ALL_GEAR_PRODUCT_IDS, FEATURED_GEAR, hasDirectMerchant } from '../data/equipment';
+import { BREAD_STYLES } from '../lib/bread-calculator';
 
 // 750 covers the common 375-412px phones at 1.75 to 2x; 1080 covers 3x phones and tablets.
 // The 4000x6000 source never ships. Quality 50 is invisible under the hero's cream overlay.
@@ -33,183 +34,10 @@ const icons = {
   custom: `<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="3"/><path d="M16 6v3M16 23v3M6 16h3M23 16h3"/><path d="M9.5 9.5l2 2M20.5 20.5l2 2M9.5 22.5l2-2M20.5 11.5l2-2"/></svg>`
 };
 
-// Bread style data
-const breadStyles = [
-  {
-    id: 'sourdough',
-    name: 'Sourdough',
-    description: 'Wild yeast, complex tang, overnight fermentation',
-    icon: icons.sourdough,
-    hydration: 75,
-    salt: 2,
-    yeastType: 'starter',
-    yeastPercent: 20,
-    wholeGrain: 10,
-    flour: 'Bread Flour + Whole Wheat',
-    waterTemp: '78-82°F / 26-28°C',
-    instructions: [
-      'Mix flour and water, autolyse 30-60 minutes',
-      'Add starter and salt, mix until combined',
-      'Stretch and fold every 30 min for 2 hours',
-      'Bulk ferment 4-6 hours at room temperature',
-      'Shape and proof overnight in refrigerator (8-12 hrs)',
-      'Bake in Dutch oven at 500°F for 20 min covered, 25 min uncovered'
-    ]
-  },
-  {
-    id: 'baguette',
-    name: 'Baguette',
-    description: 'Crisp crust, open crumb, classic French',
-    icon: icons.baguette,
-    hydration: 68,
-    salt: 2,
-    yeastType: 'instant',
-    yeastPercent: 0.5,
-    wholeGrain: 0,
-    flour: 'Bread Flour or T65',
-    waterTemp: '75-78°F / 24-26°C',
-    instructions: [
-      'Mix flour, water, yeast. Autolyse 20 minutes',
-      'Add salt, mix until smooth',
-      'Fold every 30 minutes for 1.5 hours',
-      'Bulk ferment 2-3 hours until doubled',
-      'Divide and pre-shape, rest 20 minutes',
-      'Final shape into baguettes, proof 45-60 minutes',
-      'Score and bake at 475°F with steam for 22-25 minutes'
-    ]
-  },
-  {
-    id: 'focaccia',
-    name: 'Focaccia',
-    description: 'Olive oil enriched, dimpled, herbaceous',
-    icon: icons.focaccia,
-    hydration: 80,
-    salt: 2.2,
-    yeastType: 'instant',
-    yeastPercent: 0.8,
-    wholeGrain: 0,
-    flour: 'Bread Flour or All-Purpose',
-    waterTemp: '80-85°F / 27-29°C',
-    instructions: [
-      'Mix flour, water, yeast, and 2 tbsp olive oil',
-      'Add salt, mix until smooth and elastic',
-      'Stretch and fold every 30 min for 1.5 hours',
-      'Pour into oiled pan, dimple with fingers',
-      'Proof 1-2 hours until puffy',
-      'Dimple again, drizzle olive oil, add toppings',
-      'Bake at 425°F for 20-25 minutes until golden'
-    ]
-  },
-  {
-    id: 'sandwich',
-    name: 'Sandwich Loaf',
-    description: 'Soft, tender crumb for everyday slicing',
-    icon: icons.sandwich,
-    hydration: 62,
-    salt: 1.8,
-    yeastType: 'instant',
-    yeastPercent: 1,
-    wholeGrain: 0,
-    flour: 'Bread Flour or All-Purpose',
-    waterTemp: '95-105°F / 35-40°C',
-    instructions: [
-      'Dissolve yeast in warm water, let bloom 5 minutes',
-      'Mix flour, salt, and 2 tbsp butter or oil',
-      'Add yeast mixture, knead 8-10 minutes',
-      'Bulk ferment 1-1.5 hours until doubled',
-      'Shape into loaf, place in greased pan',
-      'Proof 45-60 minutes until risen above pan',
-      'Bake at 375°F for 30-35 minutes'
-    ]
-  },
-  {
-    id: 'ciabatta',
-    name: 'Ciabatta',
-    description: 'High hydration, irregular holes, rustic',
-    icon: icons.ciabatta,
-    hydration: 82,
-    salt: 2,
-    yeastType: 'instant',
-    yeastPercent: 0.6,
-    wholeGrain: 0,
-    flour: 'Bread Flour',
-    waterTemp: '70-75°F / 21-24°C',
-    instructions: [
-      'Mix flour, water, yeast into shaggy dough',
-      'Rest 30 minutes (autolyse)',
-      'Add salt, fold until incorporated',
-      'Stretch and fold every 30 min for 3 hours',
-      'Bulk ferment 2-3 hours until very bubbly',
-      'Gently turn out, divide without degassing',
-      'Proof 30-45 min, bake at 475°F with steam for 20-25 min'
-    ]
-  },
-  {
-    id: 'brioche',
-    name: 'Brioche',
-    description: 'Butter and eggs for rich, tender bread',
-    icon: icons.brioche,
-    hydration: 55,
-    salt: 1.8,
-    yeastType: 'instant',
-    yeastPercent: 1.2,
-    wholeGrain: 0,
-    flour: 'All-Purpose Flour',
-    waterTemp: '80-85°F / 27-29°C',
-    instructions: [
-      'Mix flour, sugar (8%), eggs, milk, and yeast',
-      'Knead until smooth, about 10 minutes',
-      'Gradually add soft butter (25%), knead until silky',
-      'Add salt, knead 2 more minutes',
-      'Bulk ferment 2 hours, then refrigerate overnight',
-      'Shape cold dough, proof 2-3 hours until doubled',
-      'Egg wash and bake at 350°F for 25-30 minutes'
-    ]
-  },
-  {
-    id: 'no-knead',
-    name: 'No-Knead',
-    description: 'Hands-off, long ferment, crispy crust',
-    icon: icons.noknead,
-    hydration: 78,
-    salt: 2,
-    yeastType: 'instant',
-    yeastPercent: 0.25,
-    wholeGrain: 0,
-    flour: 'Bread Flour or All-Purpose',
-    waterTemp: '70-75°F / 21-24°C',
-    instructions: [
-      'Mix flour, water, salt, and yeast until shaggy (2 min)',
-      'Cover and let rise at room temperature 12-18 hours',
-      'Dough is ready when bubbly and doubled',
-      'Turn out onto floured surface, fold into ball',
-      'Let rest 15 min, then shape into round',
-      'Proof in bowl lined with floured towel 1-2 hours',
-      'Preheat Dutch oven at 450°F for 30 min',
-      'Bake covered 30 min, uncovered 15-20 min until deep golden'
-    ]
-  },
-  {
-    id: 'custom',
-    name: 'Custom',
-    description: 'Your recipe, your rules',
-    icon: icons.custom,
-    hydration: 70,
-    salt: 2,
-    yeastType: 'instant',
-    yeastPercent: 1,
-    wholeGrain: 0,
-    flour: 'Your choice',
-    waterTemp: 'Varies',
-    instructions: [
-      'Mix ingredients according to your method',
-      'Knead or fold as needed',
-      'Ferment according to your schedule',
-      'Shape and proof',
-      'Bake at appropriate temperature'
-    ]
-  }
-];
+// Bread style data lives in src/lib/bread-calculator.ts, so the calculator tests sweep the
+// same styles the cards carry. The icons stay here.
+const styleIcons: Record<string, string> = { ...icons, 'no-knead': icons.noknead };
+const breadStyles = BREAD_STYLES.map((style) => ({ ...style, icon: styleIcons[style.id] }));
 
 // Styles whose own method bakes in a Dutch oven. Read from the instructions rather than listed,
 // so a style that gains or loses a Dutch oven step gains or loses the featured card with it.
@@ -1577,204 +1405,16 @@ const featuredOnLoad = DUTCH_OVEN_STYLES.includes(breadStyles[0].id);
   // ============================================
   // Calculator State & Logic
   // ============================================
-  interface RecipeState {
-    style: string;
-    numLoaves: number;
-    loafWeight: number;
-    hydration: number;
-    salt: number;
-    yeastType: 'starter' | 'instant' | 'active-dry' | 'fresh';
-    yeastPercent: number;
-    starterHydration: number;
-    wholeGrain: number;
-    flour: string;
-    waterTemp: string;
-    instructions: string[];
-    unit: 'g' | 'oz';
-    // Temperature state
-    tempUnit: 'F' | 'C';
-    ddt: number; // Desired Dough Temperature in Fahrenheit
-    roomTemp: number;
-    flourTemp: number;
-    mixerType: 'hand' | 'stand' | 'spiral';
-    frictionFactor: number;
-    // Timing state
-    coldRetard: boolean;
-    // Preferment state
-    prefermentType: 'none' | 'poolish' | 'biga' | 'pate-fermentee' | 'levain';
-    prefermentPercent: number; // % of flour in preferment
-    // Autolyse state
-    autolyse: boolean;
-    autolyseDuration: number; // minutes
-  }
+  // The math and the printed values live in src/lib/bread-calculator.ts, where the tests run
+  // them. This script keeps the state objects and the DOM wiring.
+  import * as calc from '../lib/bread-calculator';
+  import type { EnrichmentState, FlourEntry, RecipeState, YeastType } from '../lib/bread-calculator';
 
-  const state: RecipeState = {
-    style: 'sourdough',
-    numLoaves: 2,
-    loafWeight: 900,
-    hydration: 75,
-    salt: 2,
-    yeastType: 'starter',
-    yeastPercent: 20,
-    starterHydration: 100,
-    wholeGrain: 10,
-    flour: 'Bread Flour + Whole Wheat',
-    waterTemp: '78-82°F / 26-28°C',
-    instructions: [],
-    unit: 'g',
-    // Temperature defaults
-    tempUnit: 'F',
-    ddt: 75,
-    roomTemp: 70,
-    flourTemp: 70,
-    mixerType: 'hand',
-    frictionFactor: 11,
-    // Timing
-    coldRetard: false,
-    // Preferment
-    prefermentType: 'none',
-    prefermentPercent: 20,
-    // Autolyse
-    autolyse: false,
-    autolyseDuration: 30
-  };
+  const { DEFAULT_YEAST_PERCENT, PREFERMENT_DATA, YEAST_TIPS } = calc;
 
-  // Preferment data
-  interface PrefermentData {
-    name: string;
-    hydration: number; // % of preferment flour
-    yeastPercent: number; // % of preferment flour
-    fermentTimeMin: number; // hours
-    fermentTimeMax: number;
-    description: string;
-    readySigns: string;
-    tip: string;
-  }
-
-  const PREFERMENT_DATA: Record<string, PrefermentData> = {
-    'poolish': {
-      name: 'Poolish',
-      hydration: 100,
-      yeastPercent: 0.1,
-      fermentTimeMin: 8,
-      fermentTimeMax: 12,
-      description: '100% hydration, mild flavor, very extensible dough. Perfect for baguettes and ciabatta.',
-      readySigns: 'Ready when: domed, very bubbly, just starting to recede',
-      tip: 'Poolish creates an open crumb and mild, wheaty flavor. Use within 3 hours of peak.'
-    },
-    'biga': {
-      name: 'Biga',
-      hydration: 55,
-      yeastPercent: 0.5,
-      fermentTimeMin: 12,
-      fermentTimeMax: 16,
-      description: '55% hydration stiff preferment. Adds strength, nutty flavor, and keeping quality.',
-      readySigns: 'Ready when: doubled, domed, with cracks on surface',
-      tip: 'Biga creates a chewy texture and complex, slightly sweet flavor.'
-    },
-    'pate-fermentee': {
-      name: 'Pâte Fermentée',
-      hydration: -1, // Uses recipe hydration
-      yeastPercent: -1, // Uses recipe yeast
-      fermentTimeMin: 1,
-      fermentTimeMax: 3,
-      description: 'Old dough method. Uses leftover dough from previous batch for instant flavor.',
-      readySigns: 'Ready when: mature, slightly puffy, but not over-proofed',
-      tip: 'Keep old dough refrigerated 1-3 days. Bring to room temp before using.'
-    },
-    'levain': {
-      name: 'Levain',
-      hydration: 100,
-      yeastPercent: 0, // No commercial yeast - starter only
-      fermentTimeMin: 4,
-      fermentTimeMax: 8,
-      description: 'Starter-based preferment for enhanced sourdough flavor and strength.',
-      readySigns: 'Ready when: doubled, passes float test, domed with bubbles',
-      tip: 'Build levain from active starter. Use at peak for best results.'
-    }
-  };
-
-  // Yeast conversion ratios (relative to instant yeast)
-  const YEAST_CONVERSIONS = {
-    'instant': 1,
-    'active-dry': 1.25,
-    'fresh': 3,
-    'starter': 1 // Starter uses different calculation
-  };
-
-  // Yeast tips
-  const YEAST_TIPS = {
-    'starter': 'Feed your starter 4-8 hours before use. Use at peak activity when it\'s domed and bubbly.',
-    'instant': 'Add directly to flour. No blooming needed. Works great for quick breads.',
-    'active-dry': 'Bloom in warm water (100-110°F / 38-43°C) for 5-10 minutes before mixing.',
-    'fresh': 'Crumble into flour or dissolve in lukewarm water. Use within 2 weeks of purchase.'
-  };
-
-  // Default yeast percentages by type
-  const DEFAULT_YEAST_PERCENT = {
-    'starter': 20,
-    'instant': 1,
-    'active-dry': 1.25,
-    'fresh': 3
-  };
-
-  // Flour types with properties
-  const FLOUR_DATA: Record<string, { name: string; protein: string; absorption: number; wholeGrain: boolean }> = {
-    'bread': { name: 'Bread Flour', protein: '12-14%', absorption: 62, wholeGrain: false },
-    'ap': { name: 'All-Purpose', protein: '10-12%', absorption: 58, wholeGrain: false },
-    'whole-wheat': { name: 'Whole Wheat', protein: '13-14%', absorption: 75, wholeGrain: true },
-    'rye-light': { name: 'Light Rye', protein: '8-10%', absorption: 80, wholeGrain: true },
-    'rye-dark': { name: 'Dark Rye', protein: '10-12%', absorption: 85, wholeGrain: true },
-    'spelt': { name: 'Spelt', protein: '12-15%', absorption: 58, wholeGrain: true },
-    'einkorn': { name: 'Einkorn', protein: '12-16%', absorption: 55, wholeGrain: true },
-    'semolina': { name: 'Semolina', protein: '12-13%', absorption: 60, wholeGrain: false },
-    'tipo-00': { name: 'Tipo 00', protein: '11-12%', absorption: 55, wholeGrain: false }
-  };
-
-  // Enrichment water content percentages
-  const ENRICHMENT_WATER_CONTENT: Record<string, number> = {
-    // Fats
-    'butter': 0.15,
-    'oil': 0,
-    // Eggs (per 50g large egg)
-    'whole': 0.75,
-    'yolks': 0.50,
-    'whites': 0.90,
-    // Dairy
-    'whole-milk': 0.87,
-    'buttermilk': 0.90,
-    'cream': 0.58,
-    // Sweeteners
-    'sugar': 0,
-    'honey': 0.17,
-    'maple': 0.33,
-    'malt': 0.20
-  };
-
-  // Enrichment state
-  interface EnrichmentState {
-    fat: { enabled: boolean; type: string; percent: number };
-    eggs: { enabled: boolean; type: string; count: number };
-    dairy: { enabled: boolean; type: string; percentOfLiquid: number };
-    sweet: { enabled: boolean; type: string; percent: number };
-  }
-
-  const enrichmentState: EnrichmentState = {
-    fat: { enabled: false, type: 'butter', percent: 5 },
-    eggs: { enabled: false, type: 'whole', count: 2 },
-    dairy: { enabled: false, type: 'whole-milk', percentOfLiquid: 50 },
-    sweet: { enabled: false, type: 'sugar', percent: 5 }
-  };
-
-  // Multi-flour state
-  interface FlourEntry {
-    type: string;
-    percent: number;
-  }
-
-  const flourBlend: FlourEntry[] = [
-    { type: 'bread', percent: 100 }
-  ];
+  const state: RecipeState = calc.createDefaultState();
+  const enrichmentState: EnrichmentState = calc.createDefaultEnrichments();
+  const flourBlend: FlourEntry[] = calc.createDefaultFlourBlend();
 
   // Get initial instructions from first style card
   const firstCard = document.querySelector('.style-card') as HTMLElement;
@@ -1782,410 +1422,15 @@ const featuredOnLoad = DUTCH_OVEN_STYLES.includes(breadStyles[0].id);
     state.instructions = JSON.parse(firstCard.dataset.instructions || '[]');
   }
 
-  // Temperature conversion helpers
-  function celsiusToFahrenheit(c: number): number {
-    return Math.round((c * 9/5) + 32);
-  }
-
-  function fahrenheitToCelsius(f: number): number {
-    return Math.round((f - 32) * 5/9);
-  }
-
-  function formatTemp(tempF: number): string {
-    if (state.tempUnit === 'C') {
-      return `${fahrenheitToCelsius(tempF)}°C`;
-    }
-    return `${tempF}°F`;
-  }
-
-  // Calculate water temperature using DDT formula
-  function calculateWaterTemp(): number {
-    // Formula: Water = (DDT × 3) - Room - Flour - Friction
-    return (state.ddt * 3) - state.roomTemp - state.flourTemp - state.frictionFactor;
-  }
-
-  // Calculate starter contribution (flour and water from starter)
-  function calculateStarterContribution(starterWeight: number): { flour: number; water: number } {
-    // Starter hydration: 100% means equal flour and water
-    // e.g., 100g starter at 100% = 50g flour + 50g water
-    const starterFlour = Math.round(starterWeight / (1 + state.starterHydration / 100));
-    const starterWater = starterWeight - starterFlour;
-    return { flour: starterFlour, water: starterWater };
-  }
-
-  // Estimate fermentation times based on temperature and yeast type
-  function estimateFermentationTimes(): { bulk: string; proof: string; total: string } {
-    // Base times at 75°F (24°C)
-    let baseBulkMin = 1.5; // hours
-    let baseBulkMax = 2;
-    let baseProofMin = 0.75;
-    let baseProofMax = 1.5;
-
-    // Adjust for yeast type
-    if (state.yeastType === 'starter') {
-      baseBulkMin = 4;
-      baseBulkMax = 6;
-      baseProofMin = 1;
-      baseProofMax = 2;
-    } else if (state.yeastPercent < 0.5) {
-      // Low yeast (like no-knead)
-      baseBulkMin = 12;
-      baseBulkMax = 18;
-    }
-
-    // Temperature adjustment: ~10% change per degree F from 75°F
-    const tempDiff = state.ddt - 75;
-    const tempFactor = Math.pow(0.93, tempDiff / 5); // Warmer = faster
-
-    const adjustedBulkMin = baseBulkMin * tempFactor;
-    const adjustedBulkMax = baseBulkMax * tempFactor;
-    const adjustedProofMin = baseProofMin * tempFactor;
-    const adjustedProofMax = baseProofMax * tempFactor;
-
-    // Format times
-    const formatTime = (min: number, max: number): string => {
-      if (min >= 1) {
-        return `${min.toFixed(0)}-${max.toFixed(0)} hrs`;
-      } else {
-        return `${Math.round(min * 60)}-${Math.round(max * 60)} min`;
-      }
-    };
-
-    const totalMin = adjustedBulkMin + adjustedProofMin;
-    const totalMax = adjustedBulkMax + adjustedProofMax;
-
-    return {
-      bulk: formatTime(adjustedBulkMin, adjustedBulkMax),
-      proof: formatTime(adjustedProofMin, adjustedProofMax),
-      total: formatTime(totalMin, totalMax)
-    };
-  }
-
-  // Calculate total whole grain percentage from flour blend
-  function calculateWholeGrainPercent(): number {
-    return flourBlend.reduce((total, flour) => {
-      if (FLOUR_DATA[flour.type]?.wholeGrain) {
-        return total + flour.percent;
-      }
-      return total;
-    }, 0);
-  }
-
-  // Calculate preferment ingredients
-  function calculatePrefermentIngredients(totalFlourWeight: number): { flour: number; water: number; yeast: number; yeastNote: string } | null {
-    if (state.prefermentType === 'none') return null;
-
-    const prefData = PREFERMENT_DATA[state.prefermentType];
-    if (!prefData) return null;
-
-    const prefFlour = Math.round(totalFlourWeight * state.prefermentPercent / 100);
-
-    // Handle hydration
-    let prefWater: number;
-    if (prefData.hydration === -1) {
-      // Pâte Fermentée uses recipe hydration
-      prefWater = Math.round(prefFlour * state.hydration / 100);
-    } else {
-      prefWater = Math.round(prefFlour * prefData.hydration / 100);
-    }
-
-    // Handle yeast
-    let prefYeast: number;
-    let yeastNote: string;
-    if (state.prefermentType === 'levain') {
-      // Levain uses starter, not commercial yeast
-      prefYeast = Math.round(prefFlour * 0.2); // 20% starter
-      yeastNote = '(active starter)';
-    } else if (prefData.yeastPercent === -1) {
-      // Pâte Fermentée uses recipe yeast amount
-      prefYeast = Math.round(prefFlour * state.yeastPercent / 100);
-      yeastNote = '';
-    } else {
-      prefYeast = prefFlour * prefData.yeastPercent / 100;
-      // Format tiny yeast amounts
-      if (prefYeast < 1) {
-        yeastNote = '(tiny pinch)';
-        prefYeast = Math.round(prefYeast * 10) / 10; // Round to 1 decimal
-      } else {
-        yeastNote = '';
-        prefYeast = Math.round(prefYeast);
-      }
-    }
-
-    return { flour: prefFlour, water: prefWater, yeast: prefYeast, yeastNote };
-  }
-
-  // Estimate preferment timing based on room temperature
-  function estimatePrefermentTiming(): { fermentTime: string; startTime: string } {
-    if (state.prefermentType === 'none') {
-      return { fermentTime: '-', startTime: '-' };
-    }
-
-    const prefData = PREFERMENT_DATA[state.prefermentType];
-    if (!prefData) return { fermentTime: '-', startTime: '-' };
-
-    // Adjust timing based on room temperature
-    const tempDiff = state.roomTemp - 70; // Base temp 70°F
-    const tempFactor = Math.pow(0.93, tempDiff / 5); // Warmer = faster
-
-    const minTime = Math.round(prefData.fermentTimeMin * tempFactor);
-    const maxTime = Math.round(prefData.fermentTimeMax * tempFactor);
-
-    const fermentTime = `${minTime}-${maxTime} hrs`;
-
-    // Calculate when to start (average of min/max from a 9am bake)
-    const avgTime = (minTime + maxTime) / 2;
-    let startTime: string;
-    if (avgTime <= 4) {
-      startTime = 'Early morning of bake day';
-    } else if (avgTime <= 8) {
-      startTime = 'Evening before bake day';
-    } else if (avgTime <= 14) {
-      startTime = 'Night before (before bed)';
-    } else {
-      startTime = 'Previous afternoon';
-    }
-
-    return { fermentTime, startTime };
-  }
-
-  // Generate baking schedule
-  function generateBakingSchedule(targetDateTime: Date): Array<{ time: string; task: string; duration: string }> {
-    const schedule: Array<{ time: string; task: string; duration: string }> = [];
-
-    // Work backwards from target time
-    let currentTime = new Date(targetDateTime);
-
-    // Cooling time (1 hour)
-    currentTime.setHours(currentTime.getHours() - 1);
-    schedule.unshift({
-      time: formatScheduleTime(currentTime),
-      task: 'Cool on wire rack',
-      duration: '1 hr'
-    });
-
-    // Baking time (depends on style, but average 45 min)
-    currentTime.setMinutes(currentTime.getMinutes() - 45);
-    schedule.unshift({
-      time: formatScheduleTime(currentTime),
-      task: 'Bake bread',
-      duration: '35-45 min'
-    });
-
-    // Preheat (30-45 min for Dutch oven)
-    currentTime.setMinutes(currentTime.getMinutes() - 45);
-    schedule.unshift({
-      time: formatScheduleTime(currentTime),
-      task: 'Preheat oven (with Dutch oven)',
-      duration: '45 min'
-    });
-
-    // Final proof
-    const fermentTimes = estimateFermentationTimes();
-    const proofHours = state.coldRetard ? 0.5 : 1.5; // If cold retard, just warmup
-    currentTime.setMinutes(currentTime.getMinutes() - proofHours * 60);
-
-    if (state.coldRetard) {
-      schedule.unshift({
-        time: formatScheduleTime(currentTime),
-        task: 'Remove from fridge, let warm',
-        duration: '30 min'
-      });
-      // Cold retard overnight
-      const coldRetardTime = new Date(currentTime);
-      coldRetardTime.setHours(coldRetardTime.getHours() - 12);
-      schedule.unshift({
-        time: formatScheduleTime(coldRetardTime),
-        task: 'Shape & refrigerate overnight',
-        duration: '8-12 hrs'
-      });
-      currentTime = coldRetardTime;
-    } else {
-      schedule.unshift({
-        time: formatScheduleTime(currentTime),
-        task: 'Shape and final proof',
-        duration: fermentTimes.proof
-      });
-    }
-
-    // Bulk fermentation
-    const bulkHours = state.yeastType === 'starter' ? 5 : (state.yeastPercent < 0.5 ? 15 : 2);
-    currentTime.setMinutes(currentTime.getMinutes() - bulkHours * 60);
-    schedule.unshift({
-      time: formatScheduleTime(currentTime),
-      task: 'Bulk fermentation (stretch & fold)',
-      duration: fermentTimes.bulk
-    });
-
-    // Autolyse (if enabled)
-    if (state.autolyse) {
-      currentTime.setMinutes(currentTime.getMinutes() - state.autolyseDuration);
-      schedule.unshift({
-        time: formatScheduleTime(currentTime),
-        task: 'Autolyse (flour + water rest)',
-        duration: `${state.autolyseDuration} min`
-      });
-    }
-
-    // Mix dough
-    currentTime.setMinutes(currentTime.getMinutes() - 15);
-    schedule.unshift({
-      time: formatScheduleTime(currentTime),
-      task: 'Mix final dough',
-      duration: '10-15 min'
-    });
-
-    // Preferment (if enabled)
-    if (state.prefermentType !== 'none') {
-      const prefTiming = estimatePrefermentTiming();
-      const prefData = PREFERMENT_DATA[state.prefermentType];
-      if (prefData) {
-        const prefHours = (prefData.fermentTimeMin + prefData.fermentTimeMax) / 2;
-        currentTime.setMinutes(currentTime.getMinutes() - prefHours * 60);
-        schedule.unshift({
-          time: formatScheduleTime(currentTime),
-          task: `Mix ${prefData.name}`,
-          duration: prefTiming.fermentTime
-        });
-      }
-    }
-
-    return schedule;
-  }
-
-  function formatScheduleTime(date: Date): string {
-    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-  }
-
-  // Calculate water contribution from enrichments
-  function calculateEnrichmentWaterContribution(flourWeight: number): { totalWater: number; breakdown: string[] } {
-    let totalWater = 0;
-    const breakdown: string[] = [];
-
-    // Fat contribution
-    if (enrichmentState.fat.enabled) {
-      const fatWeight = flourWeight * enrichmentState.fat.percent / 100;
-      const waterFromFat = fatWeight * ENRICHMENT_WATER_CONTENT[enrichmentState.fat.type];
-      totalWater += waterFromFat;
-      if (waterFromFat > 0) {
-        breakdown.push(`${enrichmentState.fat.type}: ${Math.round(waterFromFat)}g water`);
-      }
-    }
-
-    // Egg contribution
-    if (enrichmentState.eggs.enabled) {
-      const eggWeight = enrichmentState.eggs.count * 50; // 50g per large egg
-      const waterFromEggs = eggWeight * ENRICHMENT_WATER_CONTENT[enrichmentState.eggs.type];
-      totalWater += waterFromEggs;
-      breakdown.push(`Eggs: ${Math.round(waterFromEggs)}g water`);
-    }
-
-    // Dairy contribution (replaces portion of water)
-    if (enrichmentState.dairy.enabled) {
-      // Dairy replaces water, so the net water change is based on dairy water content
-      // If using 50% milk at 87% water, and rest is 100% water, net effect is small
-      const baseWater = flourWeight * state.hydration / 100;
-      const dairyPortion = baseWater * enrichmentState.dairy.percentOfLiquid / 100;
-      const waterFromDairy = dairyPortion * ENRICHMENT_WATER_CONTENT[enrichmentState.dairy.type];
-      const waterReplaced = dairyPortion; // This was water
-      const netChange = waterFromDairy - waterReplaced;
-      totalWater += netChange;
-      if (Math.abs(netChange) > 1) {
-        breakdown.push(`Dairy: ${netChange > 0 ? '+' : ''}${Math.round(netChange)}g net`);
-      }
-    }
-
-    // Sweetener contribution
-    if (enrichmentState.sweet.enabled) {
-      const sweetWeight = flourWeight * enrichmentState.sweet.percent / 100;
-      const waterFromSweet = sweetWeight * ENRICHMENT_WATER_CONTENT[enrichmentState.sweet.type];
-      totalWater += waterFromSweet;
-      if (waterFromSweet > 0) {
-        breakdown.push(`${enrichmentState.sweet.type}: ${Math.round(waterFromSweet)}g water`);
-      }
-    }
-
-    return { totalWater, breakdown };
-  }
-
-  // Calculate effective hydration considering enrichments
-  function calculateEffectiveHydration(flourWeight: number, baseWater: number): number {
-    const { totalWater } = calculateEnrichmentWaterContribution(flourWeight);
-    const effectiveWater = baseWater + totalWater;
-    return Math.round((effectiveWater / flourWeight) * 100);
-  }
-
-  function calculateRecipe() {
-    const totalDough = state.numLoaves * state.loafWeight;
-
-    // Calculate base flour weight
-    let yeastContribution = state.yeastPercent / 100;
-    if (state.yeastType !== 'starter') {
-      // Commercial yeast is much smaller percentage
-      yeastContribution = state.yeastPercent / 100;
-    }
-
-    const flourWeight = Math.round(totalDough / (1 + state.hydration / 100 + state.salt / 100 + yeastContribution));
-    let waterWeight = Math.round(flourWeight * state.hydration / 100);
-    const saltWeight = Math.round(flourWeight * state.salt / 100);
-    const yeastWeight = Math.round(flourWeight * state.yeastPercent / 100);
-
-    // For starter, calculate flour/water contribution
-    let starterFlourContrib = 0;
-    let starterWaterContrib = 0;
-    if (state.yeastType === 'starter') {
-      const starterContrib = calculateStarterContribution(yeastWeight);
-      starterFlourContrib = starterContrib.flour;
-      starterWaterContrib = starterContrib.water;
-    }
-
-    // Calculate whole grain from flour blend
-    const wholeGrainPercent = calculateWholeGrainPercent();
-    const wholeGrainWeight = Math.round(flourWeight * wholeGrainPercent / 100);
-    const whiteFlourWeight = flourWeight - wholeGrainWeight;
-
-    // Calculate water temperature
-    const calculatedWaterTemp = calculateWaterTemp();
-
-    // Calculate enrichment contributions
-    const enrichmentWater = calculateEnrichmentWaterContribution(flourWeight);
-    const effectiveHydration = calculateEffectiveHydration(flourWeight, waterWeight);
-
-    // Calculate enrichment weights
-    const enrichments = {
-      fat: enrichmentState.fat.enabled ? Math.round(flourWeight * enrichmentState.fat.percent / 100) : 0,
-      eggs: enrichmentState.eggs.enabled ? enrichmentState.eggs.count * 50 : 0,
-      sweet: enrichmentState.sweet.enabled ? Math.round(flourWeight * enrichmentState.sweet.percent / 100) : 0
-    };
-
-    return {
-      totalDough,
-      flourWeight,
-      whiteFlourWeight,
-      wholeGrainWeight,
-      wholeGrainPercent,
-      waterWeight,
-      saltWeight,
-      yeastWeight,
-      starterFlourContrib,
-      starterWaterContrib,
-      calculatedWaterTemp,
-      enrichmentWater,
-      effectiveHydration,
-      enrichments
-    };
-  }
-
-  function convertToOz(grams: number): string {
-    return (grams / 28.35).toFixed(1);
-  }
-
-  function formatWeight(grams: number): string {
-    if (state.unit === 'oz') {
-      return `${convertToOz(grams)}oz`;
-    }
-    return `${grams}g`;
-  }
+  // The shared math, bound to this page's state
+  const formatTemp = (tempF: number) => calc.formatTemp(state, tempF);
+  const formatWeight = (grams: number) => calc.formatWeight(state, grams);
+  const estimateFermentationTimes = () => calc.estimateFermentationTimes(state);
+  const calculateWholeGrainPercent = () => calc.calculateWholeGrainPercent(flourBlend);
+  const calculatePrefermentIngredients = (totalFlourWeight: number) => calc.calculatePrefermentIngredients(state, totalFlourWeight);
+  const estimatePrefermentTiming = () => calc.estimatePrefermentTiming(state);
+  const generateBakingSchedule = (targetDateTime: Date) => calc.generateBakingSchedule(state, targetDateTime);
+  const calculateRecipe = () => calc.calculateRecipe(state, enrichmentState, flourBlend);
 
   function updateUI() {
     const recipe = calculateRecipe();
@@ -2224,7 +1469,7 @@ const featuredOnLoad = DUTCH_OVEN_STYLES.includes(breadStyles[0].id);
     // Update recipe yield
     const yieldEl = document.getElementById('recipe-yield');
     if (yieldEl) {
-      yieldEl.textContent = `Makes ${state.numLoaves} ${state.numLoaves === 1 ? 'loaf' : 'loaves'} at ${formatWeight(state.loafWeight)} each (${formatWeight(recipe.totalDough)} total)`;
+      yieldEl.textContent = calc.yieldText(state, recipe);
     }
 
     // Update preferment section visibility and content
@@ -2250,21 +1495,13 @@ const featuredOnLoad = DUTCH_OVEN_STYLES.includes(breadStyles[0].id);
 
         // Build preferment ingredients list
         if (prefIngList) {
-          const prefIngs = [];
-          prefIngs.push({ name: 'Bread Flour', weight: prefIngredients.flour, note: `(${state.prefermentPercent}% of total)` });
-          prefIngs.push({ name: 'Water', weight: prefIngredients.water, note: prefData.hydration === -1 ? '(recipe hydration)' : `(${prefData.hydration}% hydration)` });
-
-          if (state.prefermentType === 'levain') {
-            prefIngs.push({ name: 'Active Starter', weight: prefIngredients.yeast, note: prefIngredients.yeastNote });
-          } else if (prefIngredients.yeast > 0) {
-            prefIngs.push({ name: 'Instant Yeast', weight: prefIngredients.yeast, note: prefIngredients.yeastNote });
-          }
+          const prefIngs = calc.prefermentRows(state, prefIngredients);
 
           prefIngList.innerHTML = prefIngs.map(ing => `
             <div class="flex justify-between py-1.5 border-b border-[var(--border-light)] last:border-0">
               <span class="font-medium">${ing.name}</span>
               <span class="flex gap-2">
-                <span>${typeof ing.weight === 'number' && ing.weight < 1 ? ing.weight.toFixed(1) : Math.round(ing.weight)}g</span>
+                <span>${calc.formatPrefermentWeight(ing.weight)}</span>
                 ${ing.note ? `<span class="text-xs text-[var(--crust-brown)]">${ing.note}</span>` : ''}
               </span>
             </div>
@@ -2279,112 +1516,7 @@ const featuredOnLoad = DUTCH_OVEN_STYLES.includes(breadStyles[0].id);
     // Update ingredients list (Final Dough when preferment active)
     const ingredientsList = document.getElementById('ingredients-list');
     if (ingredientsList) {
-      const ingredients = [];
-
-      // Calculate remaining flour and water after preferment
-      let finalFlour = recipe.flourWeight;
-      let finalWater = recipe.waterWeight;
-
-      if (state.prefermentType !== 'none' && prefIngredients) {
-        finalFlour = recipe.flourWeight - prefIngredients.flour;
-        finalWater = recipe.waterWeight - prefIngredients.water;
-      }
-
-      if (state.wholeGrain > 0) {
-        // When using preferment, apply percentage to final flour
-        const whiteFlourFinal = Math.round(finalFlour * (100 - state.wholeGrain) / 100);
-        const wholeGrainFinal = finalFlour - whiteFlourFinal;
-        ingredients.push({
-          name: 'Bread Flour',
-          weight: whiteFlourFinal,
-          percent: 100 - state.wholeGrain,
-          note: state.prefermentType !== 'none' ? '(remaining)' : ''
-        });
-        ingredients.push({
-          name: 'Whole Wheat Flour',
-          weight: wholeGrainFinal,
-          percent: state.wholeGrain,
-          note: ''
-        });
-      } else {
-        ingredients.push({
-          name: 'Flour',
-          weight: finalFlour,
-          percent: 100,
-          note: state.prefermentType !== 'none' ? '(remaining)' : ''
-        });
-      }
-
-      ingredients.push({
-        name: 'Water',
-        weight: finalWater,
-        percent: state.hydration,
-        note: state.prefermentType !== 'none' ? '(adjust for preferment)' : ''
-      });
-
-      ingredients.push({
-        name: 'Salt',
-        weight: recipe.saltWeight,
-        percent: state.salt,
-        note: ''
-      });
-
-      // Add preferment as ingredient if active
-      if (state.prefermentType !== 'none' && prefIngredients) {
-        const prefData = PREFERMENT_DATA[state.prefermentType];
-        ingredients.push({
-          name: `All of the ${prefData.name}`,
-          weight: prefIngredients.flour + prefIngredients.water,
-          percent: -1, // Special marker for no percentage
-          note: ''
-        });
-      } else {
-        // Yeast/Starter with appropriate naming (only when no preferment)
-        const yeastNames: Record<string, string> = {
-          'starter': 'Sourdough Starter',
-          'instant': 'Instant Yeast',
-          'active-dry': 'Active Dry Yeast',
-          'fresh': 'Fresh Yeast'
-        };
-        ingredients.push({
-          name: yeastNames[state.yeastType] || 'Yeast',
-          weight: recipe.yeastWeight,
-          percent: state.yeastPercent,
-          note: ''
-        });
-      }
-
-      // Add enrichments if enabled
-      if (enrichmentState.fat.enabled) {
-        const fatName = enrichmentState.fat.type === 'butter' ? 'Butter' : 'Oil';
-        ingredients.push({
-          name: fatName,
-          weight: recipe.enrichments.fat,
-          percent: enrichmentState.fat.percent,
-          note: ''
-        });
-      }
-
-      if (enrichmentState.eggs.enabled) {
-        const eggName = enrichmentState.eggs.type === 'whole' ? 'Eggs' :
-                       enrichmentState.eggs.type === 'yolks' ? 'Egg Yolks' : 'Egg Whites';
-        ingredients.push({
-          name: `${eggName} (${enrichmentState.eggs.count})`,
-          weight: recipe.enrichments.eggs,
-          percent: Math.round((recipe.enrichments.eggs / recipe.flourWeight) * 100),
-          note: ''
-        });
-      }
-
-      if (enrichmentState.sweet.enabled) {
-        const sweetName = enrichmentState.sweet.type.charAt(0).toUpperCase() + enrichmentState.sweet.type.slice(1);
-        ingredients.push({
-          name: sweetName,
-          weight: recipe.enrichments.sweet,
-          percent: enrichmentState.sweet.percent,
-          note: ''
-        });
-      }
+      const ingredients = calc.ingredientRows(state, enrichmentState, recipe, prefIngredients);
 
       ingredientsList.innerHTML = ingredients.map(ing => `
         <div class="flex justify-between py-2 border-b border-[var(--border-light)]">
@@ -2400,12 +1532,7 @@ const featuredOnLoad = DUTCH_OVEN_STYLES.includes(breadStyles[0].id);
     // Update tips - now show calculated water temperature
     const waterTempEl = document.getElementById('water-temp');
     if (waterTempEl) {
-      const calcTemp = recipe.calculatedWaterTemp;
-      if (calcTemp < 40 || calcTemp > 110) {
-        waterTempEl.textContent = `${formatTemp(calcTemp)} (adjust needed)`;
-      } else {
-        waterTempEl.textContent = formatTemp(calcTemp);
-      }
+      waterTempEl.textContent = calc.waterTempText(state, recipe.calculatedWaterTemp);
     }
 
     const flourRecEl = document.getElementById('flour-rec');
@@ -2507,23 +1634,15 @@ const featuredOnLoad = DUTCH_OVEN_STYLES.includes(breadStyles[0].id);
     // Update water temp formula display
     const waterTempFormula = document.getElementById('water-temp-formula');
     if (waterTempFormula) {
-      const unit = state.tempUnit === 'C' ? '°C' : '°F';
-      const ddt = state.tempUnit === 'C' ? fahrenheitToCelsius(state.ddt) : state.ddt;
-      const room = state.tempUnit === 'C' ? fahrenheitToCelsius(state.roomTemp) : state.roomTemp;
-      const flour = state.tempUnit === 'C' ? fahrenheitToCelsius(state.flourTemp) : state.flourTemp;
-      const friction = state.tempUnit === 'C' ? fahrenheitToCelsius(state.frictionFactor) : state.frictionFactor;
-      const result = state.tempUnit === 'C' ? fahrenheitToCelsius(recipe.calculatedWaterTemp) : recipe.calculatedWaterTemp;
-      waterTempFormula.textContent = `(${ddt} × 3) - ${room} - ${flour} - ${friction} = ${result}${unit}`;
+      waterTempFormula.textContent = calc.waterTempFormulaText(state, recipe.calculatedWaterTemp);
     }
 
     // Show/hide water temp warning
     const waterTempWarning = document.getElementById('water-temp-warning');
     if (waterTempWarning) {
-      if (recipe.calculatedWaterTemp < 40) {
-        waterTempWarning.textContent = '⚠️ Water too cold! Add ice or use cold water.';
-        waterTempWarning.classList.remove('hidden');
-      } else if (recipe.calculatedWaterTemp > 110) {
-        waterTempWarning.textContent = '⚠️ Water too hot! May kill yeast. Cool your environment.';
+      const warning = calc.waterTempWarningText(recipe.calculatedWaterTemp);
+      if (warning) {
+        waterTempWarning.textContent = warning;
         waterTempWarning.classList.remove('hidden');
       } else {
         waterTempWarning.classList.add('hidden');
@@ -2643,28 +1762,18 @@ const featuredOnLoad = DUTCH_OVEN_STYLES.includes(breadStyles[0].id);
       card.classList.add('card-selected');
 
       const el = card as HTMLElement;
-      state.style = el.dataset.style || 'sourdough';
-      state.hydration = parseFloat(el.dataset.hydration || '75');
-      state.salt = parseFloat(el.dataset.salt || '2');
-      state.yeastType = (el.dataset.yeastType || 'starter') as 'starter' | 'instant' | 'active-dry' | 'fresh';
-      state.yeastPercent = parseFloat(el.dataset.yeastPercent || '20');
-      state.wholeGrain = parseFloat(el.dataset.wholeGrain || '10');
-      state.flour = el.dataset.flour || 'Bread Flour';
-      state.waterTemp = el.dataset.waterTemp || '78-82°F';
-      state.instructions = JSON.parse(el.dataset.instructions || '[]');
-
-      // Update DDT based on bread style
-      const ddtDefaults: Record<string, number> = {
-        'sourdough': 76,
-        'baguette': 74,
-        'focaccia': 78,
-        'sandwich': 78,
-        'ciabatta': 73,
-        'brioche': 77,
-        'no-knead': 70,
-        'custom': 75
-      };
-      state.ddt = ddtDefaults[state.style] || 75;
+      // Takes over the recipe basics and the style's dough temperature
+      calc.applyStyle(state, {
+        style: el.dataset.style || 'sourdough',
+        hydration: parseFloat(el.dataset.hydration || '75'),
+        salt: parseFloat(el.dataset.salt || '2'),
+        yeastType: (el.dataset.yeastType || 'starter') as YeastType,
+        yeastPercent: parseFloat(el.dataset.yeastPercent || '20'),
+        wholeGrain: parseFloat(el.dataset.wholeGrain || '10'),
+        flour: el.dataset.flour || 'Bread Flour',
+        waterTemp: el.dataset.waterTemp || '78-82°F',
+        instructions: JSON.parse(el.dataset.instructions || '[]')
+      });
 
       // Update sliders
       (document.getElementById('hydration-slider') as HTMLInputElement).value = String(state.hydration);
@@ -2780,7 +1889,7 @@ const featuredOnLoad = DUTCH_OVEN_STYLES.includes(breadStyles[0].id);
   document.querySelectorAll('.yeast-type-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const el = btn as HTMLElement;
-      const yeastType = el.dataset.yeast as 'starter' | 'instant' | 'active-dry' | 'fresh';
+      const yeastType = el.dataset.yeast as YeastType;
       if (yeastType) {
         state.yeastType = yeastType;
         state.yeastPercent = DEFAULT_YEAST_PERCENT[yeastType];
@@ -3081,29 +2190,7 @@ const featuredOnLoad = DUTCH_OVEN_STYLES.includes(breadStyles[0].id);
     const schedule = generateBakingSchedule(targetDate);
 
     // Generate ICS file content
-    let icsContent = `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//The Dough Formula//Baking Schedule//EN
-`;
-
-    schedule.forEach((item, index) => {
-      const eventStart = new Date(targetDate);
-      // Rough time calculation (this is simplified)
-      eventStart.setMinutes(eventStart.getMinutes() - (schedule.length - index) * 30);
-
-      const dtStart = eventStart.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-      const dtEnd = new Date(eventStart.getTime() + 30 * 60000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-
-      icsContent += `BEGIN:VEVENT
-DTSTART:${dtStart}
-DTEND:${dtEnd}
-SUMMARY:${item.task}
-DESCRIPTION:Duration: ${item.duration}
-END:VEVENT
-`;
-    });
-
-    icsContent += 'END:VCALENDAR';
+    const icsContent = calc.scheduleIcs(schedule, targetDate);
 
     // Download file
     const blob = new Blob([icsContent], { type: 'text/calendar' });
@@ -3466,8 +2553,7 @@ END:VEVENT
 
   document.getElementById('btn-copy')?.addEventListener('click', async () => {
     const recipe = calculateRecipe();
-    const styleName = state.style.charAt(0).toUpperCase() + state.style.slice(1);
-    const text = `${styleName} Bread Recipe\n\nMakes ${state.numLoaves} loaves\n\nIngredients:\n- Flour: ${recipe.flourWeight}g (100%)\n- Water: ${recipe.waterWeight}g (${state.hydration}%)\n- Salt: ${recipe.saltWeight}g (${state.salt}%)\n- ${state.yeastType === 'starter' ? 'Starter' : 'Yeast'}: ${recipe.yeastWeight}g (${state.yeastPercent}%)\n\nInstructions:\n${state.instructions.map((inst, i) => `${i + 1}. ${inst}`).join('\n')}\n\nGenerated by The Dough Formula - thedoughformula.com`;
+    const text = calc.recipeCopyText(state, recipe);
 
     try {
       await navigator.clipboard.writeText(text);
@@ -3552,27 +2638,23 @@ END:VEVENT
 
   // Load recipe from URL params
   function loadFromURL() {
-    const params = new URLSearchParams(window.location.search);
-    if (params.has('style')) {
-      const styleCard = document.querySelector(`[data-style="${params.get('style')}"]`) as HTMLElement;
+    // parseUrlRecipeParams reads style, loaves, weight and hydration (50 to 95 only)
+    const fromUrl = calc.parseUrlRecipeParams(new URLSearchParams(window.location.search));
+    if (fromUrl.style !== undefined) {
+      const styleCard = document.querySelector(`[data-style="${fromUrl.style}"]`) as HTMLElement;
       if (styleCard) {
         styleCard.click();
       }
     }
-    if (params.has('loaves')) {
-      state.numLoaves = parseInt(params.get('loaves') || '2');
+    calc.applyUrlRecipeParams(state, fromUrl);
+    if (fromUrl.loaves !== undefined) {
       (document.getElementById('num-loaves') as HTMLInputElement).value = String(state.numLoaves);
     }
-    if (params.has('weight')) {
-      state.loafWeight = parseInt(params.get('weight') || '900');
+    if (fromUrl.weight !== undefined) {
       (document.getElementById('loaf-weight') as HTMLInputElement).value = String(state.loafWeight);
     }
-    if (params.has('hydration')) {
-      const h = parseFloat(params.get('hydration') || '75');
-      if (!isNaN(h) && h >= 50 && h <= 95) {
-        state.hydration = h;
-        (document.getElementById('hydration-slider') as HTMLInputElement).value = String(h);
-      }
+    if (fromUrl.hydration !== undefined) {
+      (document.getElementById('hydration-slider') as HTMLInputElement).value = String(fromUrl.hydration);
     }
     updateUI();
   }
