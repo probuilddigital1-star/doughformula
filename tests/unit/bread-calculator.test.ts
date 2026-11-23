@@ -5,7 +5,9 @@ import {
   createDefaultEnrichments,
   createDefaultState,
   eggWeight,
+  formatWeight,
   hydrationWithStarter,
+  roundSmall,
   starterHydrationNote,
   type EnrichmentState,
 } from '../../src/lib/bread-calculator';
@@ -177,5 +179,34 @@ describe('enrichments are inside the stated total', () => {
     }));
     const water = row(p, 'Whole Milk')!.weight * 0.87 + row(p, 'Butter')!.weight * 0.15 + 200 * 0.75;
     expect(p.recipe.effectiveHydration).toBe(Math.round((water / p.recipe.flourWeight) * 100));
+  });
+});
+
+describe('small amounts keep a decimal', () => {
+  const noKnead = (numLoaves: number, loafWeight: number) => {
+    const state = createDefaultState();
+    const style = BREAD_STYLES.find((s) => s.id === 'no-knead')!;
+    applyStyle(state, { ...style, style: style.id });
+    return printed(Object.assign(state, { numLoaves, loafWeight }));
+  };
+
+  it('No-Knead yeast: 0.69 g for one 500 g loaf (was "1g") and 0.28 g for one 200 g loaf (was "0g")', () => {
+    expect(row(noKnead(1, 500), 'Instant Yeast')?.weight).toBe(0.69);
+    expect(row(noKnead(1, 200), 'Instant Yeast')?.weight).toBe(0.28);
+  });
+
+  it('whole grams from 10 g, tenths under 10 g, hundredths under 1 g, never zero', () => {
+    expect(roundSmall(18.28)).toBe(18);
+    expect(roundSmall(9.96)).toBe(10);
+    expect(roundSmall(5.54)).toBe(5.5);
+    expect(roundSmall(0.996)).toBe(1);
+    expect(roundSmall(0.277)).toBe(0.28);
+    expect(roundSmall(0.004)).toBe(0.01);
+    expect(roundSmall(0)).toBe(0);
+  });
+
+  it('salt under 10 g prints to a tenth', () => {
+    expect(row(noKnead(1, 500), 'Salt')?.weight).toBe(5.5);
+    expect(formatWeight(stateWith(), 5.5)).toBe('5.5g');
   });
 });

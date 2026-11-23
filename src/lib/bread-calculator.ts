@@ -365,6 +365,11 @@ export const YEAST_CONVERSIONS = {
   'starter': 1 // Starter uses different calculation
 };
 
+/** The same leavening power in another kind of commercial yeast, to two decimals. */
+export function convertYeastPercent(percent: number, from: YeastType, to: YeastType): number {
+  return Math.round((percent / YEAST_CONVERSIONS[from]) * YEAST_CONVERSIONS[to] * 100) / 100;
+}
+
 // Yeast tips
 export const YEAST_TIPS: Record<YeastType, string> = {
   'starter': 'Feed your starter 4-8 hours before use. Use at peak activity when it\'s domed and bubbly.',
@@ -381,11 +386,37 @@ export const DEFAULT_YEAST_PERCENT: Record<YeastType, number> = {
   'fresh': 3
 };
 
-/** Picking a yeast type on the Yeast tab: switches the type and sets the amount to that
- *  type's default. */
+/**
+ * Picking a yeast type on the Yeast tab. Between instant, active dry and fresh the amount is
+ * converted at 1 : 1.25 : 3, so the dough rises the way it did. A sourdough starter is not a
+ * swap for a yeast amount, so going to or from a starter takes the bread style's own amount
+ * (converted to the yeast picked), or the usual amount when the style has none.
+ */
 export function applyYeastType(state: RecipeState, yeastType: YeastType): void {
+  if (yeastType === state.yeastType) return;
+  const style = BREAD_STYLES.find((s) => s.id === state.style);
+
+  if (yeastType === 'starter') {
+    state.yeastPercent = style?.yeastType === 'starter' ? style.yeastPercent : DEFAULT_YEAST_PERCENT['starter'];
+  } else if (state.yeastType === 'starter') {
+    state.yeastPercent = style && style.yeastType !== 'starter'
+      ? convertYeastPercent(style.yeastPercent, style.yeastType, yeastType)
+      : DEFAULT_YEAST_PERCENT[yeastType];
+  } else {
+    state.yeastPercent = convertYeastPercent(state.yeastPercent, state.yeastType, yeastType);
+  }
   state.yeastType = yeastType;
-  state.yeastPercent = DEFAULT_YEAST_PERCENT[yeastType];
+}
+
+/** The yeast amount slider for each type. Active dry and fresh run 1.25 and 3 times as high
+ *  as instant, so a converted amount always has room. */
+export function yeastSliderRange(yeastType: YeastType): { min: number; max: number; step: number } {
+  if (yeastType === 'starter') return { min: 10, max: 40, step: 1 };
+  return {
+    min: convertYeastPercent(0.1, 'instant', yeastType),
+    max: convertYeastPercent(3, 'instant', yeastType),
+    step: 0.01
+  };
 }
 
 // Flour types with properties
@@ -924,6 +955,19 @@ export interface Recipe {
   enrichments: EnrichmentWeights;
 }
 
+/**
+ * Salt, yeast and starter can be small amounts, where a whole gram is too coarse:
+ * 0.7 g of yeast printed as "1g" is 44% too much, and 0.3 g printed as "0g" is none. They keep
+ * whole grams from 10 g up, tenths under 10 g and hundredths under 1 g, and a real amount
+ * never rounds to nothing.
+ */
+export function roundSmall(grams: number): number {
+  if (!(grams > 0)) return 0;
+  if (grams >= 9.95) return Math.round(grams);
+  if (grams >= 0.995) return Math.round(grams * 10) / 10;
+  return Math.max(0.01, Math.round(grams * 100) / 100);
+}
+
 export function calculateRecipe(state: RecipeState, enrichmentState: EnrichmentState, flourBlend: FlourEntry[]): Recipe {
   const totalDough = state.numLoaves * state.loafWeight;
 
@@ -938,71 +982,92 @@ export function calculateRecipe(state: RecipeState, enrichmentState: EnrichmentS
   const eggCount = eggsThatFit(enrichmentState, totalDough);
   const eggsWeight = eggWeight(enrichmentState.eggs.type, eggCount);
 
-  const flourWeight = Math.max(0, Math.round((totalDough - eggsWeight) / perFlour));
-  const liquidWeight = Math.round(flourWeight * state.hydration / 100);
-  const saltWeight = Math.round(flourWeight * state.salt / 100);
-  const yeastWeight = Math.round(flourWeight * state.yeastPercent / 100);
-
-  // For starter, calculate flour/water contribution
-  let starterFlourContrib = 0;
-  let starterWaterContrib = 0;
-  if (state.yeastType === 'starter') {
-    const starterContrib = calculateStarterContribution(state, yeastWeight);
-    starterFlourContrib = starterContrib.flour;
-    starterWaterContrib = starterContrib.water;
-  }
-
-  // Calculate whole grain from flour blend
   const wholeGrainPercent = calculateWholeGrainPercent(flourBlend);
-  const wholeGrainWeight = Math.round(flourWeight * wholeGrainPercent / 100);
-  const whiteFlourWeight = flourWeight - wholeGrainWeight;
-
-  // Calculate water temperature
   const calculatedWaterTemp = calculateWaterTemp(state);
 
-  const preferment = calculatePrefermentIngredients(state, flourWeight);
+  // Every weight on the list for a given flour weight, and what the list then adds up to.
+  const build = (flourWeight: number): Recipe & { listed: number } => {
+    const liquidWeight = Math.round(flourWeight * state.hydration / 100);
+    const saltWeight = roundSmall(flourWeight * state.salt / 100);
+    const yeastWeight = roundSmall(flourWeight * state.yeastPercent / 100);
 
-  // Milk or cream stands in for part of the liquid, so it adds no weight. A preferment is
-  // mixed with water, so the dairy can only replace the liquid left for the final dough.
-  const liquidLeft = Math.max(0, liquidWeight - (preferment ? preferment.water : 0));
-  const dairyWeight = enrichmentState.dairy.enabled
-    ? Math.min(Math.round(liquidWeight * enrichmentState.dairy.percentOfLiquid / 100), liquidLeft)
-    : 0;
-  const waterWeight = liquidWeight - dairyWeight;
+    // For starter, calculate flour/water contribution
+    let starterFlourContrib = 0;
+    let starterWaterContrib = 0;
+    if (state.yeastType === 'starter') {
+      const starterContrib = calculateStarterContribution(state, yeastWeight);
+      starterFlourContrib = starterContrib.flour;
+      starterWaterContrib = starterContrib.water;
+    }
 
-  const enrichments: EnrichmentWeights = {
-    fat: Math.round(flourWeight * fatShare),
-    eggs: eggsWeight,
-    dairy: dairyWeight,
-    sweet: Math.round(flourWeight * sweetShare)
+    // Calculate whole grain from flour blend
+    const wholeGrainWeight = Math.round(flourWeight * wholeGrainPercent / 100);
+    const whiteFlourWeight = flourWeight - wholeGrainWeight;
+
+    const preferment = calculatePrefermentIngredients(state, flourWeight);
+
+    // Milk or cream stands in for part of the liquid, so it adds no weight. A preferment is
+    // mixed with water, so the dairy can only replace the liquid left for the final dough.
+    const liquidLeft = Math.max(0, liquidWeight - (preferment ? preferment.water : 0));
+    const dairyWeight = enrichmentState.dairy.enabled
+      ? Math.min(Math.round(liquidWeight * enrichmentState.dairy.percentOfLiquid / 100), liquidLeft)
+      : 0;
+    const waterWeight = liquidWeight - dairyWeight;
+
+    const enrichments: EnrichmentWeights = {
+      fat: Math.round(flourWeight * fatShare),
+      eggs: eggsWeight,
+      dairy: dairyWeight,
+      sweet: Math.round(flourWeight * sweetShare)
+    };
+
+    // Hydration with the water in the enrichments counted
+    const enrichmentWater = calculateEnrichmentWaterContribution(enrichmentState, enrichments);
+    const effectiveHydration = flourWeight > 0
+      ? Math.round(((liquidWeight + enrichmentWater.totalWater) / flourWeight) * 100)
+      : 0;
+
+    return {
+      totalDough,
+      flourWeight,
+      whiteFlourWeight,
+      wholeGrainWeight,
+      wholeGrainPercent,
+      liquidWeight,
+      waterWeight,
+      dairyWeight,
+      saltWeight,
+      yeastWeight,
+      starterFlourContrib,
+      starterWaterContrib,
+      calculatedWaterTemp,
+      preferment,
+      enrichmentWater,
+      effectiveHydration,
+      eggCount,
+      enrichments,
+      listed: flourWeight + liquidWeight + saltWeight + yeastWeight + enrichments.fat + enrichments.eggs + enrichments.sweet
+    };
   };
 
-  // Hydration with the water in the enrichments counted
-  const enrichmentWater = calculateEnrichmentWaterContribution(enrichmentState, enrichments);
-  const effectiveHydration = flourWeight > 0
-    ? Math.round(((liquidWeight + enrichmentWater.totalWater) / flourWeight) * 100)
-    : 0;
+  const flourWeight = Math.max(0, Math.round((totalDough - eggsWeight) / perFlour));
+  let best = build(flourWeight);
 
-  return {
-    totalDough,
-    flourWeight,
-    whiteFlourWeight,
-    wholeGrainWeight,
-    wholeGrainPercent,
-    liquidWeight,
-    waterWeight,
-    dairyWeight,
-    saltWeight,
-    yeastWeight,
-    starterFlourContrib,
-    starterWaterContrib,
-    calculatedWaterTemp,
-    preferment,
-    enrichmentWater,
-    effectiveHydration,
-    eggCount,
-    enrichments
-  };
+  // Butter, oil, a sweetener or eggs put more rounded rows on the list, and the flour rounded
+  // to a whole gram can then leave the rows a few grams off the stated total. A gram of flour
+  // either side changes every row with it, so take whichever lands closest. Without these
+  // enrichments the flour is the plain formula above, which the calculator hand-off links
+  // (src/lib/handoff.ts) are built on.
+  if (fatShare > 0 || sweetShare > 0 || eggsWeight > 0) {
+    for (const nearby of [flourWeight - 1, flourWeight + 1]) {
+      if (nearby < 0) continue;
+      const other = build(nearby);
+      if (Math.abs(other.listed - totalDough) < Math.abs(best.listed - totalDough)) best = other;
+    }
+  }
+
+  const { listed: _listed, ...recipe } = best;
+  return recipe;
 }
 
 // ============================================

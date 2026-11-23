@@ -163,6 +163,9 @@ const BAD_TEXT = /NaN|Infinity|undefined|null/;
 const flourRow = (name: string) => name.endsWith('Flour');
 const DAIRY_ROW = /^(Whole Milk|Buttermilk|Heavy Cream)$/;
 const ENRICHMENT_ROW = /^(Butter|Oil|Eggs|Egg Yolks|Egg Whites|Sugar|Honey|Maple|Malt|Whole Milk|Buttermilk|Heavy Cream)/;
+/** The step a row's grams are printed in: salt, yeast and starter keep a decimal when small. */
+const printedStep = (r: { name: string; weight: number }) =>
+  r.name === 'Salt' || r.name.endsWith('Yeast') || r.name === 'Sourdough Starter' ? (r.weight >= 10 ? 1 : r.weight >= 1 ? 0.1 : 0.01) : 1;
 const rowGrams = (rows: Printed['rows'], match: RegExp) => rows.filter((r) => match.test(r.name)).reduce((sum, r) => sum + r.weight, 0);
 
 function checkCase(c: SweepCase, p: Printed, out: SweepResult): void {
@@ -190,8 +193,9 @@ function checkCase(c: SweepCase, p: Printed, out: SweepResult): void {
     // are what is left once whole wheat, a preferment or the other liquid is taken out, so
     // they carry half a gram for each part: a gram and a half at most. The percentage itself
     // is printed to one decimal from 10% up and two below.
+    // Salt, yeast and starter print finer: tenths under 10 g, hundredths under 1 g.
     const leftover = flourRow(r.name) || r.name === 'Water' || DAIRY_ROW.test(r.name);
-    const gramSlack = (leftover ? 1.5 : 0.5) + 0.01;
+    const gramSlack = (leftover ? 1.5 : 0.5) * printedStep(r) + 0.001;
     const percentSlack = r.percent >= 10 ? 0.05 : 0.005;
     if (Math.abs(actualPercent - r.percent) > (gramSlack / recipe.flourWeight) * 100 + percentSlack + 1e-9) {
       const group = flourRow(r.name) || r.name === 'Water' ? `${r.name === 'Water' ? 'Water' : 'flour'} row, ${prefGroup}` : `${r.name.replace(/ \(\d+\)$/, '')} row`;
@@ -201,12 +205,14 @@ function checkCase(c: SweepCase, p: Printed, out: SweepResult): void {
         actualPercent - r.percent,
       );
     }
-    // A whole-gram row can still misstate a small amount badly.
+    // A small amount must not be misstated by its rounding: within 10% of the exact amount.
+    // Under a tenth of a gram no kitchen scale can tell, so there the printed hundredth is
+    // the limit.
     if (r.percent > 0 && expectedGrams > 0 && !ENRICHMENT_ROW.test(r.name) && !flourRow(r.name) && r.name !== 'Water') {
       const rel = (r.weight - expectedGrams) / expectedGrams;
-      if (Math.abs(rel) > 0.1) {
+      if (Math.abs(rel) > 0.1 && Math.abs(r.weight - expectedGrams) > 0.0101) {
         out.percentages.add(
-          `small amount rounded to a whole gram (${r.name.includes('Yeast') ? 'yeast' : r.name})`,
+          `small amount misstated by rounding (${r.name.includes('Yeast') ? 'yeast' : r.name})`,
           v(() => `${r.name} ${r.percent}% of ${recipe.flourWeight} g flour is ${expectedGrams.toFixed(2)} g, printed as ${r.weight} g (${rel > 0 ? '+' : ''}${Math.round(rel * 100)}%)`),
           rel,
         );

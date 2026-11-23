@@ -1585,15 +1585,10 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
     // Update yeast percent slider range based on type
     const yeastPercentSlider = document.getElementById('yeast-percent-slider') as HTMLInputElement;
     if (yeastPercentSlider) {
-      if (state.yeastType === 'starter') {
-        yeastPercentSlider.min = '10';
-        yeastPercentSlider.max = '40';
-        yeastPercentSlider.step = '1';
-      } else {
-        yeastPercentSlider.min = '0.1';
-        yeastPercentSlider.max = '3';
-        yeastPercentSlider.step = '0.1';
-      }
+      const range = calc.yeastSliderRange(state.yeastType);
+      yeastPercentSlider.min = String(range.min);
+      yeastPercentSlider.max = String(range.max);
+      yeastPercentSlider.step = String(range.step);
       yeastPercentSlider.value = String(state.yeastPercent);
     }
 

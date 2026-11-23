@@ -21,6 +21,7 @@ import {
   scheduleIcs,
   waterTempFormulaText,
   waterTempWarningText,
+  yeastSliderRange,
   type RecipeState,
 } from '../../src/lib/bread-calculator';
 import { printed, stateWith } from './helpers/bread-calculator';
@@ -82,28 +83,28 @@ describe('bread calculator sweep: style x preferment x yeast x starter x enrichm
     it('holds for every row when there is no preferment, to the nearest gram', () => {
       expectClean(sweep.percentages, /row, no preferment$/);
       expectClean(sweep.percentages, /^(Salt|.*Yeast|Sourdough Starter|Butter|Oil|Egg.*|Sugar|Honey|Maple|Malt|Whole Milk|Buttermilk|Heavy Cream) row$/);
-      expectOnlyKnown(sweep.percentages, [/^(flour|Water) row, with /, /^small amount rounded to a whole gram/]);
+      expectOnlyKnown(sweep.percentages, [/^(flour|Water) row, with /]);
     });
 
     it.fails('KNOWN ISSUE C: flour and water percentages still match their grams when a preferment is on', () => {
       expectClean(sweep.percentages, /^(flour|Water) row, with /);
     });
 
-    it.fails('KNOWN ISSUE D: salt and yeast are never more than 10% off after rounding to a whole gram', () => {
-      expectClean(sweep.percentages, /^small amount rounded to a whole gram/);
+    it('salt and yeast are never more than 10% off after rounding, or 0.01 g under a tenth of a gram (was KNOWN ISSUE D)', () => {
+      expectClean(sweep.percentages, /^small amount misstated by rounding/);
     });
   });
 
   describe('3. no negative, NaN or blank values', () => {
-    it('holds for every case inside the ranges the sliders and fields allow, except yeast rounding to 0 g', () => {
+    it('holds for every case inside the ranges the sliders and fields allow', () => {
       expectClean(sweep.values, 'not a number');
       expectClean(sweep.values, 'negative');
       expectClean(sweep.values, 'preferment row prints 0 g');
-      expectOnlyKnown(sweep.values, ['prints 0 g (yeast)']);
     });
 
-    it.fails('KNOWN ISSUE D: a yeast amount above zero never prints as 0 g', () => {
+    it('a yeast amount above zero never prints as 0 g (was KNOWN ISSUE D)', () => {
       expectClean(sweep.values, 'prints 0 g (yeast)');
+      expectOnlyKnown(sweep.values, []);
     });
 
     it.fails('KNOWN ISSUE Q: a junk or negative loaf count in the link cannot reach the recipe', () => {
@@ -178,23 +179,57 @@ describe('7. yeast: instant, active dry and fresh', () => {
     expect(YEAST_CONVERSIONS).toMatchObject({ instant: 1, 'active-dry': 1.25, fresh: 3 });
   });
 
-  it('FLAGGED: switching type sets the amount to that type\'s default, whatever the recipe had', () => {
-    const state = styleState('no-knead');
-    expect(state.yeastPercent).toBe(0.25);
-    applyYeastType(state, 'active-dry');
-    expect(state).toMatchObject({ yeastType: 'active-dry', yeastPercent: 1.25 });
-    applyYeastType(state, 'instant');
-    expect(state.yeastPercent).toBe(1);
-  });
-
-  it.fails('KNOWN ISSUE H: switching type converts the amount the recipe has, at the standard ratio', () => {
+  it('switching between instant, active dry and fresh converts the amount the recipe has (was KNOWN ISSUE H)', () => {
     for (const style of BREAD_STYLES.filter((s) => s.yeastType === 'instant')) {
       for (const to of ['active-dry', 'fresh'] as const) {
         const state = styleState(style.id);
         applyYeastType(state, to);
-        expect(state.yeastPercent, `${style.id}: instant ${style.yeastPercent}% to ${to}`).toBeCloseTo(style.yeastPercent * YEAST_CONVERSIONS[to], 2);
+        expect(state.yeastType).toBe(to);
+        // Kept to two decimals, so at most half a hundredth from the exact ratio.
+        expect(Math.abs(state.yeastPercent - style.yeastPercent * YEAST_CONVERSIONS[to]), `${style.id}: instant ${style.yeastPercent}% to ${to} gave ${state.yeastPercent}%`).toBeLessThanOrEqual(0.0051);
       }
     }
+  });
+
+  it('No-Knead: 0.25% instant is 0.31% active dry or 0.75% fresh, and switching back lands on 0.25%', () => {
+    const state = styleState('no-knead');
+    applyYeastType(state, 'active-dry');
+    expect(state.yeastPercent).toBe(0.31);
+    applyYeastType(state, 'instant');
+    expect(state.yeastPercent).toBe(0.25);
+    applyYeastType(state, 'fresh');
+    expect(state.yeastPercent).toBe(0.75);
+    applyYeastType(state, 'instant');
+    expect(state.yeastPercent).toBe(0.25);
+  });
+
+  it('picking the type already in use leaves the amount alone', () => {
+    const state = styleState('baguette', { yeastPercent: 0.8 });
+    applyYeastType(state, 'instant');
+    expect(state.yeastPercent).toBe(0.8);
+  });
+
+  it('switching to or from a sourdough starter uses the style default instead of converting', () => {
+    // A starter style has no yeast amount of its own, so yeast starts at the usual 1% instant.
+    const sourdough = styleState('sourdough', { yeastPercent: 35 });
+    applyYeastType(sourdough, 'active-dry');
+    expect(sourdough).toMatchObject({ yeastType: 'active-dry', yeastPercent: DEFAULT_YEAST_PERCENT['active-dry'] });
+    applyYeastType(sourdough, 'starter');
+    expect(sourdough).toMatchObject({ yeastType: 'starter', yeastPercent: 20 });
+
+    // A yeast style goes to the usual 20% starter, and comes back to its own amount.
+    const baguette = styleState('baguette', { yeastPercent: 2 });
+    applyYeastType(baguette, 'starter');
+    expect(baguette).toMatchObject({ yeastType: 'starter', yeastPercent: DEFAULT_YEAST_PERCENT.starter });
+    applyYeastType(baguette, 'fresh');
+    expect(baguette).toMatchObject({ yeastType: 'fresh', yeastPercent: 1.5 });
+  });
+
+  it('the yeast slider reaches every converted amount', () => {
+    expect(yeastSliderRange('instant')).toEqual({ min: 0.1, max: 3, step: 0.01 });
+    expect(yeastSliderRange('active-dry')).toEqual({ min: 0.13, max: 3.75, step: 0.01 });
+    expect(yeastSliderRange('fresh')).toEqual({ min: 0.3, max: 9, step: 0.01 });
+    expect(yeastSliderRange('starter')).toEqual({ min: 10, max: 40, step: 1 });
   });
 });
 
