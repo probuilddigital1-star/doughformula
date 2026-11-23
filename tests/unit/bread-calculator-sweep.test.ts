@@ -42,12 +42,14 @@ import { SWEEP_SIZE, runSweep, type SweepResult, type Tally } from './helpers/br
  * The calculator math audit, kept as a permanent test. Everything here runs the code the
  * homepage runs (src/lib/bread-calculator.ts).
  *
- * Plain `it` tests are things that hold today and must keep holding. `it.fails` tests are
- * KNOWN ISSUES from the audit: each states the behavior a baker should get, and vitest
- * expects it to fail until the issue is fixed. When a fix lands, the test starts passing,
- * vitest reports that, and the `.fails` comes off. Tests marked FLAGGED pin today's behavior
- * where the right answer is a judgment call for the site owner, so a change there is a
- * decision and not an accident.
+ * Plain `it` tests are things that hold today and must keep holding. A test whose name ends
+ * "(was KNOWN ISSUE X)" was an audit finding: it was written as `it.fails`, stating what a
+ * baker should get, and became a plain test when the fix landed. A new finding goes in the
+ * same way: `it.fails` first, then the fix, then the `.fails` comes off.
+ *
+ * Tests marked FLAGGED pin today's behavior where the right answer is a judgment call for the
+ * site owner, so a change there is a decision and not an accident. The three left are the
+ * time model (audit item J5) and the style-blind schedule (J7), which are not decided yet.
  */
 
 const styleState = (id: string, over: Partial<RecipeState> = {}): RecipeState => {
