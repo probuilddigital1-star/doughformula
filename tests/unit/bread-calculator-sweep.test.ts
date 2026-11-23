@@ -70,18 +70,18 @@ describe('bread calculator sweep: style x preferment x yeast x starter x enrichm
   describe('1. printed rows sum to the stated total within 2 g', () => {
     it('holds for every case with no butter, oil, eggs or sweetener, with and without a preferment', () => {
       expectClean(sweep.rowsSum, 'no weight-adding enrichment');
-      expectOnlyKnown(sweep.rowsSum, ['butter, oil, eggs or sweetener on']);
     });
 
-    it.fails('KNOWN ISSUE A: also holds with butter, oil, eggs or a sweetener switched on', () => {
+    it('also holds with butter, oil, eggs or a sweetener switched on (was KNOWN ISSUE A)', () => {
       expectClean(sweep.rowsSum, 'butter, oil, eggs or sweetener on');
+      expectOnlyKnown(sweep.rowsSum, []);
     });
   });
 
   describe('2. each printed percentage matches its grams divided by total flour', () => {
     it('holds for every row when there is no preferment, to the nearest gram', () => {
       expectClean(sweep.percentages, /row, no preferment$/);
-      expectClean(sweep.percentages, /^(Salt|.*Yeast|Sourdough Starter|Butter|Oil|Egg.*|Sugar|Honey|Maple|Malt) row$/);
+      expectClean(sweep.percentages, /^(Salt|.*Yeast|Sourdough Starter|Butter|Oil|Egg.*|Sugar|Honey|Maple|Malt|Whole Milk|Buttermilk|Heavy Cream) row$/);
       expectOnlyKnown(sweep.percentages, [/^(flour|Water) row, with /, /^small amount rounded to a whole gram/]);
     });
 
@@ -159,14 +159,14 @@ describe('bread calculator sweep: style x preferment x yeast x starter x enrichm
   });
 
   describe('6. enrichments: effective hydration matches the water the tab says milk, eggs and butter carry', () => {
-    it('matches within one point, recomputed from the printed grams and the stated water shares', () => {
+    it('matches within one point, recomputed from the printed rows and the stated water shares', () => {
       expectClean(sweep.effectiveHydration, 'does not match the stated water shares');
       expectClean(sweep.effectiveHydration, 'differs from plain hydration with no enrichments');
-      expectOnlyKnown(sweep.effectiveHydration, ['milk or cream is counted but not on the ingredient list']);
     });
 
-    it.fails('KNOWN ISSUE B: milk or cream that the number counts is on the ingredient list', () => {
+    it('milk or cream that the number counts is on the ingredient list (was KNOWN ISSUE B)', () => {
       expectClean(sweep.effectiveHydration, 'milk or cream is counted but not on the ingredient list');
+      expectOnlyKnown(sweep.effectiveHydration, []);
     });
   });
 });

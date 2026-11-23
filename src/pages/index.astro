@@ -2253,18 +2253,24 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
     updateUI();
   });
 
+  // The "≈ Ng total" line under the egg count: a whole egg, a yolk and a white weigh differently
+  function updateEggWeight() {
+    const weightEl = document.getElementById('egg-weight');
+    if (weightEl) {
+      weightEl.textContent = String(calc.eggWeight(enrichmentState.eggs.type, enrichmentState.eggs.count));
+    }
+  }
+
   document.getElementById('egg-type-select')?.addEventListener('change', (e) => {
     enrichmentState.eggs.type = (e.target as HTMLSelectElement).value;
+    updateEggWeight();
     updateEnrichmentDisplay();
     updateUI();
   });
 
   document.getElementById('egg-count')?.addEventListener('input', (e) => {
     enrichmentState.eggs.count = parseInt((e.target as HTMLInputElement).value) || 2;
-    const weightEl = document.getElementById('egg-weight');
-    if (weightEl) {
-      weightEl.textContent = String(enrichmentState.eggs.count * 50);
-    }
+    updateEggWeight();
     updateEnrichmentDisplay();
     updateUI();
   });

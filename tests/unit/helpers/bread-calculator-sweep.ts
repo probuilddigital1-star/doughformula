@@ -161,7 +161,9 @@ export interface SweepResult {
 const G_PER_OZ = 28.3495;
 const BAD_TEXT = /NaN|Infinity|undefined|null/;
 const flourRow = (name: string) => name.endsWith('Flour');
-const ENRICHMENT_ROW = /^(Butter|Oil|Eggs|Egg Yolks|Egg Whites|Sugar|Honey|Maple|Malt)/;
+const DAIRY_ROW = /^(Whole Milk|Buttermilk|Heavy Cream)$/;
+const ENRICHMENT_ROW = /^(Butter|Oil|Eggs|Egg Yolks|Egg Whites|Sugar|Honey|Maple|Malt|Whole Milk|Buttermilk|Heavy Cream)/;
+const rowGrams = (rows: Printed['rows'], match: RegExp) => rows.filter((r) => match.test(r.name)).reduce((sum, r) => sum + r.weight, 0);
 
 function checkCase(c: SweepCase, p: Printed, out: SweepResult): void {
   const { recipe, rows, state, enrichments, preferment } = p;
@@ -179,17 +181,20 @@ function checkCase(c: SweepCase, p: Printed, out: SweepResult): void {
     );
   }
 
-  // 2. Each printed percentage matches grams / total flour.
+  // 2. Each printed percentage matches grams / total flour, to the precision printed.
   for (const r of rows) {
     if (r.percent < 0) continue;
-    const isEgg = r.name.startsWith('Egg');
-    const expectedGrams = (r.percent / 100) * recipe.flourWeight;
     const actualPercent = (r.weight / recipe.flourWeight) * 100;
-    // Grams are printed whole, so half a gram of drift is rounding. Eggs come as a count, so
-    // their percentage is the rounded one.
-    const off = isEgg ? Math.abs(actualPercent - r.percent) > 0.51 : Math.abs(r.weight - expectedGrams) > 0.51;
-    if (off) {
-      const group = flourRow(r.name) || r.name === 'Water' ? `${r.name === 'Water' ? 'Water' : 'flour'} row, ${prefGroup}` : `${r.name} row`;
+    const expectedGrams = (r.percent / 100) * recipe.flourWeight;
+    // Grams are printed whole, so half a gram of drift is rounding. Flour, water and milk rows
+    // are what is left once whole wheat, a preferment or the other liquid is taken out, so
+    // they carry half a gram for each part: a gram and a half at most. The percentage itself
+    // is printed to one decimal from 10% up and two below.
+    const leftover = flourRow(r.name) || r.name === 'Water' || DAIRY_ROW.test(r.name);
+    const gramSlack = (leftover ? 1.5 : 0.5) + 0.01;
+    const percentSlack = r.percent >= 10 ? 0.05 : 0.005;
+    if (Math.abs(actualPercent - r.percent) > (gramSlack / recipe.flourWeight) * 100 + percentSlack + 1e-9) {
+      const group = flourRow(r.name) || r.name === 'Water' ? `${r.name === 'Water' ? 'Water' : 'flour'} row, ${prefGroup}` : `${r.name.replace(/ \(\d+\)$/, '')} row`;
       out.percentages.add(
         group,
         v(() => `${r.name} prints ${r.weight} g (${r.percent}%), but ${r.weight} g of ${recipe.flourWeight} g flour is ${actualPercent.toFixed(1)}%`),
@@ -237,12 +242,14 @@ function checkCase(c: SweepCase, p: Printed, out: SweepResult): void {
     if (flourRow(r.name)) flourInRows += r.weight;
     else if (r.name === 'Water') waterInRows += r.weight;
   }
+  // Milk or cream stands in for part of the water, so the two rows together are the liquid.
+  const dairyInRows = rowGrams(rows, DAIRY_ROW);
   if (preferment) {
     const prefRow = rows.find((r) => r.name.startsWith('All of the '))!;
-    if (flourInRows + preferment.flour !== recipe.flourWeight || waterInRows + preferment.water !== recipe.waterWeight) {
+    if (flourInRows + preferment.flour !== recipe.flourWeight || waterInRows + dairyInRows + preferment.water !== recipe.liquidWeight) {
       out.preferment.add(
         'flour or water not removed exactly once',
-        v(() => `flour ${flourInRows} + ${preferment.flour} vs ${recipe.flourWeight}; water ${waterInRows} + ${preferment.water} vs ${recipe.waterWeight}`),
+        v(() => `flour ${flourInRows} + ${preferment.flour} vs ${recipe.flourWeight}; water ${waterInRows} + milk ${dairyInRows} + ${preferment.water} vs ${recipe.liquidWeight}`),
       );
     }
     if (prefRow.weight !== preferment.flour + preferment.water) {
@@ -266,8 +273,8 @@ function checkCase(c: SweepCase, p: Printed, out: SweepResult): void {
         prefYeast.weight / preferment.flour,
       );
     }
-  } else if (flourInRows !== recipe.flourWeight || waterInRows !== recipe.waterWeight) {
-    out.preferment.add('rows differ from the recipe without a preferment', v(() => `flour ${flourInRows}/${recipe.flourWeight}, water ${waterInRows}/${recipe.waterWeight}`));
+  } else if (flourInRows !== recipe.flourWeight || waterInRows + dairyInRows !== recipe.liquidWeight) {
+    out.preferment.add('rows differ from the recipe without a preferment', v(() => `flour ${flourInRows}/${recipe.flourWeight}, water ${waterInRows} + milk ${dairyInRows}/${recipe.liquidWeight}`));
   }
 
   // 5. Ounce values match the gram values.
@@ -300,34 +307,31 @@ function checkCase(c: SweepCase, p: Printed, out: SweepResult): void {
     out.ounces.add('ounce rows drift from the ounce total', v(() => `rows add up to ${ozSum.toFixed(1)} oz, header says ${totalOz} oz`), ozSum - totalOz - gramsGapInOz);
   }
 
-  // 6. Effective hydration, recomputed from the printed grams and the water shares the
+  // 6. Effective hydration, recomputed from the printed rows and the water shares the
   //    Enrichments tab states (butter 15%, whole eggs 75%, whole milk 87%, and so on).
   const anyEnrichment = enrichments.fat.enabled || enrichments.eggs.enabled || enrichments.dairy.enabled || enrichments.sweet.enabled;
   if (anyEnrichment) {
-    let water = recipe.waterWeight;
-    if (enrichments.fat.enabled) water += recipe.enrichments.fat * ENRICHMENT_WATER_CONTENT[enrichments.fat.type];
-    if (enrichments.eggs.enabled) water += recipe.enrichments.eggs * ENRICHMENT_WATER_CONTENT[enrichments.eggs.type];
-    if (enrichments.sweet.enabled) water += recipe.enrichments.sweet * ENRICHMENT_WATER_CONTENT[enrichments.sweet.type];
-    if (enrichments.dairy.enabled) {
-      const dairy = (recipe.waterWeight * enrichments.dairy.percentOfLiquid) / 100;
-      water += dairy * ENRICHMENT_WATER_CONTENT[enrichments.dairy.type] - dairy;
-    }
+    let water = waterInRows + (preferment ? preferment.water : 0);
+    water += dairyInRows * ENRICHMENT_WATER_CONTENT[enrichments.dairy.type];
+    water += rowGrams(rows, /^(Butter|Oil)$/) * ENRICHMENT_WATER_CONTENT[enrichments.fat.type];
+    water += rowGrams(rows, /^Egg/) * ENRICHMENT_WATER_CONTENT[enrichments.eggs.type];
+    water += rowGrams(rows, /^(Sugar|Honey|Maple|Malt)$/) * ENRICHMENT_WATER_CONTENT[enrichments.sweet.type];
     const expected = (water / recipe.flourWeight) * 100;
     if (Math.abs(expected - recipe.effectiveHydration) > 1) {
       out.effectiveHydration.add(
         'does not match the stated water shares',
-        v(() => `shows ${recipe.effectiveHydration}%, the stated water shares give ${expected.toFixed(1)}%`),
+        v(() => `shows ${recipe.effectiveHydration}%, the rows and the stated water shares give ${expected.toFixed(1)}%`),
         recipe.effectiveHydration - expected,
       );
     }
     // The milk the number counts has to be on the list for a baker to add it.
-    if (enrichments.dairy.enabled && !rows.some((r) => /Milk|Buttermilk|Cream/.test(r.name))) {
+    if (enrichments.dairy.enabled && dairyInRows !== recipe.dairyWeight) {
       out.effectiveHydration.add(
         'milk or cream is counted but not on the ingredient list',
-        v(() => `effective hydration ${recipe.effectiveHydration}% counts ${enrichments.dairy.percentOfLiquid}% of the liquid as ${enrichments.dairy.type}; rows are ${rows.map((r) => r.name).join(', ')}`),
+        v(() => `effective hydration ${recipe.effectiveHydration}% counts ${recipe.dairyWeight} g of ${enrichments.dairy.type}; rows are ${rows.map((r) => `${r.name} ${r.weight} g`).join(', ')}`),
       );
     }
-  } else if (recipe.effectiveHydration !== Math.round((recipe.waterWeight / recipe.flourWeight) * 100)) {
+  } else if (recipe.effectiveHydration !== Math.round((recipe.liquidWeight / recipe.flourWeight) * 100)) {
     out.effectiveHydration.add('differs from plain hydration with no enrichments', v(() => `${recipe.effectiveHydration}%`));
   }
 }

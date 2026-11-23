@@ -406,7 +406,7 @@ export const ENRICHMENT_WATER_CONTENT: Record<string, number> = {
   // Fats
   'butter': 0.15,
   'oil': 0,
-  // Eggs (per 50g large egg)
+  // Eggs (water share of the part used)
   'whole': 0.75,
   'yolks': 0.50,
   'whites': 0.90,
@@ -419,6 +419,28 @@ export const ENRICHMENT_WATER_CONTENT: Record<string, number> = {
   'honey': 0.17,
   'maple': 0.33,
   'malt': 0.20
+};
+
+/** Grams in one large egg, by the part used: a whole egg out of its shell, the yolk, the white. */
+export const EGG_WEIGHT_G: Record<string, number> = {
+  'whole': 50,
+  'yolks': 17,
+  'whites': 33
+};
+
+/** Eggs can be at most this share of the total dough. Past it there is no room left for a
+ *  dough, so the recipe uses the most eggs that fit and the egg row says so. */
+export const MAX_EGG_SHARE = 0.5;
+
+export function eggWeight(type: string, count: number): number {
+  return count * (EGG_WEIGHT_G[type] ?? EGG_WEIGHT_G['whole']);
+}
+
+/** The name each dairy type gets on the ingredient list. */
+export const DAIRY_NAMES: Record<string, string> = {
+  'whole-milk': 'Whole Milk',
+  'buttermilk': 'Buttermilk',
+  'cream': 'Heavy Cream'
 };
 
 // Enrichment state
@@ -812,52 +834,50 @@ END:VEVENT
 // Enrichments
 // ============================================
 
-// Calculate water contribution from enrichments
+/** Grams of each enrichment in the dough. Milk or cream replaces part of the water. */
+export interface EnrichmentWeights {
+  fat: number;
+  eggs: number;
+  dairy: number;
+  sweet: number;
+}
+
+/**
+ * Water the enrichments bring, on top of the liquid the hydration slider sets. Butter, eggs
+ * and syrups add water. Milk or cream stands in for part of that liquid and is not all
+ * water, so it counts as a (negative) net change.
+ */
 export function calculateEnrichmentWaterContribution(
-  state: RecipeState,
   enrichmentState: EnrichmentState,
-  flourWeight: number
+  weights: EnrichmentWeights
 ): { totalWater: number; breakdown: string[] } {
   let totalWater = 0;
   const breakdown: string[] = [];
 
-  // Fat contribution
-  if (enrichmentState.fat.enabled) {
-    const fatWeight = flourWeight * enrichmentState.fat.percent / 100;
-    const waterFromFat = fatWeight * ENRICHMENT_WATER_CONTENT[enrichmentState.fat.type];
+  if (weights.fat > 0) {
+    const waterFromFat = weights.fat * ENRICHMENT_WATER_CONTENT[enrichmentState.fat.type];
     totalWater += waterFromFat;
     if (waterFromFat > 0) {
       breakdown.push(`${enrichmentState.fat.type}: ${Math.round(waterFromFat)}g water`);
     }
   }
 
-  // Egg contribution
-  if (enrichmentState.eggs.enabled) {
-    const eggWeight = enrichmentState.eggs.count * 50; // 50g per large egg
-    const waterFromEggs = eggWeight * ENRICHMENT_WATER_CONTENT[enrichmentState.eggs.type];
+  if (weights.eggs > 0) {
+    const waterFromEggs = weights.eggs * ENRICHMENT_WATER_CONTENT[enrichmentState.eggs.type];
     totalWater += waterFromEggs;
     breakdown.push(`Eggs: ${Math.round(waterFromEggs)}g water`);
   }
 
-  // Dairy contribution (replaces portion of water)
-  if (enrichmentState.dairy.enabled) {
-    // Dairy replaces water, so the net water change is based on dairy water content
-    // If using 50% milk at 87% water, and rest is 100% water, net effect is small
-    const baseWater = flourWeight * state.hydration / 100;
-    const dairyPortion = baseWater * enrichmentState.dairy.percentOfLiquid / 100;
-    const waterFromDairy = dairyPortion * ENRICHMENT_WATER_CONTENT[enrichmentState.dairy.type];
-    const waterReplaced = dairyPortion; // This was water
-    const netChange = waterFromDairy - waterReplaced;
+  if (weights.dairy > 0) {
+    const netChange = weights.dairy * ENRICHMENT_WATER_CONTENT[enrichmentState.dairy.type] - weights.dairy;
     totalWater += netChange;
     if (Math.abs(netChange) > 1) {
       breakdown.push(`Dairy: ${netChange > 0 ? '+' : ''}${Math.round(netChange)}g net`);
     }
   }
 
-  // Sweetener contribution
-  if (enrichmentState.sweet.enabled) {
-    const sweetWeight = flourWeight * enrichmentState.sweet.percent / 100;
-    const waterFromSweet = sweetWeight * ENRICHMENT_WATER_CONTENT[enrichmentState.sweet.type];
+  if (weights.sweet > 0) {
+    const waterFromSweet = weights.sweet * ENRICHMENT_WATER_CONTENT[enrichmentState.sweet.type];
     totalWater += waterFromSweet;
     if (waterFromSweet > 0) {
       breakdown.push(`${enrichmentState.sweet.type}: ${Math.round(waterFromSweet)}g water`);
@@ -867,16 +887,12 @@ export function calculateEnrichmentWaterContribution(
   return { totalWater, breakdown };
 }
 
-// Calculate effective hydration considering enrichments
-export function calculateEffectiveHydration(
-  state: RecipeState,
-  enrichmentState: EnrichmentState,
-  flourWeight: number,
-  baseWater: number
-): number {
-  const { totalWater } = calculateEnrichmentWaterContribution(state, enrichmentState, flourWeight);
-  const effectiveWater = baseWater + totalWater;
-  return Math.round((effectiveWater / flourWeight) * 100);
+/** How many eggs the recipe uses: the count asked for, or the most that fit the batch. */
+export function eggsThatFit(enrichmentState: EnrichmentState, totalDough: number): number {
+  if (!enrichmentState.eggs.enabled) return 0;
+  const each = eggWeight(enrichmentState.eggs.type, 1);
+  const mostThatFit = Math.max(0, Math.floor((totalDough * MAX_EGG_SHARE) / each));
+  return Math.max(0, Math.min(enrichmentState.eggs.count, mostThatFit));
 }
 
 // ============================================
@@ -889,29 +905,41 @@ export interface Recipe {
   whiteFlourWeight: number;
   wholeGrainWeight: number;
   wholeGrainPercent: number;
+  /** Everything the hydration slider sets: water plus any milk or cream standing in for it. */
+  liquidWeight: number;
+  /** The water part of that liquid, preferment water included. */
   waterWeight: number;
+  /** The milk or cream part of that liquid. */
+  dairyWeight: number;
   saltWeight: number;
   yeastWeight: number;
   starterFlourContrib: number;
   starterWaterContrib: number;
   calculatedWaterTemp: number;
+  preferment: PrefermentIngredients | null;
   enrichmentWater: { totalWater: number; breakdown: string[] };
   effectiveHydration: number;
-  enrichments: { fat: number; eggs: number; sweet: number };
+  /** How many eggs the recipe uses. Fewer than asked for when they would not fit the batch. */
+  eggCount: number;
+  enrichments: EnrichmentWeights;
 }
 
 export function calculateRecipe(state: RecipeState, enrichmentState: EnrichmentState, flourBlend: FlourEntry[]): Recipe {
   const totalDough = state.numLoaves * state.loafWeight;
 
-  // Calculate base flour weight
-  let yeastContribution = state.yeastPercent / 100;
-  if (state.yeastType !== 'starter') {
-    // Commercial yeast is much smaller percentage
-    yeastContribution = state.yeastPercent / 100;
-  }
+  // Everything that scales with the flour, as a share of it. The stated total is all of it:
+  // flour, liquid, salt, yeast or starter, and any butter, oil or sweetener.
+  const yeastContribution = state.yeastPercent / 100;
+  const fatShare = enrichmentState.fat.enabled ? enrichmentState.fat.percent / 100 : 0;
+  const sweetShare = enrichmentState.sweet.enabled ? enrichmentState.sweet.percent / 100 : 0;
+  const perFlour = 1 + state.hydration / 100 + state.salt / 100 + yeastContribution + fatShare + sweetShare;
 
-  const flourWeight = Math.round(totalDough / (1 + state.hydration / 100 + state.salt / 100 + yeastContribution));
-  let waterWeight = Math.round(flourWeight * state.hydration / 100);
+  // Eggs come as a count, not a share of the flour, so their grams come off the total first.
+  const eggCount = eggsThatFit(enrichmentState, totalDough);
+  const eggsWeight = eggWeight(enrichmentState.eggs.type, eggCount);
+
+  const flourWeight = Math.max(0, Math.round((totalDough - eggsWeight) / perFlour));
+  const liquidWeight = Math.round(flourWeight * state.hydration / 100);
   const saltWeight = Math.round(flourWeight * state.salt / 100);
   const yeastWeight = Math.round(flourWeight * state.yeastPercent / 100);
 
@@ -932,16 +960,28 @@ export function calculateRecipe(state: RecipeState, enrichmentState: EnrichmentS
   // Calculate water temperature
   const calculatedWaterTemp = calculateWaterTemp(state);
 
-  // Calculate enrichment contributions
-  const enrichmentWater = calculateEnrichmentWaterContribution(state, enrichmentState, flourWeight);
-  const effectiveHydration = calculateEffectiveHydration(state, enrichmentState, flourWeight, waterWeight);
+  const preferment = calculatePrefermentIngredients(state, flourWeight);
 
-  // Calculate enrichment weights
-  const enrichments = {
-    fat: enrichmentState.fat.enabled ? Math.round(flourWeight * enrichmentState.fat.percent / 100) : 0,
-    eggs: enrichmentState.eggs.enabled ? enrichmentState.eggs.count * 50 : 0,
-    sweet: enrichmentState.sweet.enabled ? Math.round(flourWeight * enrichmentState.sweet.percent / 100) : 0
+  // Milk or cream stands in for part of the liquid, so it adds no weight. A preferment is
+  // mixed with water, so the dairy can only replace the liquid left for the final dough.
+  const liquidLeft = Math.max(0, liquidWeight - (preferment ? preferment.water : 0));
+  const dairyWeight = enrichmentState.dairy.enabled
+    ? Math.min(Math.round(liquidWeight * enrichmentState.dairy.percentOfLiquid / 100), liquidLeft)
+    : 0;
+  const waterWeight = liquidWeight - dairyWeight;
+
+  const enrichments: EnrichmentWeights = {
+    fat: Math.round(flourWeight * fatShare),
+    eggs: eggsWeight,
+    dairy: dairyWeight,
+    sweet: Math.round(flourWeight * sweetShare)
   };
+
+  // Hydration with the water in the enrichments counted
+  const enrichmentWater = calculateEnrichmentWaterContribution(enrichmentState, enrichments);
+  const effectiveHydration = flourWeight > 0
+    ? Math.round(((liquidWeight + enrichmentWater.totalWater) / flourWeight) * 100)
+    : 0;
 
   return {
     totalDough,
@@ -949,14 +989,18 @@ export function calculateRecipe(state: RecipeState, enrichmentState: EnrichmentS
     whiteFlourWeight,
     wholeGrainWeight,
     wholeGrainPercent,
+    liquidWeight,
     waterWeight,
+    dairyWeight,
     saltWeight,
     yeastWeight,
     starterFlourContrib,
     starterWaterContrib,
     calculatedWaterTemp,
+    preferment,
     enrichmentWater,
     effectiveHydration,
+    eggCount,
     enrichments
   };
 }
@@ -1008,6 +1052,11 @@ export function formatPrefermentWeight(weight: number): string {
   return `${typeof weight === 'number' && weight < 1 ? weight.toFixed(1) : Math.round(weight)}g`;
 }
 
+/** A share of the flour as the list prints it: one decimal from 10% up, two below. */
+export function printedPercent(percent: number): number {
+  return percent >= 10 ? Math.round(percent * 10) / 10 : Math.round(percent * 100) / 100;
+}
+
 export interface IngredientRow {
   name: string;
   weight: number;
@@ -1027,11 +1076,11 @@ export function ingredientRows(
 
   // Calculate remaining flour and water after preferment
   let finalFlour = recipe.flourWeight;
-  let finalWater = recipe.waterWeight;
+  let finalWater = recipe.liquidWeight;
 
   if (state.prefermentType !== 'none' && prefIngredients) {
     finalFlour = recipe.flourWeight - prefIngredients.flour;
-    finalWater = recipe.waterWeight - prefIngredients.water;
+    finalWater = recipe.liquidWeight - prefIngredients.water;
   }
 
   if (state.wholeGrain > 0) {
@@ -1059,12 +1108,25 @@ export function ingredientRows(
     });
   }
 
-  ingredients.push({
-    name: 'Water',
-    weight: finalWater,
-    percent: state.hydration,
-    note: state.prefermentType !== 'none' ? '(adjust for preferment)' : ''
-  });
+  // Milk or cream takes its share of the liquid, so the water row is what is left.
+  const waterRowWeight = finalWater - recipe.dairyWeight;
+  if (waterRowWeight > 0 || recipe.dairyWeight === 0) {
+    ingredients.push({
+      name: 'Water',
+      weight: waterRowWeight,
+      percent: recipe.dairyWeight === 0 ? state.hydration : printedPercent((waterRowWeight / recipe.flourWeight) * 100),
+      note: state.prefermentType !== 'none' ? '(adjust for preferment)' : ''
+    });
+  }
+
+  if (recipe.dairyWeight > 0) {
+    ingredients.push({
+      name: DAIRY_NAMES[enrichmentState.dairy.type] || 'Milk',
+      weight: recipe.dairyWeight,
+      percent: printedPercent((recipe.dairyWeight / recipe.flourWeight) * 100),
+      note: ''
+    });
+  }
 
   ingredients.push({
     name: 'Salt',
@@ -1112,14 +1174,14 @@ export function ingredientRows(
     });
   }
 
-  if (enrichmentState.eggs.enabled) {
+  if (enrichmentState.eggs.enabled && recipe.eggCount > 0) {
     const eggName = enrichmentState.eggs.type === 'whole' ? 'Eggs' :
                    enrichmentState.eggs.type === 'yolks' ? 'Egg Yolks' : 'Egg Whites';
     ingredients.push({
-      name: `${eggName} (${enrichmentState.eggs.count})`,
+      name: `${eggName} (${recipe.eggCount})`,
       weight: recipe.enrichments.eggs,
-      percent: Math.round((recipe.enrichments.eggs / recipe.flourWeight) * 100),
-      note: ''
+      percent: printedPercent((recipe.enrichments.eggs / recipe.flourWeight) * 100),
+      note: recipe.eggCount < enrichmentState.eggs.count ? '(the most that fit this batch)' : ''
     });
   }
 
@@ -1159,7 +1221,7 @@ export function starterHydrationNote(state: RecipeState): string | null {
 /** The text the "Copy" button puts on the clipboard. */
 export function recipeCopyText(state: RecipeState, recipe: Recipe): string {
   const styleName = state.style.charAt(0).toUpperCase() + state.style.slice(1);
-  return `${styleName} Bread Recipe\n\nMakes ${state.numLoaves} loaves\n\nIngredients:\n- Flour: ${recipe.flourWeight}g (100%)\n- Water: ${recipe.waterWeight}g (${state.hydration}%)\n- Salt: ${recipe.saltWeight}g (${state.salt}%)\n- ${state.yeastType === 'starter' ? 'Starter' : 'Yeast'}: ${recipe.yeastWeight}g (${state.yeastPercent}%)\n\nInstructions:\n${state.instructions.map((inst, i) => `${i + 1}. ${inst}`).join('\n')}\n\nGenerated by The Dough Formula - thedoughformula.com`;
+  return `${styleName} Bread Recipe\n\nMakes ${state.numLoaves} loaves\n\nIngredients:\n- Flour: ${recipe.flourWeight}g (100%)\n- Water: ${recipe.liquidWeight}g (${state.hydration}%)\n- Salt: ${recipe.saltWeight}g (${state.salt}%)\n- ${state.yeastType === 'starter' ? 'Starter' : 'Yeast'}: ${recipe.yeastWeight}g (${state.yeastPercent}%)\n\nInstructions:\n${state.instructions.map((inst, i) => `${i + 1}. ${inst}`).join('\n')}\n\nGenerated by The Dough Formula - thedoughformula.com`;
 }
 
 // ============================================

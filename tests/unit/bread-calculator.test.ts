@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { hydrationWithStarter, starterHydrationNote } from '../../src/lib/bread-calculator';
+import {
+  BREAD_STYLES,
+  applyStyle,
+  createDefaultEnrichments,
+  createDefaultState,
+  eggWeight,
+  hydrationWithStarter,
+  starterHydrationNote,
+  type EnrichmentState,
+} from '../../src/lib/bread-calculator';
 import { printed, row, stateWith } from './helpers/bread-calculator';
 
 const sumsToTotal = (p: ReturnType<typeof printed>) => expect(Math.abs(p.rowsTotal - p.recipe.totalDough)).toBeLessThanOrEqual(2);
@@ -81,5 +90,92 @@ describe('hydration with the starter counted', () => {
 
   it('has no em dash', () => {
     expect(starterHydrationNote(stateWith())).not.toMatch(/[–—]|--/);
+  });
+});
+
+describe('enrichments are inside the stated total', () => {
+  const brioche = () => {
+    const state = createDefaultState();
+    const style = BREAD_STYLES.find((s) => s.id === 'brioche')!;
+    applyStyle(state, { ...style, style: style.id });
+    return state;
+  };
+  const enrich = (change: (e: EnrichmentState) => void): EnrichmentState => {
+    const e = createDefaultEnrichments();
+    change(e);
+    return e;
+  };
+
+  it('audit example: Brioche, 2 x 900 g, butter 25%, 4 eggs, sugar 8% adds up to 1800 g (was 2376 g)', () => {
+    const p = printed(brioche(), enrich((e) => {
+      e.fat = { enabled: true, type: 'butter', percent: 25 };
+      e.eggs = { enabled: true, type: 'whole', count: 4 };
+      e.sweet = { enabled: true, type: 'sugar', percent: 8 };
+    }));
+    expect(p.recipe.totalDough).toBe(1800);
+    // 1800 g less 200 g of eggs, over 1 + 55% + 1.8% + 1.2% + 25% + 8%.
+    expect(p.recipe.flourWeight).toBe(Math.round(1600 / 1.91));
+    expect(row(p, 'Butter')?.weight).toBe(Math.round(838 * 0.25));
+    expect(row(p, 'Eggs (4)')?.weight).toBe(200);
+    expect(row(p, 'Sugar')?.weight).toBe(Math.round(838 * 0.08));
+    sumsToTotal(p);
+  });
+
+  it('adds nothing to the flour when no enrichment is on', () => {
+    const plain = printed(stateWith());
+    const off = printed(stateWith(), enrich((e) => {
+      e.fat.percent = 25;
+      e.sweet.percent = 20;
+      e.eggs.count = 6;
+    }));
+    expect(off.rows).toEqual(plain.rows);
+    expect(plain.recipe.flourWeight).toBe(Math.round(1800 / 1.97));
+  });
+
+  it('milk takes its share of the liquid and gets its own row', () => {
+    const state = stateWith({ yeastType: 'instant', yeastPercent: 1, wholeGrain: 0, hydration: 62, salt: 1.8 });
+    const plain = printed(state);
+    const p = printed(state, enrich((e) => { e.dairy = { enabled: true, type: 'whole-milk', percentOfLiquid: 50 }; }));
+    const liquid = row(plain, 'Water')!.weight;
+    expect(p.recipe.flourWeight).toBe(plain.recipe.flourWeight);
+    expect(row(p, 'Whole Milk')?.weight).toBe(Math.round(liquid / 2));
+    expect(row(p, 'Water')!.weight + row(p, 'Whole Milk')!.weight).toBe(liquid);
+    expect(row(p, 'Water')?.percent).toBeCloseTo(31, 0);
+    sumsToTotal(p);
+  });
+
+  it('cream for all of the liquid leaves no water row', () => {
+    const p = printed(stateWith(), enrich((e) => { e.dairy = { enabled: true, type: 'cream', percentOfLiquid: 100 }; }));
+    expect(row(p, 'Water')).toBeUndefined();
+    expect(row(p, 'Heavy Cream')?.weight).toBe(p.recipe.liquidWeight);
+    sumsToTotal(p);
+  });
+
+  it('a whole egg, a yolk and a white weigh 50 g, 17 g and 33 g', () => {
+    expect(eggWeight('whole', 2)).toBe(100);
+    expect(eggWeight('yolks', 2)).toBe(34);
+    expect(eggWeight('whites', 2)).toBe(66);
+    const p = printed(stateWith(), enrich((e) => { e.eggs = { enabled: true, type: 'yolks', count: 2 }; }));
+    expect(row(p, 'Egg Yolks (2)')?.weight).toBe(34);
+    sumsToTotal(p);
+  });
+
+  it('uses the most eggs that fit when the count asked for is over half the dough, and says so', () => {
+    const p = printed(stateWith({ numLoaves: 1, loafWeight: 200 }), enrich((e) => { e.eggs = { enabled: true, type: 'whole', count: 4 }; }));
+    const eggs = row(p, 'Eggs (2)')!;
+    expect(eggs.weight).toBe(100);
+    expect(eggs.note).toBe('(the most that fit this batch)');
+    expect(p.recipe.flourWeight).toBeGreaterThan(0);
+    sumsToTotal(p);
+  });
+
+  it('effective hydration counts the water in the milk, butter and eggs on the list', () => {
+    const p = printed(brioche(), enrich((e) => {
+      e.fat = { enabled: true, type: 'butter', percent: 25 };
+      e.eggs = { enabled: true, type: 'whole', count: 4 };
+      e.dairy = { enabled: true, type: 'whole-milk', percentOfLiquid: 100 };
+    }));
+    const water = row(p, 'Whole Milk')!.weight * 0.87 + row(p, 'Butter')!.weight * 0.15 + 200 * 0.75;
+    expect(p.recipe.effectiveHydration).toBe(Math.round((water / p.recipe.flourWeight) * 100));
   });
 });
