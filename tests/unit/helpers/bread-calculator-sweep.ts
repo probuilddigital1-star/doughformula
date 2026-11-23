@@ -8,6 +8,7 @@ import {
   LEVAIN_SEED_PERCENT,
   YEAST_NAMES,
   applyStyle,
+  applyStyleEnrichments,
   convertToOz,
   createDefaultEnrichments,
   createDefaultState,
@@ -45,17 +46,20 @@ const PREFERMENTS: Array<{ type: PrefermentType; percent: number }> = [
 ];
 const SIZES: Array<[loaves: number, weight: number]> = [[1, 200], [1, 500], [2, 900], [3, 350], [12, 2000]];
 
-function enrichmentSets(): Array<{ name: string; make: () => EnrichmentState }> {
-  const set = (name: string, change: (e: EnrichmentState) => void) => ({
+function enrichmentSets(): Array<{ name: string; make: (styleId: string) => EnrichmentState }> {
+  const set = (name: string, change: (e: EnrichmentState, styleId: string) => void) => ({
     name,
-    make: () => {
+    make: (styleId: string) => {
       const e = createDefaultEnrichments();
-      change(e);
+      change(e, styleId);
       return e;
     },
   });
   return [
     set('none', () => {}),
+    // What picking the style card switches on: butter, eggs, milk and sugar for brioche,
+    // olive oil for focaccia, butter for a sandwich loaf, nothing for the rest.
+    set("the style's own", (e, styleId) => applyStyleEnrichments(e, styleId)),
     set('butter 5%', (e) => { e.fat = { enabled: true, type: 'butter', percent: 5 }; }),
     set('butter 25%', (e) => { e.fat = { enabled: true, type: 'butter', percent: 25 }; }),
     set('oil 5%', (e) => { e.fat = { enabled: true, type: 'oil', percent: 5 }; }),
@@ -100,7 +104,7 @@ export function* sweepCases(): Generator<SweepCase> {
                 `${style.id}, ${numLoaves} x ${loafWeight} g, ${state.hydration}% hydration, ${state.wholeGrain}% whole grain, ${state.salt}% salt, ` +
                 `${state.yeastType} ${state.yeastPercent}%${state.yeastType === 'starter' ? ` at ${state.starterHydration}%` : ''}, ` +
                 `${pref.type === 'none' ? 'no preferment' : `${pref.type} ${pref.percent}%`}, enrichments: ${en.name}`;
-              yield { label, state, enrichments: en.make() };
+              yield { label, state, enrichments: en.make(style.id) };
             }
           }
         }

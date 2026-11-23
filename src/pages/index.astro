@@ -1533,6 +1533,14 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
       `).join('');
     }
 
+    // A style's eggs follow the batch size, so the count field shows the count in use
+    if (enrichmentState.eggs.enabled && enrichmentState.eggs.percentOfFlour && enrichmentState.eggs.count !== recipe.eggCountAsked) {
+      enrichmentState.eggs.count = recipe.eggCountAsked;
+      const eggCountEl = document.getElementById('egg-count') as HTMLInputElement | null;
+      if (eggCountEl) eggCountEl.value = String(recipe.eggCountAsked);
+      updateEggWeight();
+    }
+
     // With a starter, say what the hydration is once the starter's flour and water count
     const starterNoteEl = document.getElementById('starter-hydration-note');
     if (starterNoteEl) {
@@ -1717,6 +1725,10 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
     if (typeof updatePrefermentUI === 'function') {
       updatePrefermentUI();
     }
+
+    // The Effective Hydration box follows every change, not only the Enrichments tab's own:
+    // the hydration slider, the batch size and the style cards all move it
+    updateEnrichmentDisplay();
   }
 
   // Update yeast type button active states
@@ -1791,6 +1803,11 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
       (document.getElementById('whole-grain-slider') as HTMLInputElement).value = String(state.wholeGrain);
       (document.getElementById('salt-slider') as HTMLInputElement).value = String(state.salt);
       (document.getElementById('ddt-slider') as HTMLInputElement).value = String(state.ddt);
+
+      // The style's own enrichments go on (butter, eggs, milk and sugar for brioche, olive
+      // oil for focaccia, butter for a sandwich loaf), and any others go off
+      calc.applyStyleEnrichments(enrichmentState, state.style);
+      syncEnrichmentControls();
 
       // Update yeast type buttons
       updateYeastTypeButtons();
@@ -2252,6 +2269,33 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
     }
   }
 
+  // Puts the Enrichments tab's switches and fields in line with enrichmentState, after a
+  // style card set it
+  function syncEnrichmentControls() {
+    const set = (toggleId: string, controlsId: string, enabled: boolean) => {
+      const toggle = document.getElementById(toggleId) as HTMLInputElement | null;
+      if (toggle) toggle.checked = enabled;
+      document.getElementById(controlsId)?.classList.toggle('hidden', !enabled);
+    };
+    const value = (id: string, v: string | number) => {
+      const el = document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null;
+      if (el) el.value = String(v);
+    };
+    set('enrichment-fat-toggle', 'fat-controls', enrichmentState.fat.enabled);
+    value('fat-type-select', enrichmentState.fat.type);
+    value('fat-percent', enrichmentState.fat.percent);
+    set('enrichment-egg-toggle', 'egg-controls', enrichmentState.eggs.enabled);
+    value('egg-type-select', enrichmentState.eggs.type);
+    value('egg-count', enrichmentState.eggs.count);
+    set('enrichment-dairy-toggle', 'dairy-controls', enrichmentState.dairy.enabled);
+    value('dairy-type-select', enrichmentState.dairy.type);
+    value('dairy-percent', enrichmentState.dairy.percentOfLiquid);
+    set('enrichment-sweet-toggle', 'sweet-controls', enrichmentState.sweet.enabled);
+    value('sweet-type-select', enrichmentState.sweet.type);
+    value('sweet-percent', enrichmentState.sweet.percent);
+    updateEggWeight();
+  }
+
   document.getElementById('egg-type-select')?.addEventListener('change', (e) => {
     enrichmentState.eggs.type = (e.target as HTMLSelectElement).value;
     updateEggWeight();
@@ -2261,6 +2305,8 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
 
   document.getElementById('egg-count')?.addEventListener('input', (e) => {
     enrichmentState.eggs.count = parseInt((e.target as HTMLInputElement).value) || 2;
+    // A typed count stays put. Until then a style's eggs follow the batch size.
+    enrichmentState.eggs.percentOfFlour = null;
     updateEggWeight();
     updateEnrichmentDisplay();
     updateUI();
@@ -2335,7 +2381,7 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
       }
 
       const breakdownEl = document.getElementById('enrichment-breakdown');
-      if (breakdownEl && recipe.enrichmentWater.breakdown.length > 0) {
+      if (breakdownEl) {
         breakdownEl.innerHTML = recipe.enrichmentWater.breakdown.join(' · ');
       }
     }

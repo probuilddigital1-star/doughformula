@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   BREAD_STYLES,
   applyStyle,
+  applyStyleEnrichments,
   createDefaultEnrichments,
   createDefaultState,
   eggWeight,
@@ -346,5 +347,85 @@ describe('flour blends from the Flour tab', () => {
     expect(isValidBlend([{ type: 'bread', percent: 60 }])).toBe(false);
     const p = printed(stateWith(), undefined, [{ type: 'bread', percent: 100 }, { type: 'whole-wheat', percent: 100 }, { type: 'rye-light', percent: 50 }]);
     expect(p.rows).toEqual(printed(stateWith()).rows);
+  });
+});
+
+describe('style cards switch on the enrichments their steps call for', () => {
+  const card = (id: string, over: Partial<RecipeState> = {}) => {
+    const state = createDefaultState();
+    const style = BREAD_STYLES.find((s) => s.id === id)!;
+    applyStyle(state, { ...style, style: style.id });
+    const enrichments = createDefaultEnrichments();
+    applyStyleEnrichments(enrichments, id);
+    return printed(Object.assign(state, over), enrichments);
+  };
+
+  it('Brioche, 2 x 900 g: milk, butter 25%, 3 eggs and sugar 8% are on the list (was flour, water, salt, yeast)', () => {
+    const p = card('brioche');
+    expect(p.rows.map((r) => [r.name, r.weight, r.percent])).toEqual([
+      ['Flour', 864, 100],
+      ['Whole Milk', 475, 55],
+      ['Salt', 16, 1.8],
+      ['Instant Yeast', 10, 1.2],
+      ['Butter', 216, 25],
+      ['Eggs (3)', 150, 17.4],
+      ['Sugar', 69, 8],
+    ]);
+    expect(p.rowsTotal).toBe(1800);
+    // Milk at 87% water, butter at 15%, eggs at 75%.
+    expect(p.recipe.effectiveHydration).toBe(65);
+  });
+
+  it('the Brioche egg count follows the batch size, about one egg for 250 g of flour', () => {
+    expect(card('brioche', { numLoaves: 1, loafWeight: 500 }).recipe.eggCount).toBe(1);
+    expect(card('brioche', { numLoaves: 2, loafWeight: 900 }).recipe.eggCount).toBe(3);
+    expect(card('brioche', { numLoaves: 4, loafWeight: 900 }).recipe.eggCount).toBe(7);
+    expect(card('brioche', { numLoaves: 1, loafWeight: 200 }).recipe.eggCount).toBe(1);
+    for (const [numLoaves, loafWeight] of [[1, 200], [1, 500], [2, 900], [4, 900], [12, 2000]]) sumsToTotal(card('brioche', { numLoaves, loafWeight }));
+  });
+
+  it('a typed egg count stays put', () => {
+    const enrichments = createDefaultEnrichments();
+    applyStyleEnrichments(enrichments, 'brioche');
+    enrichments.eggs.count = 5;
+    enrichments.eggs.percentOfFlour = null;
+    const state = card('brioche').state;
+    expect(printed(state, enrichments).recipe.eggCount).toBe(5);
+    expect(printed({ ...state, numLoaves: 4 }, enrichments).recipe.eggCount).toBe(5);
+  });
+
+  it('Focaccia gets 5% olive oil and a Sandwich Loaf 5% butter', () => {
+    expect(row(card('focaccia'), 'Oil')).toMatchObject({ percent: 5 });
+    expect(row(card('sandwich'), 'Butter')).toMatchObject({ percent: 5 });
+    sumsToTotal(card('focaccia'));
+    sumsToTotal(card('sandwich'));
+  });
+
+  it('every style lists what its own steps tell the baker to add', () => {
+    const calledFor: Array<[RegExp, RegExp]> = [
+      [/\b(butter|oil)\b/i, /^(Butter|Oil)$/],
+      [/\beggs\b/i, /^Egg/],
+      [/\bmilk\b/i, /Milk$/],
+      [/\b(sugar|honey)\b/i, /^(Sugar|Honey)$/],
+    ];
+    for (const style of BREAD_STYLES) {
+      // Shaping and baking steps (an oiled pan, an egg wash) are not dough ingredients.
+      const mixing = style.instructions.filter((step) => /^(mix|add|gradually add)\b/i.test(step)).join(' ');
+      const p = card(style.id);
+      for (const [inSteps, onList] of calledFor) {
+        expect(p.rows.some((r) => onList.test(r.name)), `${style.id}: ${inSteps}`).toBe(inSteps.test(mixing));
+      }
+    }
+  });
+
+  it('picking another style switches them off again', () => {
+    const enrichments = createDefaultEnrichments();
+    applyStyleEnrichments(enrichments, 'brioche');
+    applyStyleEnrichments(enrichments, 'sourdough');
+    expect(enrichments).toEqual(createDefaultEnrichments());
+  });
+
+  it('no step still names a spoon measure for something the list now weighs', () => {
+    for (const style of BREAD_STYLES) expect(style.instructions.join(' '), style.id).not.toMatch(/tbsp/);
   });
 });

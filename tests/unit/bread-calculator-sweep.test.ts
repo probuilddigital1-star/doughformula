@@ -63,8 +63,8 @@ describe('bread calculator sweep: style x preferment x yeast x starter x enrichm
   }, 120_000);
 
   it('covers the whole grid', () => {
-    // 8 styles x 4 basics x 18 yeast settings x 13 preferment settings x 5 sizes x 9 enrichment sets
-    expect(SWEEP_SIZE).toBe(8 * 4 * 18 * 13 * 5 * 9);
+    // 8 styles x 4 basics x 18 yeast settings x 13 preferment settings x 5 sizes x 10 enrichment sets
+    expect(SWEEP_SIZE).toBe(8 * 4 * 18 * 13 * 5 * 10);
     expect(sweep.cases).toBe(SWEEP_SIZE);
   });
 
@@ -422,7 +422,7 @@ describe('page wiring that changes the numbers (checked in the page source)', ()
     expect(src).not.toMatch(/class="flour-preset-btn preset-pill/);
   });
 
-  it.fails('KNOWN ISSUE O: the effective hydration box is refreshed whenever the recipe is', () => {
+  it('the effective hydration box is refreshed whenever the recipe is (was KNOWN ISSUE O)', () => {
     const updateUI = src.slice(src.indexOf('function updateUI() {'), src.indexOf('// Update yeast type button active states'));
     expect(updateUI).toContain('updateEnrichmentDisplay()');
   });

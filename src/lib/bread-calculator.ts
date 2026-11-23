@@ -81,10 +81,21 @@ export function createDefaultState(): RecipeState {
 // Bread styles
 // ============================================
 
+/** The enrichments a style's own steps call for. Eggs are a share of the flour here, so the
+ *  count follows the batch size. */
+export interface StyleEnrichments {
+  fat?: { type: string; percent: number };
+  eggs?: { type: string; percentOfFlour: number };
+  dairy?: { type: string; percentOfLiquid: number };
+  sweet?: { type: string; percent: number };
+}
+
 export interface BreadStyle {
   id: string;
   name: string;
   description: string;
+  /** Switched on with the style, so the list holds what the steps tell the baker to add. */
+  enrichments?: StyleEnrichments;
   hydration: number;
   salt: number;
   yeastType: YeastType;
@@ -148,8 +159,10 @@ export const BREAD_STYLES: BreadStyle[] = [
     wholeGrain: 0,
     flour: 'Bread Flour or All-Purpose',
     waterTemp: '80-85°F / 27-29°C',
+    // Olive oil in the dough, the usual 5% of the flour
+    enrichments: { fat: { type: 'oil', percent: 5 } },
     instructions: [
-      'Mix flour, water, yeast, and 2 tbsp olive oil',
+      'Mix flour, water, yeast, and the olive oil',
       'Add salt, mix until smooth and elastic',
       'Stretch and fold every 30 min for 1.5 hours',
       'Pour into oiled pan, dimple with fingers',
@@ -169,9 +182,11 @@ export const BREAD_STYLES: BreadStyle[] = [
     wholeGrain: 0,
     flour: 'Bread Flour or All-Purpose',
     waterTemp: '95-105°F / 35-40°C',
+    // A soft sandwich loaf takes about 5% butter (2 tbsp for one loaf)
+    enrichments: { fat: { type: 'butter', percent: 5 } },
     instructions: [
       'Dissolve yeast in warm water, let bloom 5 minutes',
-      'Mix flour, salt, and 2 tbsp butter or oil',
+      'Mix flour, salt, and the butter (or oil)',
       'Add yeast mixture, knead 8-10 minutes',
       'Bulk ferment 1-1.5 hours until doubled',
       'Shape into loaf, place in greased pan',
@@ -211,6 +226,14 @@ export const BREAD_STYLES: BreadStyle[] = [
     wholeGrain: 0,
     flour: 'All-Purpose Flour',
     waterTemp: '80-85°F / 27-29°C',
+    // The steps name butter at 25% and sugar at 8%. The liquid is all milk, and eggs come to
+    // about a fifth of the flour: one large egg for every 250 g.
+    enrichments: {
+      fat: { type: 'butter', percent: 25 },
+      eggs: { type: 'whole', percentOfFlour: 20 },
+      dairy: { type: 'whole-milk', percentOfLiquid: 100 },
+      sweet: { type: 'sugar', percent: 8 }
+    },
     instructions: [
       'Mix flour, sugar (8%), eggs, milk, and yeast',
       'Knead until smooth, about 10 minutes',
@@ -477,7 +500,9 @@ export const DAIRY_NAMES: Record<string, string> = {
 // Enrichment state
 export interface EnrichmentState {
   fat: { enabled: boolean; type: string; percent: number };
-  eggs: { enabled: boolean; type: string; count: number };
+  /** `percentOfFlour` is set when a style switched the eggs on: the count then follows the
+   *  batch size. Typing a count clears it. */
+  eggs: { enabled: boolean; type: string; count: number; percentOfFlour?: number | null };
   dairy: { enabled: boolean; type: string; percentOfLiquid: number };
   sweet: { enabled: boolean; type: string; percent: number };
 }
@@ -489,6 +514,18 @@ export function createDefaultEnrichments(): EnrichmentState {
     dairy: { enabled: false, type: 'whole-milk', percentOfLiquid: 50 },
     sweet: { enabled: false, type: 'sugar', percent: 5 }
   };
+}
+
+/** Picking a style card: the enrichments its steps call for go on, and any others go off. */
+export function applyStyleEnrichments(enrichmentState: EnrichmentState, styleId: string): void {
+  const wanted = BREAD_STYLES.find((style) => style.id === styleId)?.enrichments ?? {};
+  const fresh = createDefaultEnrichments();
+  enrichmentState.fat = wanted.fat ? { enabled: true, ...wanted.fat } : fresh.fat;
+  enrichmentState.eggs = wanted.eggs
+    ? { enabled: true, type: wanted.eggs.type, count: fresh.eggs.count, percentOfFlour: wanted.eggs.percentOfFlour }
+    : fresh.eggs;
+  enrichmentState.dairy = wanted.dairy ? { enabled: true, ...wanted.dairy } : fresh.dairy;
+  enrichmentState.sweet = wanted.sweet ? { enabled: true, ...wanted.sweet } : fresh.sweet;
 }
 
 // Multi-flour state
@@ -1095,12 +1132,21 @@ export function calculateEnrichmentWaterContribution(
   return { totalWater, breakdown };
 }
 
-/** How many eggs the recipe uses: the count asked for, or the most that fit the batch. */
-export function eggsThatFit(enrichmentState: EnrichmentState, totalDough: number): number {
-  if (!enrichmentState.eggs.enabled) return 0;
+/**
+ * How many eggs the recipe asks for and how many it uses. The count asked for is the one
+ * typed in, or, when a style set the eggs as a share of the flour, the nearest whole number
+ * of eggs for this batch (at least one). The recipe uses that many, or the most that fit.
+ * `perFlour` is everything else in the dough per gram of flour.
+ */
+export function eggsThatFit(enrichmentState: EnrichmentState, totalDough: number, perFlour: number): { asked: number; used: number } {
+  if (!enrichmentState.eggs.enabled) return { asked: 0, used: 0 };
   const each = eggWeight(enrichmentState.eggs.type, 1);
+  const share = (enrichmentState.eggs.percentOfFlour ?? 0) / 100;
+  const asked = share > 0
+    ? Math.max(1, Math.round((share * totalDough) / (perFlour + share) / each))
+    : enrichmentState.eggs.count;
   const mostThatFit = Math.max(0, Math.floor((totalDough * MAX_EGG_SHARE) / each));
-  return Math.max(0, Math.min(enrichmentState.eggs.count, mostThatFit));
+  return { asked, used: Math.max(0, Math.min(asked, mostThatFit)) };
 }
 
 // ============================================
@@ -1141,6 +1187,8 @@ export interface Recipe {
   effectiveHydration: number;
   /** How many eggs the recipe uses. Fewer than asked for when they would not fit the batch. */
   eggCount: number;
+  /** How many eggs were asked for: the count typed in, or the style's share of the flour. */
+  eggCountAsked: number;
   enrichments: EnrichmentWeights;
 }
 
@@ -1169,7 +1217,7 @@ export function calculateRecipe(state: RecipeState, enrichmentState: EnrichmentS
   const perFlour = 1 + state.hydration / 100 + state.salt / 100 + yeastContribution + fatShare + sweetShare;
 
   // Eggs come as a count, not a share of the flour, so their grams come off the total first.
-  const eggCount = eggsThatFit(enrichmentState, totalDough);
+  const { asked: eggCountAsked, used: eggCount } = eggsThatFit(enrichmentState, totalDough, perFlour);
   const eggsWeight = eggWeight(enrichmentState.eggs.type, eggCount);
 
   const shares = flourShares(state, flourBlend);
@@ -1273,6 +1321,7 @@ export function calculateRecipe(state: RecipeState, enrichmentState: EnrichmentS
       enrichmentWater,
       effectiveHydration,
       eggCount,
+      eggCountAsked,
       enrichments,
       listed
     };
@@ -1478,7 +1527,7 @@ export function ingredientRows(
       name: `${eggName} (${recipe.eggCount})`,
       weight: recipe.enrichments.eggs,
       percent: printedPercent((recipe.enrichments.eggs / recipe.flourWeight) * 100),
-      note: recipe.eggCount < enrichmentState.eggs.count ? '(the most that fit this batch)' : ''
+      note: recipe.eggCount < recipe.eggCountAsked ? '(the most that fit this batch)' : ''
     });
   }
 
