@@ -391,6 +391,14 @@ export function createDefaultFlourBlend(): FlourEntry[] {
   ];
 }
 
+/** The blend the Whole Grain slider and the style cards stand for: the main flour plus that
+ *  share of whole wheat. */
+export function blendForWholeGrain(percent: number, baseFlour = 'bread'): FlourEntry[] {
+  if (percent >= 100) return [{ type: 'whole-wheat', percent: 100 }];
+  if (percent > 0) return [{ type: baseFlour, percent: 100 - percent }, { type: 'whole-wheat', percent }];
+  return [{ type: baseFlour, percent: 100 }];
+}
+
 // ============================================
 // Temperature
 // ============================================

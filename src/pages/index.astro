@@ -12,13 +12,19 @@ import {
   HYDRATION_MAX,
   HYDRATION_MIN,
   LOAF_WEIGHT_MAX,
+  blendForWholeGrain,
+  calculateRecipe,
   calculateWaterTemp,
+  createDefaultEnrichments,
   createDefaultState,
   estimateFermentationTimes,
   formatTemp,
+  formatWeight,
+  ingredientRows,
   starterHydrationNote,
   waterTempFormulaText,
   waterTempText,
+  yeastSliderRange,
 } from '../lib/bread-calculator';
 
 // 750 covers the common 375-412px phones at 1.75 to 2x; 1080 covers 3x phones and tablets.
@@ -67,6 +73,14 @@ const starterNoteOnLoad = starterHydrationNote(defaultState);
 // The same goes for the water temperature: the server HTML shows what the script will.
 const waterTempOnLoad = calculateWaterTemp(defaultState);
 const timesOnLoad = estimateFermentationTimes(defaultState);
+// And for the recipe itself. The whole default recipe is in the server HTML, built by the
+// code the script runs, so a plain visit has nothing to work out or draw on load. The script
+// renders from the first change on.
+const enrichmentsOnLoad = createDefaultEnrichments();
+const blendOnLoad = blendForWholeGrain(defaultState.wholeGrain);
+const recipeOnLoad = calculateRecipe(defaultState, enrichmentsOnLoad, blendOnLoad);
+const rowsOnLoad = ingredientRows(defaultState, enrichmentsOnLoad, recipeOnLoad);
+const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
 ---
 
 <Layout>
@@ -343,7 +357,7 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
                       <span id="yeast-percent-label">Starter Amount</span>
                       <span class="font-medium" id="yeast-percent-value">20%</span>
                     </label>
-                    <input type="range" id="yeast-percent-slider" min="0.1" max="30" value="20" step="0.1" class="w-full accent-[var(--accent-gold)]" />
+                    <input type="range" id="yeast-percent-slider" min={yeastRangeOnLoad.min} max={yeastRangeOnLoad.max} value={defaultState.yeastPercent} step={yeastRangeOnLoad.step} class="w-full accent-[var(--accent-gold)]" />
                     <p id="yeast-levain-note" class="hidden text-xs text-[var(--crust-brown)] mt-1">With a levain on, the levain is your starter. Set its size on the Preferments tab.</p>
                   </div>
 
@@ -369,7 +383,7 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
                   <div id="starter-contribution" class="bg-[var(--accent-gold)]/10 rounded-lg p-3 border border-[var(--accent-gold)]/20">
                     <p class="text-sm font-medium text-[var(--espresso)] mb-1">Starter Contribution:</p>
                     <p class="text-sm text-[var(--crust-brown)]">
-                      Your starter adds <span id="starter-flour-contrib" class="font-medium">0g</span> flour and <span id="starter-water-contrib" class="font-medium">0g</span> water to the dough.
+                      Your starter adds <span id="starter-flour-contrib" class="font-medium">{formatWeight(defaultState, recipeOnLoad.starterFlourContrib)}</span> flour and <span id="starter-water-contrib" class="font-medium">{formatWeight(defaultState, recipeOnLoad.starterWaterContrib)}</span> water to the dough.
                     </p>
                   </div>
                 </div>
@@ -395,14 +409,14 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
                         <option value="tipo-00">Tipo 00</option>
                       </select>
                       <div class="flex items-center gap-1">
-                        <input type="number" class="flour-percent-input input w-16 text-center py-2" value="100" min="0" max="100" data-flour="0" />
+                        <input type="number" class="flour-percent-input input w-16 text-center py-2" value={blendOnLoad[0].percent} min="0" max="100" data-flour="0" />
                         <span class="text-sm text-[var(--crust-brown)]">%</span>
                       </div>
                     </div>
                   </div>
 
                   <!-- Additional Flour Slots (hidden by default) -->
-                  <div id="flour-slot-1" class="flour-entry hidden" data-flour-index="1">
+                  <div id="flour-slot-1" class:list={['flour-entry', { hidden: blendOnLoad.length < 2 }]} data-flour-index="1">
                     <div class="flex items-center gap-2 mb-2">
                       <select class="flour-type-select input flex-1 py-2" data-flour="1">
                         <option value="bread">Bread Flour</option>
@@ -416,7 +430,7 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
                         <option value="tipo-00">Tipo 00</option>
                       </select>
                       <div class="flex items-center gap-1">
-                        <input type="number" class="flour-percent-input input w-16 text-center py-2" value="0" min="0" max="100" data-flour="1" />
+                        <input type="number" class="flour-percent-input input w-16 text-center py-2" value={blendOnLoad[1]?.percent ?? 0} min="0" max="100" data-flour="1" />
                         <span class="text-sm text-[var(--crust-brown)]">%</span>
                       </div>
                       <button class="remove-flour-btn text-[var(--crust-brown)] hover:text-red-500 p-1" data-flour="1">
@@ -724,7 +738,7 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
                       <span class="text-lg font-display font-semibold text-[var(--accent-gold)]" id="bulk-time">{timesOnLoad.bulk}</span>
                     </div>
                     <p class="text-xs text-[var(--crust-brown)]" id="bulk-description">
-                      Look for 50-75% rise with visible bubbles on the surface and sides.
+                      Look for 50-75% rise with visible bubbles. Dough should be airy and jiggly.
                     </p>
                   </div>
 
@@ -764,7 +778,7 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
                       <span class="text-lg font-display font-semibold text-[var(--accent-gold)]" id="total-time">{timesOnLoad.total}</span>
                     </div>
                     <p class="text-xs text-[var(--crust-brown)] mt-1" id="total-time-note">
-                      Excluding cold retard if enabled
+                      Active time from mixing to baking
                     </p>
                   </div>
 
@@ -969,7 +983,17 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
                   <span class="text-sm font-normal text-[var(--crust-brown)]">(Baker's %)</span>
                 </h4>
                 <div class="space-y-2" id="ingredients-list">
-                  <!-- Populated by JS -->
+                  {rowsOnLoad.map((ing) => (
+                    <div class="flex justify-between py-2 border-b border-[var(--border-light)]">
+                      <span>{ing.name}{ing.note && <Fragment> <span class="text-xs text-[var(--crust-brown)]">{ing.note}</span></Fragment>}</span>
+                      <span class="flex gap-4">
+                        <span class="font-medium">{formatWeight(defaultState, ing.weight)}</span>
+                        {ing.percent >= 0
+                          ? <span class="text-[var(--crust-brown)] w-16 text-right">({ing.percent}%)</span>
+                          : <span class="w-16"></span>}
+                      </span>
+                    </div>
+                  ))}
                 </div>
                 <p id="starter-hydration-note" class:list={['text-xs text-[var(--crust-brown)] mt-3', { hidden: !starterNoteOnLoad }]}>{starterNoteOnLoad}</p>
               </div>
@@ -991,7 +1015,12 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
               <div>
                 <h4 class="font-medium text-lg mb-3">Instructions</h4>
                 <ol class="space-y-3" id="instructions-list">
-                  <!-- Populated by JS -->
+                  {breadStyles[0].instructions.map((inst, i) => (
+                    <li class="flex gap-3">
+                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--accent-gold)] text-white text-sm flex items-center justify-center">{i + 1}</span>
+                      <span class="text-[var(--crust-brown)]">{inst}</span>
+                    </li>
+                  ))}
                 </ol>
               </div>
 
@@ -1438,7 +1467,7 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
   // The recipe is built on flourBlend. The Flour tab edits flourDraft, and the draft becomes
   // the blend only when it adds up to 100%, so a half-typed blend can never print a recipe
   // with negative flour.
-  const flourBlend: FlourEntry[] = calc.createDefaultFlourBlend();
+  const flourBlend: FlourEntry[] = calc.blendForWholeGrain(state.wholeGrain);
   let flourDraft: FlourEntry[] = flourBlend.map((flour) => ({ ...flour }));
 
   // Get initial instructions from first style card
@@ -2509,13 +2538,7 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
   // flour plus that share of whole wheat.
   function setWholeGrain(percent: number, baseFlour?: string) {
     const base = baseFlour ?? flourBlend.find((flour) => !calc.FLOUR_DATA[flour.type]?.wholeGrain)?.type ?? 'bread';
-    if (percent >= 100) {
-      flourDraft = [{ type: 'whole-wheat', percent: 100 }];
-    } else if (percent > 0) {
-      flourDraft = [{ type: base, percent: 100 - percent }, { type: 'whole-wheat', percent }];
-    } else {
-      flourDraft = [{ type: base, percent: 100 }];
-    }
+    flourDraft = calc.blendForWholeGrain(percent, base);
     showFlourDraft();
     applyFlourDraft();
   }
@@ -2821,10 +2844,13 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
     }
   }
 
-  // Initialize
-  setWholeGrain(state.wholeGrain, 'bread');
-  updateMixerButtons();
-  updateTempUnitToggle();
-  loadFromURL();
-  updateYeastTypeButtons();
+  // Initialize. The server HTML already shows the default recipe, built by the same code
+  // (see the frontmatter), so a plain visit has nothing to work out or draw: the first render
+  // comes with the first change. A link that sets anything is read and rendered now.
+  if (window.location.search) {
+    updateMixerButtons();
+    updateTempUnitToggle();
+    loadFromURL();
+    updateYeastTypeButtons();
+  }
 </script>
