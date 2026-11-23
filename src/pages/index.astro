@@ -2604,23 +2604,62 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
   });
 
   // Unit toggle
+  function updateUnitToggle() {
+    const on = ['bg-[var(--espresso)]', 'text-white'];
+    const off = 'text-[var(--crust-brown)]';
+    for (const unit of ['g', 'oz']) {
+      const button = document.getElementById(`unit-${unit}`);
+      if (!button) continue;
+      const active = state.unit === unit;
+      on.forEach((name) => button.classList.toggle(name, active));
+      button.classList.toggle(off, !active);
+    }
+  }
+
   document.getElementById('unit-g')?.addEventListener('click', () => {
     state.unit = 'g';
-    document.getElementById('unit-g')?.classList.add('bg-[var(--espresso)]', 'text-white');
-    document.getElementById('unit-g')?.classList.remove('text-[var(--crust-brown)]');
-    document.getElementById('unit-oz')?.classList.remove('bg-[var(--espresso)]', 'text-white');
-    document.getElementById('unit-oz')?.classList.add('text-[var(--crust-brown)]');
+    updateUnitToggle();
     updateUI();
   });
 
   document.getElementById('unit-oz')?.addEventListener('click', () => {
     state.unit = 'oz';
-    document.getElementById('unit-oz')?.classList.add('bg-[var(--espresso)]', 'text-white');
-    document.getElementById('unit-oz')?.classList.remove('text-[var(--crust-brown)]');
-    document.getElementById('unit-g')?.classList.remove('bg-[var(--espresso)]', 'text-white');
-    document.getElementById('unit-g')?.classList.add('text-[var(--crust-brown)]');
+    updateUnitToggle();
     updateUI();
   });
+
+  // Puts every control in line with the state, after a share link set it
+  function syncControls() {
+    const set = (id: string, value: string | number) => {
+      const el = document.getElementById(id) as HTMLInputElement | null;
+      if (el) el.value = String(value);
+    };
+    const check = (id: string, checked: boolean) => {
+      const el = document.getElementById(id) as HTMLInputElement | null;
+      if (el) el.checked = checked;
+    };
+    set('num-loaves', state.numLoaves);
+    set('loaf-weight', state.loafWeight);
+    set('hydration-slider', state.hydration);
+    set('salt-slider', state.salt);
+    set('starter-hydration-slider', state.starterHydration);
+    set('ddt-slider', state.ddt);
+    set('room-temp-slider', state.roomTemp);
+    set('flour-temp-slider', state.flourTemp);
+    set('preferment-percent-slider', state.prefermentPercent);
+    check('cold-retard-toggle', state.coldRetard);
+    check('autolyse-toggle', state.autolyse);
+    document.getElementById('autolyse-controls')?.classList.toggle('hidden', !state.autolyse);
+    document.querySelectorAll('.autolyse-duration-btn').forEach(btn => {
+      btn.classList.toggle('autolyse-duration-active', (btn as HTMLElement).dataset.duration === String(state.autolyseDuration));
+    });
+    updateUnitToggle();
+    updateYeastTypeButtons();
+    updateMixerButtons();
+    updateTempUnitToggle();
+    updatePrefermentTypeButtons();
+    syncEnrichmentControls();
+  }
 
   // Toast helper
   function showToast(message: string) {
@@ -2650,11 +2689,13 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
   });
 
   document.getElementById('btn-share')?.addEventListener('click', async () => {
+    // style, loaves, weight and hydration as always, then whatever else differs from the
+    // style card: salt, yeast, flours, preferment, enrichments, units, temperatures, timing
     const url = new URL(window.location.href);
-    url.searchParams.set('style', state.style);
-    url.searchParams.set('loaves', String(state.numLoaves));
-    url.searchParams.set('weight', String(state.loafWeight));
-    url.searchParams.set('hydration', String(state.hydration));
+    url.search = '';
+    for (const [key, value] of calc.shareLinkParams(state, enrichmentState, flourBlend)) {
+      url.searchParams.set(key, value);
+    }
 
     try {
       await navigator.clipboard.writeText(url.toString());
@@ -2741,6 +2782,18 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
     }
     if (fromUrl.hydration !== undefined) {
       (document.getElementById('hydration-slider') as HTMLInputElement).value = String(fromUrl.hydration);
+    }
+
+    // A share link can carry the rest of the recipe. A hand-off link carries none of it.
+    const shared = calc.parseShareSettings(new URLSearchParams(window.location.search));
+    if (Object.keys(shared).length > 0) {
+      calc.applyShareSettings(state, enrichmentState, shared);
+      if (shared.flours) {
+        flourDraft = shared.flours.map((flour) => ({ ...flour }));
+        showFlourDraft();
+        applyFlourDraft();
+      }
+      syncControls();
     }
     updateUI();
   }

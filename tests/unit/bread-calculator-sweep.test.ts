@@ -581,6 +581,15 @@ describe('other printed outputs', () => {
 describe('page wiring that changes the numbers (checked in the page source)', () => {
   const src = readFileSync(join(process.cwd(), 'src/pages/index.astro'), 'utf8');
 
+  it('the Share button and the page load use the shared link code (S)', () => {
+    expect(src).toContain('for (const [key, value] of calc.shareLinkParams(state, enrichmentState, flourBlend)) {');
+    const load = src.slice(src.indexOf('function loadFromURL() {'), src.lastIndexOf('// Initialize'));
+    // The original three values are applied first, by the code the hand-off guard pins.
+    expect(load.indexOf('calc.applyUrlRecipeParams(state, fromUrl);')).toBeGreaterThan(0);
+    expect(load.indexOf('calc.applyShareSettings(state, enrichmentState, shared);')).toBeGreaterThan(load.indexOf('calc.applyUrlRecipeParams(state, fromUrl);'));
+    expect(load).toContain('syncControls();');
+  });
+
   it('the Flour tab edits a draft, and the recipe only takes a blend that adds up to 100% (was KNOWN ISSUE T)', () => {
     expect(src).toContain('const calculateRecipe = () => calc.calculateRecipe(state, enrichmentState, flourBlend);');
     const apply = src.slice(src.indexOf('function applyFlourDraft() {'), src.indexOf('function setWholeGrain('));

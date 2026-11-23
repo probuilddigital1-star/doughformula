@@ -1,15 +1,22 @@
 import { describe, it, expect } from 'vitest';
 import {
   BREAD_STYLES,
+  applyShareSettings,
   applyStyle,
   applyStyleEnrichments,
+  applyUrlRecipeParams,
+  calculateWaterTemp,
   createDefaultEnrichments,
+  createDefaultFlourBlend,
   createDefaultState,
   eggWeight,
   formatWeight,
   hydrationWithStarter,
   isValidBlend,
+  parseShareSettings,
+  parseUrlRecipeParams,
   roundSmall,
+  shareLinkParams,
   starterHydrationNote,
   type EnrichmentState,
   type RecipeState,
@@ -427,5 +434,102 @@ describe('style cards switch on the enrichments their steps call for', () => {
 
   it('no step still names a spoon measure for something the list now weighs', () => {
     for (const style of BREAD_STYLES) expect(style.instructions.join(' '), style.id).not.toMatch(/tbsp/);
+  });
+});
+
+describe('share links carry the whole recipe', () => {
+  /** Opens a link the way the homepage's loadFromURL() does: the style card first, then loaves,
+   *  weight and hydration, then the extra settings. */
+  const open = (query: string) => {
+    const params = new URLSearchParams(query);
+    const state = createDefaultState();
+    const enrichments = createDefaultEnrichments();
+    const fromUrl = parseUrlRecipeParams(params);
+    const style = BREAD_STYLES.find((s) => s.id === fromUrl.style);
+    if (style) {
+      applyStyle(state, { ...style, style: style.id });
+      applyStyleEnrichments(enrichments, style.id);
+    }
+    applyUrlRecipeParams(state, fromUrl);
+    const shared = parseShareSettings(params);
+    applyShareSettings(state, enrichments, shared);
+    return { state, enrichments, blend: shared.flours ?? createDefaultFlourBlend() };
+  };
+  const link = (state: RecipeState, enrichments = createDefaultEnrichments(), blend = createDefaultFlourBlend()) =>
+    new URLSearchParams(shareLinkParams(state, enrichments, blend)).toString();
+  const styled = (id: string) => {
+    const state = createDefaultState();
+    const style = BREAD_STYLES.find((s) => s.id === id)!;
+    applyStyle(state, { ...style, style: style.id });
+    const enrichments = createDefaultEnrichments();
+    applyStyleEnrichments(enrichments, id);
+    return { state, enrichments };
+  };
+
+  it('a default recipe shares as the same four values as before', () => {
+    expect(link(createDefaultState())).toBe('style=sourdough&loaves=2&weight=900&hydration=75');
+    for (const style of BREAD_STYLES) {
+      const { state, enrichments } = styled(style.id);
+      expect(link(state, enrichments), style.id).toBe(`style=${style.id}&loaves=2&weight=900&hydration=${style.hydration}`);
+    }
+  });
+
+  it('loaves, weight and hydration still mean what they meant, with or without the new values', () => {
+    expect(parseUrlRecipeParams(new URLSearchParams('style=baguette&loaves=3&weight=350&hydration=70&salt=2.4&pref=poolish'))).toEqual({
+      style: 'baguette',
+      loaves: 3,
+      weight: 350,
+      hydration: 70,
+    });
+    const opened = open('style=baguette&loaves=3&weight=350&hydration=70&salt=2.4&pref=poolish');
+    expect(opened.state).toMatchObject({ style: 'baguette', numLoaves: 3, loafWeight: 350, hydration: 70, salt: 2.4, prefermentType: 'poolish' });
+    // A calculator hand-off link carries none of the new values.
+    expect(parseShareSettings(new URLSearchParams('loaves=1&weight=1900&hydration=68'))).toEqual({});
+  });
+
+  it('a changed recipe opens as the same recipe', () => {
+    const { state, enrichments } = styled('brioche');
+    Object.assign(state, {
+      numLoaves: 3, loafWeight: 650, hydration: 58, salt: 2.1, yeastType: 'fresh', yeastPercent: 3.3,
+      prefermentType: 'biga', prefermentPercent: 30, unit: 'oz', tempUnit: 'C', ddt: 79, roomTemp: 74, flourTemp: 66,
+      mixerType: 'stand', frictionFactor: 22, coldRetard: true, autolyse: true, autolyseDuration: 45,
+    });
+    enrichments.fat = { enabled: true, type: 'butter', percent: 30 };
+    enrichments.eggs = { enabled: true, type: 'yolks', count: 6, percentOfFlour: null };
+    enrichments.sweet = { enabled: false, type: 'sugar', percent: 5 };
+    const blend = [{ type: 'ap', percent: 80 }, { type: 'spelt', percent: 20 }];
+    state.wholeGrain = 20;
+    const query = link(state, enrichments, blend);
+    expect(query).toBe(
+      'style=brioche&loaves=3&weight=650&hydration=58&salt=2.1&yeast=fresh&yeastpct=3.3&flours=ap.80_spelt.20&pref=biga&prefpct=30' +
+        '&fat=butter&fatpct=30&eggs=yolks&eggcount=6&sweet=none&unit=oz&temp=c&ddt=79&room=74&flourtemp=66&mixer=stand&retard=1&autolyse=45',
+    );
+    const opened = open(query);
+    expect(printed(opened.state, opened.enrichments, opened.blend).rows).toEqual(printed(state, enrichments, blend).rows);
+    expect(printed(opened.state, opened.enrichments, opened.blend).prefermentRows).toEqual(printed(state, enrichments, blend).prefermentRows);
+    expect(opened.state).toMatchObject({ unit: 'oz', tempUnit: 'C', ddt: 79, roomTemp: 74, flourTemp: 66, mixerType: 'stand', frictionFactor: 22, coldRetard: true, autolyse: true, autolyseDuration: 45 });
+    expect(calculateWaterTemp(opened.state)).toBe(calculateWaterTemp(state));
+  });
+
+  it('a sourdough with a levain, a starter change and whole grain opens the same', () => {
+    const state = stateWith({ wholeGrain: 30, yeastPercent: 25, starterHydration: 80, prefermentType: 'levain', salt: 1.8 });
+    const query = link(state);
+    expect(query).toBe('style=sourdough&loaves=2&weight=900&hydration=75&salt=1.8&yeastpct=25&starterh=80&flours=bread.70_whole-wheat.30&pref=levain');
+    const opened = open(query);
+    expect(printed(opened.state, opened.enrichments, opened.blend).rows).toEqual(printed(state).rows);
+  });
+
+  it('a link never sets a value the controls could not', () => {
+    expect(parseShareSettings(new URLSearchParams('salt=99&yeast=banana&yeastpct=abc&starterh=-5&flours=bread.60&pref=xyz&prefpct=90&fat=lard&fatpct=5&eggs=whole&eggcount=500&unit=kg&ddt=200&mixer=robot&autolyse=7'))).toEqual({
+      salt: 3,
+      starterHydration: 50,
+      eggs: { type: 'whole', count: 12 },
+      ddt: 86,
+    });
+    expect(parseShareSettings(new URLSearchParams('flours=bread.150_rye-light.-50'))).toEqual({});
+    expect(parseShareSettings(new URLSearchParams('flours=moon-dust.100'))).toEqual({});
+    // A yeast amount is held to the slider for its type.
+    const opened = open('style=baguette&loaves=2&weight=900&hydration=68&yeastpct=40');
+    expect(opened.state.yeastPercent).toBe(3);
   });
 });
