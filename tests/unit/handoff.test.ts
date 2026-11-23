@@ -5,8 +5,8 @@ import { HANDOFF_FALLBACK, HOMEPAGE_SALT_PCT, HOMEPAGE_STARTER_PCT, handoffHref 
 import { hydrationView, HYDRATION_DEFAULTS } from '../../src/lib/hydration-view';
 import { recipeToPercentagesView } from '../../src/lib/bakers-view';
 import { DEFAULT_ROWS } from '../../src/lib/bakers-percentage';
+import { BREAD_STYLES } from '../../src/lib/bread-styles';
 import {
-  BREAD_STYLES,
   applyUrlRecipeParams,
   calculateRecipe,
   createDefaultEnrichments,

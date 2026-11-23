@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import { BREAD_STYLES } from '../../src/lib/bread-styles';
 import {
-  BREAD_STYLES,
-  applyShareSettings,
   applyStyle,
   applyStyleEnrichments,
   applyUrlRecipeParams,
@@ -13,14 +12,13 @@ import {
   formatWeight,
   hydrationWithStarter,
   isValidBlend,
-  parseShareSettings,
   parseUrlRecipeParams,
   roundSmall,
-  shareLinkParams,
   starterHydrationNote,
   type EnrichmentState,
   type RecipeState,
 } from '../../src/lib/bread-calculator';
+import { applyShareSettings, parseShareSettings, shareLinkParams } from '../../src/lib/bread-calculator-actions';
 import { printed, row, stateWith } from './helpers/bread-calculator';
 
 const sumsToTotal = (p: ReturnType<typeof printed>) => expect(Math.abs(p.rowsTotal - p.recipe.totalDough)).toBeLessThanOrEqual(2);

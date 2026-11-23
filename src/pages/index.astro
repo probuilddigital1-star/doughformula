@@ -7,8 +7,8 @@ import EquipmentGrid from '../components/EquipmentGrid.astro';
 import AffiliateDisclosure from '../components/AffiliateDisclosure.astro';
 import FeaturedGearCard from '../components/FeaturedGearCard.astro';
 import { HOMEPAGE_PRODUCTS, TRACKING_IDS, GEAR_SETS, CALCULATOR_STYLE_FAMILY, ALL_GEAR_PRODUCT_IDS, FEATURED_GEAR, hasDirectMerchant } from '../data/equipment';
+import { BREAD_STYLES } from '../lib/bread-styles';
 import {
-  BREAD_STYLES,
   HYDRATION_MAX,
   HYDRATION_MIN,
   LOAF_WEIGHT_MAX,
@@ -46,8 +46,9 @@ const icons = {
   custom: `<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="3"/><path d="M16 6v3M16 23v3M6 16h3M23 16h3"/><path d="M9.5 9.5l2 2M20.5 20.5l2 2M9.5 22.5l2-2M20.5 11.5l2-2"/></svg>`
 };
 
-// Bread style data lives in src/lib/bread-calculator.ts, so the calculator tests sweep the
-// same styles the cards carry. The icons stay here.
+// Bread style data lives in src/lib/bread-styles.ts (the words) and src/lib/bread-calculator.ts
+// (the recipe settings), so the calculator tests sweep the same styles the cards carry. The
+// icons stay here.
 const styleIcons: Record<string, string> = { ...icons, 'no-knead': icons.noknead };
 const breadStyles = BREAD_STYLES.map((style) => ({ ...style, icon: styleIcons[style.id] }));
 
@@ -1429,7 +1430,8 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
   import * as calc from '../lib/bread-calculator';
   import type { EnrichmentState, FlourEntry, RecipeState, YeastType } from '../lib/bread-calculator';
 
-  const { PREFERMENT_DATA, YEAST_TIPS } = calc;
+  const PREFERMENT_DATA = calc.PREFERMENT_DATA;
+  const YEAST_TIPS = calc.YEAST_TIPS;
 
   const state: RecipeState = calc.createDefaultState();
   const enrichmentState: EnrichmentState = calc.createDefaultEnrichments();
@@ -1445,12 +1447,24 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
     state.instructions = JSON.parse(firstCard.dataset.instructions || '[]');
   }
 
+  // The bake schedule, the calendar file, Copy and Share run on a click, so their code stays
+  // out of this script. It is fetched once the page has loaded and is idle, and a click that
+  // comes before then waits for it.
+  type Actions = typeof import('../lib/bread-calculator-actions');
+  let actionsModule: Promise<Actions> | null = null;
+  const loadActions = (): Promise<Actions> => (actionsModule ??= import('../lib/bread-calculator-actions'));
+  const whenIdle = (work: () => void) => {
+    if ('requestIdleCallback' in window) window.requestIdleCallback(work);
+    else setTimeout(work, 2000);
+  };
+  if (document.readyState === 'complete') whenIdle(() => void loadActions());
+  else window.addEventListener('load', () => whenIdle(() => void loadActions()));
+
   // The shared math, bound to this page's state
   const formatTemp = (tempF: number) => calc.formatTemp(state, tempF);
   const formatWeight = (grams: number) => calc.formatWeight(state, grams);
   const estimateFermentationTimes = () => calc.estimateFermentationTimes(state);
   const estimatePrefermentTiming = () => calc.estimatePrefermentTiming(state);
-  const generateBakingSchedule = (targetDateTime: Date) => calc.generateBakingSchedule(state, targetDateTime);
   const calculateRecipe = () => calc.calculateRecipe(state, enrichmentState, flourBlend);
 
   function updateUI() {
@@ -2204,7 +2218,7 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
   });
 
   // Generate schedule
-  document.getElementById('generate-schedule-btn')?.addEventListener('click', () => {
+  document.getElementById('generate-schedule-btn')?.addEventListener('click', async () => {
     const dateInput = document.getElementById('schedule-date') as HTMLInputElement;
     const timeInput = document.getElementById('schedule-time') as HTMLInputElement;
     const resultDiv = document.getElementById('schedule-result');
@@ -2213,7 +2227,7 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
     if (!dateInput?.value || !timeInput?.value) return;
 
     const targetDate = new Date(`${dateInput.value}T${timeInput.value}`);
-    const schedule = generateBakingSchedule(targetDate);
+    const schedule = (await loadActions()).generateBakingSchedule(state, targetDate);
 
     if (timeline) {
       timeline.innerHTML = schedule.map(item => `
@@ -2247,17 +2261,18 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
   });
 
   // Download ICS calendar file
-  document.getElementById('download-ics-btn')?.addEventListener('click', () => {
+  document.getElementById('download-ics-btn')?.addEventListener('click', async () => {
     const dateInput = document.getElementById('schedule-date') as HTMLInputElement;
     const timeInput = document.getElementById('schedule-time') as HTMLInputElement;
 
     if (!dateInput?.value || !timeInput?.value) return;
 
     const targetDate = new Date(`${dateInput.value}T${timeInput.value}`);
-    const schedule = generateBakingSchedule(targetDate);
+    const actions = await loadActions();
+    const schedule = actions.generateBakingSchedule(state, targetDate);
 
     // Generate ICS file content
-    const icsContent = calc.scheduleIcs(schedule, targetDate);
+    const icsContent = actions.scheduleIcs(schedule, targetDate);
 
     // Download file
     const blob = new Blob([icsContent], { type: 'text/calendar' });
@@ -2678,7 +2693,7 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
 
   document.getElementById('btn-copy')?.addEventListener('click', async () => {
     const recipe = calculateRecipe();
-    const text = calc.recipeCopyText(state, enrichmentState, recipe);
+    const text = (await loadActions()).recipeCopyText(state, enrichmentState, recipe);
 
     try {
       await navigator.clipboard.writeText(text);
@@ -2693,7 +2708,7 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
     // style card: salt, yeast, flours, preferment, enrichments, units, temperatures, timing
     const url = new URL(window.location.href);
     url.search = '';
-    for (const [key, value] of calc.shareLinkParams(state, enrichmentState, flourBlend)) {
+    for (const [key, value] of (await loadActions()).shareLinkParams(state, enrichmentState, flourBlend)) {
       url.searchParams.set(key, value);
     }
 
@@ -2784,25 +2799,32 @@ const timesOnLoad = estimateFermentationTimes(defaultState);
       (document.getElementById('hydration-slider') as HTMLInputElement).value = String(fromUrl.hydration);
     }
 
-    // A share link can carry the rest of the recipe. A hand-off link carries none of it.
-    const shared = calc.parseShareSettings(new URLSearchParams(window.location.search));
-    if (Object.keys(shared).length > 0) {
-      calc.applyShareSettings(state, enrichmentState, shared);
-      if (shared.flours) {
-        flourDraft = shared.flours.map((flour) => ({ ...flour }));
-        showFlourDraft();
-        applyFlourDraft();
-      }
-      syncControls();
-    }
     updateUI();
+
+    // A share link can carry the rest of the recipe. A hand-off link carries none of it, so
+    // the share code is fetched now only when the link has something more to read.
+    const params = new URLSearchParams(window.location.search);
+    const known = ['style', 'loaves', 'weight', 'hydration'];
+    if ([...params.keys()].some((key) => !known.includes(key))) {
+      loadActions().then((actions) => {
+        const shared = actions.parseShareSettings(params);
+        if (Object.keys(shared).length === 0) return;
+        actions.applyShareSettings(state, enrichmentState, shared);
+        if (shared.flours) {
+          flourDraft = shared.flours.map((flour) => ({ ...flour }));
+          showFlourDraft();
+          applyFlourDraft();
+        }
+        syncControls();
+        updateUI();
+      });
+    }
   }
 
   // Initialize
   setWholeGrain(state.wholeGrain, 'bread');
-  loadFromURL();
-  updateYeastTypeButtons();
   updateMixerButtons();
   updateTempUnitToggle();
-  updateUI();
+  loadFromURL();
+  updateYeastTypeButtons();
 </script>

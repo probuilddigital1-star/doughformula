@@ -1,8 +1,8 @@
 import { beforeAll, describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { BREAD_STYLES } from '../../src/lib/bread-styles';
 import {
-  BREAD_STYLES,
   DEFAULT_YEAST_PERCENT,
   HYDRATION_MAX,
   HYDRATION_MIN,
@@ -19,15 +19,11 @@ import {
   createDefaultState,
   estimateFermentationTimes,
   formatHourRange,
-  formatScheduleTime,
   formatTemp,
   formatTempDifference,
   formatWeight,
-  generateBakingSchedule,
   parseUrlRecipeParams,
-  recipeCopyText,
   recipeTitle,
-  scheduleIcs,
   starterHydrationNote,
   waterTempFormulaText,
   waterTempWarningText,
@@ -35,6 +31,7 @@ import {
   yeastSliderRange,
   type RecipeState,
 } from '../../src/lib/bread-calculator';
+import { formatScheduleTime, generateBakingSchedule, recipeCopyText, scheduleIcs } from '../../src/lib/bread-calculator-actions';
 import { printed, stateWith } from './helpers/bread-calculator';
 import { SWEEP_SIZE, runSweep, type SweepResult, type Tally } from './helpers/bread-calculator-sweep';
 
@@ -584,12 +581,19 @@ describe('page wiring that changes the numbers (checked in the page source)', ()
   const src = readFileSync(join(process.cwd(), 'src/pages/index.astro'), 'utf8');
 
   it('the Share button and the page load use the shared link code (S)', () => {
-    expect(src).toContain('for (const [key, value] of calc.shareLinkParams(state, enrichmentState, flourBlend)) {');
+    expect(src).toContain("const loadActions = (): Promise<Actions> => (actionsModule ??= import('../lib/bread-calculator-actions'));");
+    expect(src).toContain('for (const [key, value] of (await loadActions()).shareLinkParams(state, enrichmentState, flourBlend)) {');
     const load = src.slice(src.indexOf('function loadFromURL() {'), src.lastIndexOf('// Initialize'));
     // The original three values are applied first, by the code the hand-off guard pins.
     expect(load.indexOf('calc.applyUrlRecipeParams(state, fromUrl);')).toBeGreaterThan(0);
-    expect(load.indexOf('calc.applyShareSettings(state, enrichmentState, shared);')).toBeGreaterThan(load.indexOf('calc.applyUrlRecipeParams(state, fromUrl);'));
+    expect(load.indexOf('actions.applyShareSettings(state, enrichmentState, shared);')).toBeGreaterThan(load.indexOf('calc.applyUrlRecipeParams(state, fromUrl);'));
     expect(load).toContain('syncControls();');
+  });
+
+  it('the schedule, the calendar file and Copy run the shared code too', () => {
+    expect(src).toContain('const schedule = (await loadActions()).generateBakingSchedule(state, targetDate);');
+    expect(src).toContain('const icsContent = actions.scheduleIcs(schedule, targetDate);');
+    expect(src).toContain('const text = (await loadActions()).recipeCopyText(state, enrichmentState, recipe);');
   });
 
   it('the Flour tab edits a draft, and the recipe only takes a blend that adds up to 100% (was KNOWN ISSUE T)', () => {

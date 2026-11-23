@@ -2,8 +2,8 @@
 // hydration, whole grain, yeast type and amount, starter hydration, preferment type and amount,
 // enrichments, and batch size. Each case is printed through the calculator's own code (see
 // ./bread-calculator) and checked in grams and in ounces.
+import { BREAD_STYLES } from '../../../src/lib/bread-styles';
 import {
-  BREAD_STYLES,
   ENRICHMENT_WATER_CONTENT,
   LEVAIN_SEED_PERCENT,
   YEAST_NAMES,
