@@ -306,7 +306,7 @@ export function applyStyle(state: RecipeState, s: StyleSettings): void {
 export interface PrefermentData {
   name: string;
   hydration: number; // % of preferment flour
-  yeastPercent: number; // % of preferment flour
+  yeastPercent: number; // instant yeast, as % of preferment flour
   fermentTimeMin: number; // hours
   fermentTimeMax: number;
   description: string;
@@ -328,7 +328,7 @@ export const PREFERMENT_DATA: Record<string, PrefermentData> = {
   'biga': {
     name: 'Biga',
     hydration: 55,
-    yeastPercent: 0.5,
+    yeastPercent: 0.2,
     fermentTimeMin: 12,
     fermentTimeMax: 16,
     description: '55% hydration stiff preferment. Adds strength, nutty flavor, and keeping quality.',
@@ -629,55 +629,232 @@ export function calculateWholeGrainPercent(flourBlend: FlourEntry[]): number {
   }, 0);
 }
 
-export interface PrefermentIngredients {
-  flour: number;
-  water: number;
-  yeast: number;
-  yeastNote: string;
+// ---- Flours ----
+
+/** The name each flour gets on the ingredient list. */
+export const FLOUR_ROW_NAMES: Record<string, string> = {
+  'bread': 'Bread Flour',
+  'ap': 'All-Purpose Flour',
+  'whole-wheat': 'Whole Wheat Flour',
+  'rye-light': 'Light Rye Flour',
+  'rye-dark': 'Dark Rye Flour',
+  'spelt': 'Spelt Flour',
+  'einkorn': 'Einkorn Flour',
+  'semolina': 'Semolina Flour',
+  'tipo-00': 'Tipo 00 Flour'
+};
+
+/** A flour blend the recipe can be built on: known flours that add up to 100%. */
+export function isValidBlend(flourBlend: FlourEntry[]): boolean {
+  const active = flourBlend.filter((flour) => flour && flour.percent > 0);
+  if (active.length === 0 || active.some((flour) => !FLOUR_DATA[flour.type])) return false;
+  return Math.abs(active.reduce((sum, flour) => sum + flour.percent, 0) - 100) < 1e-9;
 }
 
-// Calculate preferment ingredients
-export function calculatePrefermentIngredients(state: RecipeState, totalFlourWeight: number): PrefermentIngredients | null {
-  if (state.prefermentType === 'none') return null;
+export interface FlourShare {
+  type: string;
+  name: string;
+  /** Share of the total flour. The shares add up to 100. */
+  percent: number;
+}
 
-  const prefData = PREFERMENT_DATA[state.prefermentType];
-  if (!prefData) return null;
-
-  const prefFlour = Math.round(totalFlourWeight * state.prefermentPercent / 100);
-
-  // Handle hydration
-  let prefWater: number;
-  if (prefData.hydration === -1) {
-    // Pâte Fermentée uses recipe hydration
-    prefWater = Math.round(prefFlour * state.hydration / 100);
-  } else {
-    prefWater = Math.round(prefFlour * prefData.hydration / 100);
-  }
-
-  // Handle yeast
-  let prefYeast: number;
-  let yeastNote: string;
-  if (state.prefermentType === 'levain') {
-    // Levain uses starter, not commercial yeast
-    prefYeast = Math.round(prefFlour * 0.2); // 20% starter
-    yeastNote = '(active starter)';
-  } else if (prefData.yeastPercent === -1) {
-    // Pâte Fermentée uses recipe yeast amount
-    prefYeast = Math.round(prefFlour * state.yeastPercent / 100);
-    yeastNote = '';
-  } else {
-    prefYeast = prefFlour * prefData.yeastPercent / 100;
-    // Format tiny yeast amounts
-    if (prefYeast < 1) {
-      yeastNote = '(tiny pinch)';
-      prefYeast = Math.round(prefYeast * 10) / 10; // Round to 1 decimal
-    } else {
-      yeastNote = '';
-      prefYeast = Math.round(prefYeast);
+/**
+ * The flours in the dough, as shares of the total flour.
+ *
+ * One plain flour (the Flour tab left alone, or set to a single white flour) is split by the
+ * Whole Grain slider on the Basics tab. A blend from the Flour tab is listed as it was
+ * entered. A blend that does not add up to 100% cannot be weighed out, so it is ignored
+ * here; the page keeps the last blend that did.
+ */
+export function flourShares(state: RecipeState, flourBlend: FlourEntry[]): FlourShare[] {
+  const merged = new Map<string, number>();
+  if (isValidBlend(flourBlend)) {
+    for (const flour of flourBlend) {
+      if (flour && flour.percent > 0) merged.set(flour.type, (merged.get(flour.type) ?? 0) + flour.percent);
     }
+  } else {
+    merged.set('bread', 100);
+  }
+  const entries = [...merged].map(([type, percent]) => ({ type, percent }));
+
+  if (entries.length === 1 && !FLOUR_DATA[entries[0].type].wholeGrain) {
+    const base = entries[0].type;
+    const wholeGrain = Math.min(100, Math.max(0, state.wholeGrain || 0));
+    if (wholeGrain === 0) {
+      return [{ type: base, name: base === 'bread' ? 'Flour' : FLOUR_ROW_NAMES[base], percent: 100 }];
+    }
+    const shares: FlourShare[] = [];
+    if (wholeGrain < 100) shares.push({ type: base, name: FLOUR_ROW_NAMES[base], percent: 100 - wholeGrain });
+    shares.push({ type: 'whole-wheat', name: FLOUR_ROW_NAMES['whole-wheat'], percent: wholeGrain });
+    return shares;
+  }
+  return entries.map((entry) => ({ type: entry.type, name: FLOUR_ROW_NAMES[entry.type], percent: entry.percent }));
+}
+
+/** Whole grams of each flour. Every flour after the first is its share of the total flour,
+ *  and the first takes what is left, so they always add up to the flour weight. */
+function flourWeights(shares: FlourShare[], flourWeight: number): number[] {
+  const weights = shares.map((share, i) => (i === 0 ? 0 : Math.round(flourWeight * share.percent / 100)));
+  weights[0] = flourWeight - weights.reduce((sum, w) => sum + w, 0);
+  if (weights[0] < 0) {
+    // Only when the first flour is a sliver of a tiny batch: rounding took a gram too many.
+    const largest = weights.indexOf(Math.max(...weights));
+    weights[largest] += weights[0];
+    weights[0] = 0;
+  }
+  return weights;
+}
+
+// ---- Leavening ----
+
+export const YEAST_NAMES: Record<YeastType, string> = {
+  'starter': 'Sourdough Starter',
+  'instant': 'Instant Yeast',
+  'active-dry': 'Active Dry Yeast',
+  'fresh': 'Fresh Yeast'
+};
+
+/** A levain is built from this much active starter, as a share of the levain's flour. */
+export const LEVAIN_SEED_PERCENT = 20;
+
+/** Where the dough's leavening sits, as shares of the total flour. */
+export interface LeavenPlan {
+  /** The yeast or starter row of the final dough. 0 means there is no such row. */
+  mainPercent: number;
+  /** What raises the preferment. 0 without a preferment. */
+  prefPercent: number;
+  prefName: string;
+  /** Yeast and starter in the whole dough: the share the flour formula counts. */
+  totalPercent: number;
+  /** Sourdough starter in the whole dough, wherever it sits. */
+  starterPercent: number;
+}
+
+/**
+ * Splits the leavening between the preferment and the final dough, so each gram is listed
+ * once and the list still adds up to the stated total.
+ *
+ * - Poolish and biga are raised with a pinch of yeast. In a yeast recipe the pinch comes out
+ *   of the recipe's own yeast, in the yeast type picked. A sourdough recipe has no yeast row
+ *   to take it from, so the pinch of instant yeast is extra and the total counts it.
+ * - Pâte fermentée is a piece of the same dough made ahead: it carries its share of the
+ *   recipe's yeast or starter, and that share comes out of the final dough's row.
+ * - A levain is flour, water and a seed of active starter. In a sourdough recipe the levain
+ *   is the starter, so it replaces the starter row. A yeast recipe keeps its yeast row. Either
+ *   way the seed is in the levain bowl and in the total.
+ */
+export function leavenPlan(state: RecipeState): LeavenPlan {
+  const recipePercent = state.yeastPercent;
+  const usesStarter = state.yeastType === 'starter';
+  const share = state.prefermentPercent / 100;
+  const data = PREFERMENT_DATA[state.prefermentType];
+  const none: LeavenPlan = {
+    mainPercent: recipePercent,
+    prefPercent: 0,
+    prefName: '',
+    totalPercent: recipePercent,
+    starterPercent: usesStarter ? recipePercent : 0
+  };
+  if (state.prefermentType === 'none' || !data) return none;
+
+  if (state.prefermentType === 'levain') {
+    const seed = LEVAIN_SEED_PERCENT * share;
+    return {
+      mainPercent: usesStarter ? 0 : recipePercent,
+      prefPercent: seed,
+      prefName: 'Active Starter',
+      totalPercent: usesStarter ? seed : recipePercent + seed,
+      starterPercent: seed
+    };
   }
 
-  return { flour: prefFlour, water: prefWater, yeast: prefYeast, yeastNote };
+  if (state.prefermentType === 'pate-fermentee') {
+    const inOldDough = recipePercent * share;
+    return {
+      ...none,
+      mainPercent: recipePercent - inOldDough,
+      prefPercent: inOldDough,
+      prefName: YEAST_NAMES[state.yeastType]
+    };
+  }
+
+  // Poolish and biga
+  if (usesStarter) {
+    const pinch = data.yeastPercent * share;
+    return { ...none, prefPercent: pinch, prefName: YEAST_NAMES['instant'], totalPercent: recipePercent + pinch };
+  }
+  const pinch = Math.min(recipePercent, convertYeastPercent(data.yeastPercent, 'instant', state.yeastType) * share);
+  const left = recipePercent - pinch;
+  return { ...none, mainPercent: left < 1e-9 ? 0 : left, prefPercent: pinch, prefName: YEAST_NAMES[state.yeastType] };
+}
+
+/** Hydration of the preferment, as a percentage of its own flour. Old dough is the recipe's. */
+export function prefermentHydration(state: RecipeState): number {
+  const data = PREFERMENT_DATA[state.prefermentType];
+  if (!data) return 0;
+  return data.hydration === -1 ? state.hydration : data.hydration;
+}
+
+// ---- Preferment ----
+
+export interface PrefermentPart {
+  name: string;
+  weight: number;
+  note: string;
+}
+
+/** What goes in the preferment bowl. All of it comes out of the final dough's rows. */
+export interface PrefermentIngredients {
+  /** Flour in the preferment, all kinds together. */
+  flour: number;
+  /** Which flours it takes, in the order the dough lists them. */
+  flours: PrefermentPart[];
+  water: number;
+  /** Only old dough (pâte fermentée) carries salt. */
+  salt: number;
+  /** What raises it: a pinch of yeast, its share of the recipe's leavening, or a starter seed. */
+  leaven: PrefermentPart | null;
+  /** Everything in the bowl. This is the "All of the ..." row of the final dough. */
+  total: number;
+}
+
+export interface FlourRow {
+  name: string;
+  weight: number;
+  percent: number;
+}
+
+/** Takes the preferment's flour out of the dough's flours, first flour first. Returns the
+ *  preferment's flours and what is left for the final dough. */
+function splitFlours(
+  state: RecipeState,
+  shares: FlourShare[],
+  flourWeight: number
+): { taken: PrefermentPart[]; takenTotal: number; left: FlourRow[] } {
+  const weights = flourWeights(shares, flourWeight);
+  const taken: PrefermentPart[] = [];
+  const left: FlourRow[] = [];
+  const active = state.prefermentType !== 'none' && !!PREFERMENT_DATA[state.prefermentType];
+  let percentToTake = active ? state.prefermentPercent : 0;
+  let gramsToTake = Math.round(flourWeight * percentToTake / 100);
+  let takenTotal = 0;
+
+  shares.forEach((share, i) => {
+    const takePercent = Math.min(share.percent, percentToTake);
+    // A flour the preferment uses up goes in whole, so no stray gram is left on the list.
+    const takeGrams = takePercent <= 0 ? 0 : takePercent >= share.percent ? weights[i] : Math.min(gramsToTake, weights[i]);
+    percentToTake -= takePercent;
+    gramsToTake = Math.max(0, gramsToTake - takeGrams);
+    takenTotal += takeGrams;
+    if (takeGrams > 0) {
+      taken.push({ name: share.name, weight: takeGrams, note: `(${printedPercent(takePercent)}% of total)` });
+    }
+    if (weights[i] - takeGrams > 0) {
+      left.push({ name: share.name, weight: weights[i] - takeGrams, percent: printedPercent(share.percent - takePercent) });
+    }
+  });
+
+  return { taken, takenTotal, left };
 }
 
 // Estimate preferment timing based on room temperature
@@ -942,8 +1119,20 @@ export interface Recipe {
   waterWeight: number;
   /** The milk or cream part of that liquid. */
   dairyWeight: number;
+  /** Grams added to (or taken off) the liquid so the list lands on the stated total. Almost
+   *  always 0: see calculateRecipe(). */
+  liquidNudge: number;
+  /** Salt in the whole dough. With old dough on, part of it is in the preferment. */
   saltWeight: number;
+  /** The recipe's yeast or starter in the whole dough, at the percentage the Yeast tab shows. */
   yeastWeight: number;
+  /** The flour rows of the final dough: each flour, less what the preferment took. */
+  flours: FlourRow[];
+  /** The salt row of the final dough. */
+  mainSaltWeight: number;
+  /** The yeast or starter row of the final dough. 0 means there is no such row. */
+  mainLeavenWeight: number;
+  /** Flour and water the sourdough starter (or the levain's seed) brings with it. */
   starterFlourContrib: number;
   starterWaterContrib: number;
   calculatedWaterTemp: number;
@@ -972,8 +1161,9 @@ export function calculateRecipe(state: RecipeState, enrichmentState: EnrichmentS
   const totalDough = state.numLoaves * state.loafWeight;
 
   // Everything that scales with the flour, as a share of it. The stated total is all of it:
-  // flour, liquid, salt, yeast or starter, and any butter, oil or sweetener.
-  const yeastContribution = state.yeastPercent / 100;
+  // flour, liquid, salt, yeast or starter (wherever it sits), and any butter, oil or sweetener.
+  const leaven = leavenPlan(state);
+  const yeastContribution = leaven.totalPercent / 100;
   const fatShare = enrichmentState.fat.enabled ? enrichmentState.fat.percent / 100 : 0;
   const sweetShare = enrichmentState.sweet.enabled ? enrichmentState.sweet.percent / 100 : 0;
   const perFlour = 1 + state.hydration / 100 + state.salt / 100 + yeastContribution + fatShare + sweetShare;
@@ -982,29 +1172,53 @@ export function calculateRecipe(state: RecipeState, enrichmentState: EnrichmentS
   const eggCount = eggsThatFit(enrichmentState, totalDough);
   const eggsWeight = eggWeight(enrichmentState.eggs.type, eggCount);
 
-  const wholeGrainPercent = calculateWholeGrainPercent(flourBlend);
+  const shares = flourShares(state, flourBlend);
+  const wholeGrainPercent = shares.reduce((sum, share) => sum + (FLOUR_DATA[share.type]?.wholeGrain ? share.percent : 0), 0);
   const calculatedWaterTemp = calculateWaterTemp(state);
+  const prefData = state.prefermentType !== 'none' ? PREFERMENT_DATA[state.prefermentType] : undefined;
+  // Old dough is salted like the dough it came from, so its salt comes out of the salt row.
+  const saltInPreferment = prefData && state.prefermentType === 'pate-fermentee' ? state.prefermentPercent / 100 : 0;
 
   // Every weight on the list for a given flour weight, and what the list then adds up to.
-  const build = (flourWeight: number): Recipe & { listed: number } => {
-    const liquidWeight = Math.round(flourWeight * state.hydration / 100);
+  const build = (flourWeight: number, liquidNudge = 0): Recipe & { listed: number } => {
+    const liquidWeight = Math.round(flourWeight * state.hydration / 100) + liquidNudge;
     const saltWeight = roundSmall(flourWeight * state.salt / 100);
     const yeastWeight = roundSmall(flourWeight * state.yeastPercent / 100);
+    const mainSaltWeight = roundSmall(flourWeight * state.salt / 100 * (1 - saltInPreferment));
+    const mainLeavenWeight = roundSmall(flourWeight * leaven.mainPercent / 100);
 
-    // For starter, calculate flour/water contribution
-    let starterFlourContrib = 0;
-    let starterWaterContrib = 0;
-    if (state.yeastType === 'starter') {
-      const starterContrib = calculateStarterContribution(state, yeastWeight);
-      starterFlourContrib = starterContrib.flour;
-      starterWaterContrib = starterContrib.water;
-    }
+    // Flour and water the starter brings with it
+    const starterContrib = calculateStarterContribution(state, roundSmall(flourWeight * leaven.starterPercent / 100));
+    const starterFlourContrib = starterContrib.flour;
+    const starterWaterContrib = starterContrib.water;
 
-    // Calculate whole grain from flour blend
+    // The flours, and what the preferment takes of them
+    const split = splitFlours(state, shares, flourWeight);
     const wholeGrainWeight = Math.round(flourWeight * wholeGrainPercent / 100);
     const whiteFlourWeight = flourWeight - wholeGrainWeight;
 
-    const preferment = calculatePrefermentIngredients(state, flourWeight);
+    let preferment: PrefermentIngredients | null = null;
+    if (prefData) {
+      const water = Math.round(split.takenTotal * prefermentHydration(state) / 100);
+      const salt = roundSmall(flourWeight * state.salt / 100 * saltInPreferment);
+      const leavenWeight = roundSmall(flourWeight * leaven.prefPercent / 100);
+      preferment = {
+        flour: split.takenTotal,
+        flours: split.taken,
+        water,
+        salt,
+        leaven: leavenWeight > 0
+          ? {
+              name: leaven.prefName,
+              weight: leavenWeight,
+              note: state.prefermentType === 'levain'
+                ? `(${LEVAIN_SEED_PERCENT}% of its flour)`
+                : leaven.prefName !== YEAST_NAMES['starter'] && leavenWeight < 1 ? '(tiny pinch)' : ''
+            }
+          : null,
+        total: roundSmall(split.takenTotal + water + salt + leavenWeight)
+      };
+    }
 
     // Milk or cream stands in for part of the liquid, so it adds no weight. A preferment is
     // mixed with water, so the dairy can only replace the liquid left for the final dough.
@@ -1027,6 +1241,16 @@ export function calculateRecipe(state: RecipeState, enrichmentState: EnrichmentS
       ? Math.round(((liquidWeight + enrichmentWater.totalWater) / flourWeight) * 100)
       : 0;
 
+    // The final dough's rows: what is left of the flour and liquid, salt, yeast or starter,
+    // the preferment as one row, and the enrichments.
+    const listed =
+      (flourWeight - split.takenTotal) +
+      liquidLeft +
+      mainSaltWeight +
+      mainLeavenWeight +
+      (preferment ? preferment.total : 0) +
+      enrichments.fat + enrichments.eggs + enrichments.sweet;
+
     return {
       totalDough,
       flourWeight,
@@ -1036,8 +1260,12 @@ export function calculateRecipe(state: RecipeState, enrichmentState: EnrichmentS
       liquidWeight,
       waterWeight,
       dairyWeight,
+      liquidNudge,
       saltWeight,
       yeastWeight,
+      flours: split.left,
+      mainSaltWeight,
+      mainLeavenWeight,
       starterFlourContrib,
       starterWaterContrib,
       calculatedWaterTemp,
@@ -1046,23 +1274,32 @@ export function calculateRecipe(state: RecipeState, enrichmentState: EnrichmentS
       effectiveHydration,
       eggCount,
       enrichments,
-      listed: flourWeight + liquidWeight + saltWeight + yeastWeight + enrichments.fat + enrichments.eggs + enrichments.sweet
+      listed
     };
   };
 
   const flourWeight = Math.max(0, Math.round((totalDough - eggsWeight) / perFlour));
   let best = build(flourWeight);
 
-  // Butter, oil, a sweetener or eggs put more rounded rows on the list, and the flour rounded
-  // to a whole gram can then leave the rows a few grams off the stated total. A gram of flour
-  // either side changes every row with it, so take whichever lands closest. Without these
-  // enrichments the flour is the plain formula above, which the calculator hand-off links
-  // (src/lib/handoff.ts) are built on.
-  if (fatShare > 0 || sweetShare > 0 || eggsWeight > 0) {
+  // Butter, oil, a sweetener, eggs or a preferment put more rounded rows on the list, and the
+  // flour rounded to a whole gram can then leave the rows a few grams off the stated total. A
+  // gram of flour either side moves every row with it, so take whichever lands closest. In
+  // the rare case that every choice is still more than 2 g out (several rows tipping over to
+  // the next gram at once), the last grams go into the liquid.
+  //
+  // A plain dough (no enrichment that adds weight, no preferment) keeps the formula above
+  // untouched: the calculator hand-off links in src/lib/handoff.ts are built on it.
+  if (fatShare > 0 || sweetShare > 0 || eggsWeight > 0 || prefData) {
     for (const nearby of [flourWeight - 1, flourWeight + 1]) {
-      if (nearby < 0) continue;
+      // Within half a gram there is nothing to gain.
+      if (nearby < 0 || Math.abs(best.listed - totalDough) <= 0.5) continue;
       const other = build(nearby);
       if (Math.abs(other.listed - totalDough) < Math.abs(best.listed - totalDough)) best = other;
+    }
+    const gap = totalDough - best.listed;
+    if (Math.abs(gap) > 1.95) {
+      const liquidLeft = best.liquidWeight - (best.preferment ? best.preferment.water : 0);
+      best = build(best.flourWeight, Math.max(-liquidLeft, Math.round(gap)));
     }
   }
 
@@ -1096,30 +1333,30 @@ export interface PrefermentRow {
   note: string;
 }
 
-/** The rows of the preferment box on the recipe card. */
-export function prefermentRows(state: RecipeState, prefIngredients: PrefermentIngredients): PrefermentRow[] {
+/** The rows of the preferment box on the recipe card: everything that goes in its bowl. */
+export function prefermentRows(state: RecipeState, recipe: Recipe): PrefermentRow[] {
+  const preferment = recipe.preferment;
   const prefData = PREFERMENT_DATA[state.prefermentType];
-  const prefIngs: PrefermentRow[] = [];
-  prefIngs.push({ name: 'Bread Flour', weight: prefIngredients.flour, note: `(${state.prefermentPercent}% of total)` });
-  prefIngs.push({ name: 'Water', weight: prefIngredients.water, note: prefData.hydration === -1 ? '(recipe hydration)' : `(${prefData.hydration}% hydration)` });
+  if (!preferment || !prefData) return [];
 
-  if (state.prefermentType === 'levain') {
-    prefIngs.push({ name: 'Active Starter', weight: prefIngredients.yeast, note: prefIngredients.yeastNote });
-  } else if (prefIngredients.yeast > 0) {
-    prefIngs.push({ name: 'Instant Yeast', weight: prefIngredients.yeast, note: prefIngredients.yeastNote });
+  const rows: PrefermentRow[] = preferment.flours.map((flour) => ({ ...flour }));
+  rows.push({
+    name: 'Water',
+    weight: preferment.water,
+    note: prefData.hydration === -1 ? '(recipe hydration)' : `(${prefData.hydration}% hydration)`
+  });
+  if (preferment.salt > 0) {
+    rows.push({ name: 'Salt', weight: preferment.salt, note: `(${state.salt}%, as in the dough)` });
   }
-
-  return prefIngs;
+  if (preferment.leaven) {
+    rows.push({ ...preferment.leaven });
+  }
+  return rows;
 }
 
-/** A preferment row's weight as printed: always grams, one decimal under a gram. */
+/** A preferment row's weight as printed. */
 export function formatPrefermentWeight(weight: number): string {
-  return `${typeof weight === 'number' && weight < 1 ? weight.toFixed(1) : Math.round(weight)}g`;
-}
-
-/** A share of the flour as the list prints it: one decimal from 10% up, two below. */
-export function printedPercent(percent: number): number {
-  return percent >= 10 ? Math.round(percent * 10) / 10 : Math.round(percent * 100) / 100;
+  return `${weight}g`;
 }
 
 export interface IngredientRow {
@@ -1130,57 +1367,55 @@ export interface IngredientRow {
   note: string;
 }
 
-/** The rows of the ingredient list ("Final Dough" when a preferment is on). */
+/** A share of the flour as the list prints it: one decimal from 10% up, two below. */
+export function printedPercent(percent: number): number {
+  return percent >= 10 ? Math.round(percent * 10) / 10 : Math.round(percent * 100) / 100;
+}
+
+/**
+ * The rows of the ingredient list ("Final Dough" when a preferment is on). Each percentage is
+ * the row's share of the total flour, so with a preferment on, the flour and water rows show
+ * what is left for the final dough, not 100% and the full hydration.
+ */
 export function ingredientRows(
   state: RecipeState,
   enrichmentState: EnrichmentState,
-  recipe: Recipe,
-  prefIngredients: PrefermentIngredients | null
+  recipe: Recipe
 ): IngredientRow[] {
   const ingredients: IngredientRow[] = [];
+  const preferment = recipe.preferment;
+  const leaven = leavenPlan(state);
+  const prefShare = preferment ? state.prefermentPercent / 100 : 0;
 
-  // Calculate remaining flour and water after preferment
-  let finalFlour = recipe.flourWeight;
-  let finalWater = recipe.liquidWeight;
-
-  if (state.prefermentType !== 'none' && prefIngredients) {
-    finalFlour = recipe.flourWeight - prefIngredients.flour;
-    finalWater = recipe.liquidWeight - prefIngredients.water;
-  }
-
-  if (state.wholeGrain > 0) {
-    // When using preferment, apply percentage to final flour
-    const whiteFlourFinal = Math.round(finalFlour * (100 - state.wholeGrain) / 100);
-    const wholeGrainFinal = finalFlour - whiteFlourFinal;
+  recipe.flours.forEach((flour, i) => {
     ingredients.push({
-      name: 'Bread Flour',
-      weight: whiteFlourFinal,
-      percent: 100 - state.wholeGrain,
-      note: state.prefermentType !== 'none' ? '(remaining)' : ''
+      name: flour.name,
+      weight: flour.weight,
+      percent: flour.percent,
+      note: preferment && i === 0 ? '(remaining)' : ''
     });
-    ingredients.push({
-      name: 'Whole Wheat Flour',
-      weight: wholeGrainFinal,
-      percent: state.wholeGrain,
-      note: ''
-    });
-  } else {
-    ingredients.push({
-      name: 'Flour',
-      weight: finalFlour,
-      percent: 100,
-      note: state.prefermentType !== 'none' ? '(remaining)' : ''
-    });
-  }
+  });
 
-  // Milk or cream takes its share of the liquid, so the water row is what is left.
-  const waterRowWeight = finalWater - recipe.dairyWeight;
+  // Liquid left for the final dough once the preferment has its water. Milk or cream takes
+  // its share of the liquid, and the water row is what is left.
+  const prefWaterPercent = prefShare * prefermentHydration(state);
+  const liquidLeftPercent = state.hydration - prefWaterPercent;
+  const dairyPercent = recipe.dairyWeight > 0
+    ? Math.min(state.hydration * enrichmentState.dairy.percentOfLiquid / 100, liquidLeftPercent)
+    : 0;
+  const waterRowWeight = recipe.liquidWeight - (preferment ? preferment.water : 0) - recipe.dairyWeight;
+  // When the liquid took up a last gram or two to land on the total, its rows state the
+  // share they really are.
+  const ofFlour = (grams: number) => printedPercent((grams / recipe.flourWeight) * 100);
+  const nudged = recipe.liquidNudge !== 0;
   if (waterRowWeight > 0 || recipe.dairyWeight === 0) {
     ingredients.push({
       name: 'Water',
       weight: waterRowWeight,
-      percent: recipe.dairyWeight === 0 ? state.hydration : printedPercent((waterRowWeight / recipe.flourWeight) * 100),
-      note: state.prefermentType !== 'none' ? '(adjust for preferment)' : ''
+      percent: nudged
+        ? ofFlour(waterRowWeight)
+        : !preferment && recipe.dairyWeight === 0 ? state.hydration : printedPercent(liquidLeftPercent - dairyPercent),
+      note: preferment ? '(remaining)' : ''
     });
   }
 
@@ -1188,45 +1423,42 @@ export function ingredientRows(
     ingredients.push({
       name: DAIRY_NAMES[enrichmentState.dairy.type] || 'Milk',
       weight: recipe.dairyWeight,
-      percent: printedPercent((recipe.dairyWeight / recipe.flourWeight) * 100),
+      percent: nudged ? ofFlour(recipe.dairyWeight) : printedPercent(dairyPercent),
       note: ''
     });
   }
 
   ingredients.push({
     name: 'Salt',
-    weight: recipe.saltWeight,
-    percent: state.salt,
-    note: ''
+    weight: recipe.mainSaltWeight,
+    percent: preferment && preferment.salt > 0 ? printedPercent(state.salt * (1 - prefShare)) : state.salt,
+    note: preferment && preferment.salt > 0 ? '(remaining)' : ''
   });
 
-  // Add preferment as ingredient if active
-  if (state.prefermentType !== 'none' && prefIngredients) {
+  // The preferment goes in as one row. Its flour, water, salt and leavening are all out of
+  // the rows around it, so nothing is counted twice.
+  if (preferment) {
     const prefData = PREFERMENT_DATA[state.prefermentType];
     ingredients.push({
       name: `All of the ${prefData.name}`,
-      weight: prefIngredients.flour + prefIngredients.water,
+      weight: preferment.total,
       percent: -1, // Special marker for no percentage
       note: ''
     });
   }
 
-  // Yeast/Starter with appropriate naming. It is listed with or without a preferment:
-  // calculateRecipe() sizes the flour with the yeast or starter inside the total dough, and a
-  // preferment only moves flour and water out of the rows above. Leaving this row off made
-  // the list come up short of the stated total by the starter's weight.
-  const yeastNames: Record<string, string> = {
-    'starter': 'Sourdough Starter',
-    'instant': 'Instant Yeast',
-    'active-dry': 'Active Dry Yeast',
-    'fresh': 'Fresh Yeast'
-  };
-  ingredients.push({
-    name: yeastNames[state.yeastType] || 'Yeast',
-    weight: recipe.yeastWeight,
-    percent: state.yeastPercent,
-    note: ''
-  });
+  // Yeast or starter. It is listed with or without a preferment: calculateRecipe() sizes the
+  // flour with the leavening inside the total dough. A levain replaces the starter row, and
+  // old dough or a yeasted preferment takes its share out of it.
+  if (recipe.mainLeavenWeight > 0) {
+    const whole = Math.abs(leaven.mainPercent - state.yeastPercent) < 1e-9;
+    ingredients.push({
+      name: YEAST_NAMES[state.yeastType] || 'Yeast',
+      weight: recipe.mainLeavenWeight,
+      percent: whole ? state.yeastPercent : printedPercent(leaven.mainPercent),
+      note: whole ? '' : '(remaining)'
+    });
+  }
 
   // Add enrichments if enabled
   if (enrichmentState.fat.enabled) {
@@ -1270,9 +1502,12 @@ export function ingredientRows(
  * not the rounded grams, so the same recipe reads the same at any batch size.
  */
 export function hydrationWithStarter(state: RecipeState): number | null {
-  if (state.yeastType !== 'starter') return null;
-  const starterFlour = state.yeastPercent / (1 + state.starterHydration / 100);
-  const starterWater = state.yeastPercent - starterFlour;
+  // With a levain the starter in the dough is the levain's seed. The levain's own flour and
+  // water are already part of the recipe's flour and water.
+  const starterPercent = leavenPlan(state).starterPercent;
+  if (!(starterPercent > 0)) return null;
+  const starterFlour = starterPercent / (1 + state.starterHydration / 100);
+  const starterWater = starterPercent - starterFlour;
   return ((state.hydration + starterWater) / (100 + starterFlour)) * 100;
 }
 

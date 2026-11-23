@@ -7,9 +7,11 @@ import {
   eggWeight,
   formatWeight,
   hydrationWithStarter,
+  isValidBlend,
   roundSmall,
   starterHydrationNote,
   type EnrichmentState,
+  type RecipeState,
 } from '../../src/lib/bread-calculator';
 import { printed, row, stateWith } from './helpers/bread-calculator';
 
@@ -29,11 +31,11 @@ describe('reader report: with a preferment on, the printed list still adds up to
     sumsToTotal(p);
   });
 
-  it('keeps the starter row for every preferment type and amount', () => {
-    for (const prefermentType of ['poolish', 'biga', 'pate-fermentee', 'levain'] as const) {
+  it('keeps the starter on the list for a poolish or biga of any size', () => {
+    for (const prefermentType of ['poolish', 'biga'] as const) {
       for (const prefermentPercent of [15, 20, 30, 40]) {
         const p = printed(stateWith({ prefermentType, prefermentPercent }));
-        expect(row(p, 'Sourdough Starter')?.weight, `${prefermentType} ${prefermentPercent}%`).toBe(183);
+        expect(row(p, 'Sourdough Starter')?.weight, `${prefermentType} ${prefermentPercent}%`).toBe(Math.round(p.recipe.flourWeight * 0.2));
         sumsToTotal(p);
       }
     }
@@ -41,7 +43,11 @@ describe('reader report: with a preferment on, the printed list still adds up to
 
   it('keeps the yeast row too, which was dropped the same way', () => {
     const p = printed(stateWith({ yeastType: 'instant', yeastPercent: 1, wholeGrain: 0, prefermentType: 'biga' }));
-    expect(row(p, 'Instant Yeast')?.weight).toBe(10);
+    // The biga's pinch comes out of the recipe's 1% yeast: 0.2% of a fifth of the flour.
+    const pinch = p.prefermentRows.find((r) => r.name === 'Instant Yeast')!.weight;
+    expect(pinch).toBe(0.4);
+    expect(row(p, 'Instant Yeast')?.weight).toBe(9.7);
+    expect(row(p, 'Instant Yeast')?.percent).toBe(0.96);
     sumsToTotal(p);
   });
 
@@ -208,5 +214,137 @@ describe('small amounts keep a decimal', () => {
   it('salt under 10 g prints to a tenth', () => {
     expect(row(noKnead(1, 500), 'Salt')?.weight).toBe(5.5);
     expect(formatWeight(stateWith(), 5.5)).toBe('5.5g');
+  });
+});
+
+describe('preferments: every gram is listed once', () => {
+  const styled = (id: string, over: Partial<RecipeState> = {}) => {
+    const state = createDefaultState();
+    const style = BREAD_STYLES.find((s) => s.id === id)!;
+    applyStyle(state, { ...style, style: style.id });
+    return Object.assign(state, over);
+  };
+  const box = (p: ReturnType<typeof printed>, name: string) => p.prefermentRows.find((r) => r.name === name);
+
+  it('C: Baguette with a 30% poolish shows what is left, 70% flour and 38% water (was 100% and 68%)', () => {
+    const p = printed(styled('baguette', { prefermentType: 'poolish', prefermentPercent: 30 }));
+    const flour = p.recipe.flourWeight;
+    expect(row(p, 'Flour')).toMatchObject({ percent: 70, note: '(remaining)' });
+    expect(row(p, 'Water')).toMatchObject({ percent: 38, note: '(remaining)' });
+    expect(Math.abs(row(p, 'Flour')!.weight - flour * 0.7)).toBeLessThanOrEqual(1);
+    expect(Math.abs(row(p, 'Water')!.weight - flour * 0.38)).toBeLessThanOrEqual(1);
+    sumsToTotal(p);
+  });
+
+  it('C2: whole wheat is 10% of all the flour, 91 g, with a 20% poolish on (was 73 g)', () => {
+    const p = printed(stateWith({ prefermentType: 'poolish', prefermentPercent: 20 }));
+    expect(p.recipe.flourWeight).toBe(914);
+    expect(row(p, 'Whole Wheat Flour')).toMatchObject({ weight: 91, percent: 10 });
+    expect(row(p, 'Bread Flour')).toMatchObject({ weight: 914 - 91 - 183, percent: 70 });
+    expect(box(p, 'Bread Flour')).toMatchObject({ weight: 183, note: '(20% of total)' });
+    sumsToTotal(p);
+  });
+
+  it('G: a levain replaces the starter row, and its seed starter is in the box and in the total', () => {
+    const p = printed(stateWith({ prefermentType: 'levain', prefermentPercent: 20 }));
+    // 1800 g over 1 + 75% + 2% + 4% (the seed: 20% of the fifth of the flour in the levain).
+    expect(Math.abs(p.recipe.flourWeight - 1800 / 1.81)).toBeLessThanOrEqual(1);
+    expect(row(p, 'Sourdough Starter')).toBeUndefined();
+    const [flour, water, seed] = p.prefermentRows;
+    expect([flour.name, water.name, seed.name]).toEqual(['Bread Flour', 'Water', 'Active Starter']);
+    expect(water.weight).toBe(flour.weight);
+    expect(seed.weight).toBe(Math.round(p.recipe.flourWeight * 0.04));
+    expect(row(p, 'All of the Levain')?.weight).toBe(flour.weight + water.weight + seed.weight);
+    sumsToTotal(p);
+    // The line under the list counts the seed as the starter.
+    expect(starterHydrationNote(p.state)).toBe("With the starter's flour and water counted, hydration is 75.5%.");
+  });
+
+  it('G: a yeast style keeps its yeast row next to a levain', () => {
+    const p = printed(styled('baguette', { prefermentType: 'levain', prefermentPercent: 20 }));
+    expect(row(p, 'Instant Yeast')).toMatchObject({ percent: 0.5, note: '' });
+    expect(box(p, 'Active Starter')?.weight).toBe(Math.round(p.recipe.flourWeight * 0.04));
+    sumsToTotal(p);
+  });
+
+  it('F: pâte fermentée in a sourdough recipe is raised with starter, not "Instant Yeast 37g"', () => {
+    const p = printed(stateWith({ prefermentType: 'pate-fermentee', prefermentPercent: 20 }));
+    expect(box(p, 'Instant Yeast')).toBeUndefined();
+    // The old dough holds a fifth of everything: flour, water, salt and starter.
+    expect(box(p, 'Sourdough Starter')?.weight).toBe(37);
+    expect(row(p, 'Sourdough Starter')).toMatchObject({ weight: 146, percent: 16, note: '(remaining)' });
+    sumsToTotal(p);
+  });
+
+  it('F: in a yeast recipe it carries the recipe yeast at the recipe share, in the yeast type picked', () => {
+    const p = printed(styled('baguette', { yeastType: 'fresh', yeastPercent: 1.5, prefermentType: 'pate-fermentee', prefermentPercent: 20 }));
+    const oldDoughFlour = box(p, 'Flour')!.weight;
+    expect(Math.abs(box(p, 'Fresh Yeast')!.weight - oldDoughFlour * 0.015)).toBeLessThanOrEqual(0.06);
+    expect(row(p, 'Fresh Yeast')?.percent).toBe(1.2);
+    sumsToTotal(p);
+  });
+
+  it('J8: old dough carries its salt, and that salt comes out of the salt row', () => {
+    const p = printed(stateWith({ prefermentType: 'pate-fermentee', prefermentPercent: 20 }));
+    expect(box(p, 'Salt')).toMatchObject({ weight: 3.7, note: '(2%, as in the dough)' });
+    expect(row(p, 'Salt')).toMatchObject({ weight: 15, percent: 1.6, note: '(remaining)' });
+    for (const prefermentType of ['poolish', 'biga', 'levain'] as const) {
+      const other = printed(stateWith({ prefermentType }));
+      expect(other.prefermentRows.some((r) => r.name === 'Salt'), prefermentType).toBe(false);
+      expect(row(other, 'Salt')?.percent, prefermentType).toBe(2);
+    }
+  });
+
+  it('J8: a biga takes 0.2% yeast, a poolish 0.1%, out of the recipe yeast and in the yeast type picked', () => {
+    const biga = printed(styled('ciabatta', { prefermentType: 'biga', prefermentPercent: 40 }));
+    expect(box(biga, 'Instant Yeast')?.weight).toBeCloseTo(box(biga, 'Flour')!.weight * 0.002, 1);
+    expect(row(biga, 'Instant Yeast')?.percent).toBe(0.52);
+
+    const activeDry = printed(styled('ciabatta', { yeastType: 'active-dry', yeastPercent: 0.75, prefermentType: 'poolish', prefermentPercent: 40 }));
+    expect(box(activeDry, 'Instant Yeast')).toBeUndefined();
+    expect(box(activeDry, 'Active Dry Yeast')?.weight).toBeCloseTo(box(activeDry, 'Flour')!.weight * 0.00125, 1);
+    expect(row(activeDry, 'Active Dry Yeast')?.percent).toBe(0.7);
+  });
+
+  it('a sourdough recipe has no yeast row to take from, so the pinch of instant yeast is on top and in the total', () => {
+    const p = printed(stateWith({ prefermentType: 'poolish', prefermentPercent: 40 }));
+    expect(box(p, 'Instant Yeast')).toMatchObject({ weight: 0.37, note: '(tiny pinch)' });
+    expect(row(p, 'Sourdough Starter')).toMatchObject({ percent: 20, note: '' });
+    sumsToTotal(p);
+  });
+
+  it('a preferment bigger than the first flour takes the rest from the next one', () => {
+    const blend = [{ type: 'bread', percent: 10 }, { type: 'whole-wheat', percent: 90 }];
+    const p = printed(stateWith({ prefermentType: 'poolish', prefermentPercent: 20 }), undefined, blend);
+    expect(p.prefermentRows.filter((r) => r.name.endsWith('Flour')).map((r) => [r.name, r.note])).toEqual([
+      ['Bread Flour', '(10% of total)'],
+      ['Whole Wheat Flour', '(10% of total)'],
+    ]);
+    expect(row(p, 'Bread Flour')).toBeUndefined();
+    expect(row(p, 'Whole Wheat Flour')?.percent).toBe(80);
+    sumsToTotal(p);
+  });
+});
+
+describe('flour blends from the Flour tab', () => {
+  it('prints one row per flour, by name', () => {
+    const blend = [{ type: 'ap', percent: 50 }, { type: 'spelt', percent: 50 }];
+    const p = printed(stateWith({ wholeGrain: 50 }), undefined, blend);
+    expect(p.rows.filter((r) => r.name.endsWith('Flour')).map((r) => [r.name, r.percent])).toEqual([['All-Purpose Flour', 50], ['Spelt Flour', 50]]);
+    expect(row(p, 'All-Purpose Flour')!.weight + row(p, 'Spelt Flour')!.weight).toBe(p.recipe.flourWeight);
+  });
+
+  it('one plain flour is split by the Whole Grain slider', () => {
+    const p = printed(stateWith({ wholeGrain: 20 }), undefined, [{ type: 'ap', percent: 100 }]);
+    expect(p.rows.slice(0, 2).map((r) => [r.name, r.percent])).toEqual([['All-Purpose Flour', 80], ['Whole Wheat Flour', 20]]);
+  });
+
+  it('a blend that is not 100% is not used', () => {
+    expect(isValidBlend([{ type: 'bread', percent: 100 }])).toBe(true);
+    expect(isValidBlend([{ type: 'bread', percent: 70 }, { type: 'whole-wheat', percent: 20 }, { type: 'rye-light', percent: 10 }])).toBe(true);
+    expect(isValidBlend([{ type: 'bread', percent: 100 }, { type: 'whole-wheat', percent: 100 }])).toBe(false);
+    expect(isValidBlend([{ type: 'bread', percent: 60 }])).toBe(false);
+    const p = printed(stateWith(), undefined, [{ type: 'bread', percent: 100 }, { type: 'whole-wheat', percent: 100 }, { type: 'rye-light', percent: 50 }]);
+    expect(p.rows).toEqual(printed(stateWith()).rows);
   });
 });

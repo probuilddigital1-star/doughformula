@@ -83,11 +83,11 @@ describe('bread calculator sweep: style x preferment x yeast x starter x enrichm
     it('holds for every row when there is no preferment, to the nearest gram', () => {
       expectClean(sweep.percentages, /row, no preferment$/);
       expectClean(sweep.percentages, /^(Salt|.*Yeast|Sourdough Starter|Butter|Oil|Egg.*|Sugar|Honey|Maple|Malt|Whole Milk|Buttermilk|Heavy Cream) row$/);
-      expectOnlyKnown(sweep.percentages, [/^(flour|Water) row, with /]);
     });
 
-    it.fails('KNOWN ISSUE C: flour and water percentages still match their grams when a preferment is on', () => {
+    it('flour and water percentages still match their grams when a preferment is on (was KNOWN ISSUE C)', () => {
       expectClean(sweep.percentages, /^(flour|Water) row, with /);
+      expectOnlyKnown(sweep.percentages, []);
     });
 
     it('salt and yeast are never more than 10% off after rounding, or 0.01 g under a tenth of a gram (was KNOWN ISSUE D)', () => {
@@ -118,7 +118,7 @@ describe('bread calculator sweep: style x preferment x yeast x starter x enrichm
       }
     });
 
-    it.fails('KNOWN ISSUE T: a flour blend that adds up past 100% cannot print negative flour', () => {
+    it('a flour blend that adds up past 100% cannot print negative flour (was KNOWN ISSUE T)', () => {
       // The Flour tab warns "Total flour must equal 100%" and still prints the recipe.
       const blend = [{ type: 'bread', percent: 100 }, { type: 'whole-wheat', percent: 100 }, { type: 'rye-light', percent: 50 }];
       const p = printed(stateWith({ wholeGrain: calculateWholeGrainPercent(blend) }), undefined, blend);
@@ -129,17 +129,34 @@ describe('bread calculator sweep: style x preferment x yeast x starter x enrichm
   describe('4. preferment flour and water are taken out of the main rows exactly once', () => {
     it('holds for every preferment type and amount', () => {
       expectClean(sweep.preferment, 'flour or water not removed exactly once');
-      expectClean(sweep.preferment, 'preferment row is not its flour plus water');
+      expectClean(sweep.preferment, 'preferment box does not list the flour and water taken out');
       expectClean(sweep.preferment, 'rows differ from the recipe without a preferment');
-      expectOnlyKnown(sweep.preferment, [/ box weighs more than the "All of the" row$/, 'pate-fermentee asks for instant yeast above 2% of its flour']);
     });
 
-    it.fails('KNOWN ISSUE F: pâte fermentée never asks for instant yeast at a starter-sized dose', () => {
-      expectClean(sweep.preferment, 'pate-fermentee asks for instant yeast above 2% of its flour');
+    it('salt and leavening are each listed once too, and only old dough carries salt', () => {
+      expectClean(sweep.preferment, 'salt in the wrong preferment');
+      expectClean(sweep.preferment, 'salt not listed exactly once');
+      expectClean(sweep.preferment, 'leavening not listed exactly once');
     });
 
-    it.fails('KNOWN ISSUE G: what the preferment box says to mix weighs what the "All of the ..." row says (within 2 g)', () => {
-      expectClean(sweep.preferment, / box weighs more than the "All of the" row$/);
+    it("pâte fermentée is leavened like the recipe: same yeast or starter, same share (was KNOWN ISSUE F)", () => {
+      expectClean(sweep.preferment, "pate-fermentee leavening is not the recipe's own");
+    });
+
+    it('what the preferment box says to mix weighs what the "All of the ..." row says (was KNOWN ISSUE G)', () => {
+      expectClean(sweep.preferment, / box does not weigh what the "All of the" row says$/);
+    });
+
+    it('a levain is seeded with 20% starter, replaces the starter row, and leaves a yeast row alone', () => {
+      expectClean(sweep.preferment, 'levain seed is not 20% of its flour');
+      expectClean(sweep.preferment, 'levain did not replace the starter row, or changed the yeast row');
+    });
+
+    it('a poolish or biga takes a pinch of the yeast type picked, or of instant yeast in a sourdough recipe', () => {
+      expectClean(sweep.preferment, / yeast is not the yeast type picked$/);
+      expectClean(sweep.preferment, / yeast is more than a pinch$/);
+      expectClean(sweep.preferment, / in a sourdough recipe changed the starter row or lost its yeast$/);
+      expectOnlyKnown(sweep.preferment, []);
     });
   });
 

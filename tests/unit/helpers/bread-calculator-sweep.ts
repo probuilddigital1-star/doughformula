@@ -5,6 +5,8 @@
 import {
   BREAD_STYLES,
   ENRICHMENT_WATER_CONTENT,
+  LEVAIN_SEED_PERCENT,
+  YEAST_NAMES,
   applyStyle,
   convertToOz,
   createDefaultEnrichments,
@@ -188,7 +190,6 @@ function checkCase(c: SweepCase, p: Printed, out: SweepResult): void {
   for (const r of rows) {
     if (r.percent < 0) continue;
     const actualPercent = (r.weight / recipe.flourWeight) * 100;
-    const expectedGrams = (r.percent / 100) * recipe.flourWeight;
     // Grams are printed whole, so half a gram of drift is rounding. Flour, water and milk rows
     // are what is left once whole wheat, a preferment or the other liquid is taken out, so
     // they carry half a gram for each part: a gram and a half at most. The percentage itself
@@ -207,13 +208,17 @@ function checkCase(c: SweepCase, p: Printed, out: SweepResult): void {
     }
     // A small amount must not be misstated by its rounding: within 10% of the exact amount.
     // Under a tenth of a gram no kitchen scale can tell, so there the printed hundredth is
-    // the limit.
-    if (r.percent > 0 && expectedGrams > 0 && !ENRICHMENT_ROW.test(r.name) && !flourRow(r.name) && r.name !== 'Water') {
-      const rel = (r.weight - expectedGrams) / expectedGrams;
-      if (Math.abs(rel) > 0.1 && Math.abs(r.weight - expectedGrams) > 0.0101) {
+    // the limit. The percentage is itself printed rounded, so the exact amount is anywhere
+    // in that half-step band.
+    if (r.percent > 0 && !ENRICHMENT_ROW.test(r.name) && !flourRow(r.name) && r.name !== 'Water') {
+      const low = ((r.percent - percentSlack) / 100) * recipe.flourWeight;
+      const high = ((r.percent + percentSlack) / 100) * recipe.flourWeight;
+      const off = r.weight < low ? r.weight - low : r.weight > high ? r.weight - high : 0;
+      const rel = off / (off < 0 ? low : high);
+      if (Math.abs(rel) > 0.1 && Math.abs(off) > 0.0101) {
         out.percentages.add(
           `small amount misstated by rounding (${r.name.includes('Yeast') ? 'yeast' : r.name})`,
-          v(() => `${r.name} ${r.percent}% of ${recipe.flourWeight} g flour is ${expectedGrams.toFixed(2)} g, printed as ${r.weight} g (${rel > 0 ? '+' : ''}${Math.round(rel * 100)}%)`),
+          v(() => `${r.name} ${r.percent}% of ${recipe.flourWeight} g flour is ${low.toFixed(2)} to ${high.toFixed(2)} g, printed as ${r.weight} g (${rel > 0 ? '+' : ''}${Math.round(rel * 100)}%)`),
           rel,
         );
       }
@@ -250,34 +255,72 @@ function checkCase(c: SweepCase, p: Printed, out: SweepResult): void {
   }
   // Milk or cream stands in for part of the water, so the two rows together are the liquid.
   const dairyInRows = rowGrams(rows, DAIRY_ROW);
+  const leavenName = YEAST_NAMES[state.yeastType];
+  const mainLeaven = rowGrams(rows, new RegExp(`^${leavenName}$`));
   if (preferment) {
+    const type = state.prefermentType;
     const prefRow = rows.find((r) => r.name.startsWith('All of the '))!;
+    const box = p.prefermentRows;
+    const boxText = () => box.map((r) => `${r.name} ${formatPrefermentWeight(r.weight)}`).join(', ');
     if (flourInRows + preferment.flour !== recipe.flourWeight || waterInRows + dairyInRows + preferment.water !== recipe.liquidWeight) {
       out.preferment.add(
         'flour or water not removed exactly once',
         v(() => `flour ${flourInRows} + ${preferment.flour} vs ${recipe.flourWeight}; water ${waterInRows} + milk ${dairyInRows} + ${preferment.water} vs ${recipe.liquidWeight}`),
       );
     }
-    if (prefRow.weight !== preferment.flour + preferment.water) {
-      out.preferment.add('preferment row is not its flour plus water', v(() => `${prefRow.name} ${prefRow.weight} g`));
+    if (rowGrams(box, /Flour$/) !== preferment.flour || rowGrams(box, /^Water$/) !== preferment.water) {
+      out.preferment.add('preferment box does not list the flour and water taken out', v(() => `box lists ${boxText()}; taken out: flour ${preferment.flour}, water ${preferment.water}`));
     }
-    // What the preferment box tells the baker to mix, against the "All of the ..." row.
-    const boxTotal = p.prefermentRows.reduce((s, r) => s + r.weight, 0);
-    const extra = boxTotal - prefRow.weight;
-    if (Math.abs(extra) > 2) {
+    // What the box tells the baker to mix, against the "All of the ..." row (a whole-gram row).
+    const boxTotal = box.reduce((s, r) => s + r.weight, 0);
+    if (Math.abs(boxTotal - prefRow.weight) > 0.51) {
       out.preferment.add(
-        `${state.prefermentType} box weighs more than the "All of the" row`,
-        v(() => `box lists ${p.prefermentRows.map((r) => `${r.name} ${formatPrefermentWeight(r.weight)}`).join(', ')} = ${Math.round(boxTotal)} g, row says ${prefRow.weight} g`),
-        extra,
+        `${type} box does not weigh what the "All of the" row says`,
+        v(() => `box lists ${boxText()} = ${boxTotal.toFixed(2)} g, row says ${prefRow.weight} g`),
+        boxTotal - prefRow.weight,
       );
     }
-    const prefYeast = p.prefermentRows.find((r) => r.name === 'Instant Yeast');
-    if (prefYeast && prefYeast.weight / preferment.flour > 0.02) {
-      out.preferment.add(
-        `${state.prefermentType} asks for instant yeast above 2% of its flour`,
-        v(() => `preferment box: Instant Yeast ${formatPrefermentWeight(prefYeast.weight)} for ${preferment.flour} g flour (${((prefYeast.weight / preferment.flour) * 100).toFixed(0)}%)`),
-        prefYeast.weight / preferment.flour,
-      );
+
+    // Salt: only old dough is salted, and its salt comes out of the salt row. Each part is
+    // rounded on its own, so the two can be a gram off the whole.
+    const boxSalt = rowGrams(box, /^Salt$/);
+    if ((type === 'pate-fermentee') !== boxSalt > 0) {
+      out.preferment.add('salt in the wrong preferment', v(() => `${type} box lists ${boxText()}`));
+    }
+    if (Math.abs(rowGrams(rows, /^Salt$/) + boxSalt - recipe.saltWeight) > 1.06) {
+      out.preferment.add('salt not listed exactly once', v(() => `salt row ${rowGrams(rows, /^Salt$/)} + old dough ${boxSalt} vs ${recipe.saltWeight} g in the dough`));
+    }
+
+    // Leavening: listed once, named for what the recipe uses.
+    const boxLeaven = box.find((r) => /(Yeast|Starter)$/.test(r.name));
+    const leavenText = () => `box: ${boxLeaven ? `${boxLeaven.name} ${formatPrefermentWeight(boxLeaven.weight)}` : 'no leavening'} for ${preferment.flour} g flour; final dough: ${leavenName} ${mainLeaven} g; recipe ${state.yeastType} ${state.yeastPercent}%`;
+    if (type === 'levain') {
+      if (!boxLeaven || boxLeaven.name !== 'Active Starter' || Math.abs(boxLeaven.weight - (LEVAIN_SEED_PERCENT / 100) * preferment.flour) > 0.61) {
+        out.preferment.add('levain seed is not 20% of its flour', v(leavenText));
+      }
+      if (state.yeastType === 'starter' ? rows.some((r) => r.name === 'Sourdough Starter') : mainLeaven !== recipe.yeastWeight) {
+        out.preferment.add('levain did not replace the starter row, or changed the yeast row', v(leavenText));
+      }
+    } else if (type === 'pate-fermentee') {
+      // Old dough is a piece of the same dough: the recipe's own leavening, at the recipe's share.
+      if (!boxLeaven || boxLeaven.name !== leavenName || Math.abs(boxLeaven.weight - (state.yeastPercent / 100) * preferment.flour) > 0.76) {
+        out.preferment.add("pate-fermentee leavening is not the recipe's own", v(leavenText), boxLeaven ? boxLeaven.weight / preferment.flour : 0);
+      } else if (Math.abs(mainLeaven + boxLeaven.weight - recipe.yeastWeight) > 1.06) {
+        out.preferment.add('leavening not listed exactly once', v(leavenText));
+      }
+    } else if (state.yeastType === 'starter') {
+      // A sourdough recipe has no yeast row, so the pinch of instant yeast is on top.
+      if (!boxLeaven || boxLeaven.name !== 'Instant Yeast' || mainLeaven !== recipe.yeastWeight) {
+        out.preferment.add(`${type} in a sourdough recipe changed the starter row or lost its yeast`, v(leavenText));
+      }
+    } else if (!boxLeaven || boxLeaven.name !== leavenName) {
+      out.preferment.add(`${type} yeast is not the yeast type picked`, v(leavenText));
+    } else if (Math.abs(mainLeaven + boxLeaven.weight - recipe.yeastWeight) > 1.06) {
+      out.preferment.add('leavening not listed exactly once', v(leavenText));
+    }
+    // A poolish or biga takes a pinch: never more than 1% of its flour, in any yeast type.
+    if ((type === 'poolish' || type === 'biga') && boxLeaven && boxLeaven.weight > 0.01 * preferment.flour + 0.06) {
+      out.preferment.add(`${type} yeast is more than a pinch`, v(leavenText), boxLeaven.weight / preferment.flour);
     }
   } else if (flourInRows !== recipe.flourWeight || waterInRows + dairyInRows !== recipe.liquidWeight) {
     out.preferment.add('rows differ from the recipe without a preferment', v(() => `flour ${flourInRows}/${recipe.flourWeight}, water ${waterInRows} + milk ${dairyInRows}/${recipe.liquidWeight}`));

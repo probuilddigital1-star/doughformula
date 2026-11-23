@@ -1,5 +1,4 @@
 import {
-  calculatePrefermentIngredients,
   calculateRecipe,
   createDefaultEnrichments,
   createDefaultFlourBlend,
@@ -35,15 +34,15 @@ export function printed(
   flourBlend: FlourEntry[] = createDefaultFlourBlend(),
 ): Printed {
   const recipe = calculateRecipe(state, enrichments, flourBlend);
-  const preferment = calculatePrefermentIngredients(state, recipe.flourWeight);
-  const rows = ingredientRows(state, enrichments, recipe, preferment);
+  const preferment = recipe.preferment;
+  const rows = ingredientRows(state, enrichments, recipe);
   return {
     state,
     enrichments,
     recipe,
     preferment,
     rows,
-    prefermentRows: preferment ? prefermentRows(state, preferment) : [],
+    prefermentRows: prefermentRows(state, recipe),
     rowsTotal: rows.reduce((sum, r) => sum + r.weight, 0),
   };
 }

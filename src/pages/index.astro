@@ -328,6 +328,7 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
                       <span class="font-medium" id="yeast-percent-value">20%</span>
                     </label>
                     <input type="range" id="yeast-percent-slider" min="0.1" max="30" value="20" step="0.1" class="w-full accent-[var(--accent-gold)]" />
+                    <p id="yeast-levain-note" class="hidden text-xs text-[var(--crust-brown)] mt-1">With a levain on, the levain is your starter. Set its size on the Preferments tab.</p>
                   </div>
 
                   <!-- Starter Hydration (only for sourdough starter) -->
@@ -1431,7 +1432,6 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
   const formatWeight = (grams: number) => calc.formatWeight(state, grams);
   const estimateFermentationTimes = () => calc.estimateFermentationTimes(state);
   const calculateWholeGrainPercent = () => calc.calculateWholeGrainPercent(flourBlend);
-  const calculatePrefermentIngredients = (totalFlourWeight: number) => calc.calculatePrefermentIngredients(state, totalFlourWeight);
   const estimatePrefermentTiming = () => calc.estimatePrefermentTiming(state);
   const generateBakingSchedule = (targetDateTime: Date) => calc.generateBakingSchedule(state, targetDateTime);
   const calculateRecipe = () => calc.calculateRecipe(state, enrichmentState, flourBlend);
@@ -1479,7 +1479,7 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
     // Update preferment section visibility and content
     const prefermentSection = document.getElementById('preferment-section');
     const ingredientsHeading = document.getElementById('ingredients-heading-text');
-    const prefIngredients = calculatePrefermentIngredients(recipe.flourWeight);
+    const prefIngredients = recipe.preferment;
 
     if (prefermentSection && ingredientsHeading) {
       if (state.prefermentType !== 'none' && prefIngredients) {
@@ -1499,7 +1499,7 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
 
         // Build preferment ingredients list
         if (prefIngList) {
-          const prefIngs = calc.prefermentRows(state, prefIngredients);
+          const prefIngs = calc.prefermentRows(state, recipe);
 
           prefIngList.innerHTML = prefIngs.map(ing => `
             <div class="flex justify-between py-1.5 border-b border-[var(--border-light)] last:border-0">
@@ -1520,7 +1520,7 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
     // Update ingredients list (Final Dough when preferment active)
     const ingredientsList = document.getElementById('ingredients-list');
     if (ingredientsList) {
-      const ingredients = calc.ingredientRows(state, enrichmentState, recipe, prefIngredients);
+      const ingredients = calc.ingredientRows(state, enrichmentState, recipe);
 
       ingredientsList.innerHTML = ingredients.map(ing => `
         <div class="flex justify-between py-2 border-b border-[var(--border-light)]">
@@ -1590,6 +1590,10 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
       yeastPercentSlider.max = String(range.max);
       yeastPercentSlider.step = String(range.step);
       yeastPercentSlider.value = String(state.yeastPercent);
+      // In a sourdough recipe a levain replaces the starter row, so this amount is not used
+      const levainIsStarter = state.yeastType === 'starter' && state.prefermentType === 'levain';
+      yeastPercentSlider.disabled = levainIsStarter;
+      document.getElementById('yeast-levain-note')?.classList.toggle('hidden', !levainIsStarter);
     }
 
     // Show/hide starter-specific controls
@@ -2038,9 +2042,7 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
     const readySigns = document.getElementById('preferment-ready-signs');
     const startTime = document.getElementById('preferment-start-time');
     const prefTip = document.getElementById('preferment-tip');
-    const prefFlourWeight = document.getElementById('preferment-flour-weight');
-    const prefWaterWeight = document.getElementById('preferment-water-weight');
-    const prefYeastWeight = document.getElementById('preferment-yeast-weight');
+    const prefPreview = document.getElementById('preferment-ingredients');
 
     if (state.prefermentType === 'none') {
       controls?.classList.add('hidden');
@@ -2066,20 +2068,14 @@ const starterNoteOnLoad = starterHydrationNote(createDefaultState());
     if (startTime) startTime.textContent = timing.startTime;
     if (prefTip) prefTip.textContent = prefData.tip;
 
-    // Calculate and update preferment ingredients
-    const recipe = calculateRecipe();
-    const prefIngredients = calculatePrefermentIngredients(recipe.flourWeight);
-    if (prefIngredients) {
-      if (prefFlourWeight) prefFlourWeight.textContent = `${prefIngredients.flour}g`;
-      if (prefWaterWeight) prefWaterWeight.textContent = `${prefIngredients.water}g`;
-      if (prefYeastWeight) {
-        const yeastText = state.prefermentType === 'levain'
-          ? `${prefIngredients.yeast}g ${prefIngredients.yeastNote}`
-          : prefIngredients.yeast < 1
-            ? `${prefIngredients.yeast}g ${prefIngredients.yeastNote}`
-            : `${prefIngredients.yeast}g`;
-        prefYeastWeight.textContent = yeastText;
-      }
+    // The preview lists what the box on the recipe card lists
+    if (prefPreview) {
+      prefPreview.innerHTML = calc.prefermentRows(state, calculateRecipe()).map(ing => `
+        <div class="flex justify-between">
+          <span class="text-[var(--crust-brown)]">${ing.name}</span>
+          <span class="font-medium">${calc.formatPrefermentWeight(ing.weight)}${ing.note ? ` ${ing.note}` : ''}</span>
+        </div>
+      `).join('');
     }
   }
 

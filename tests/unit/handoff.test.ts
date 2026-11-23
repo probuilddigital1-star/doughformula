@@ -8,7 +8,6 @@ import { DEFAULT_ROWS } from '../../src/lib/bakers-percentage';
 import {
   BREAD_STYLES,
   applyUrlRecipeParams,
-  calculatePrefermentIngredients,
   calculateRecipe,
   createDefaultEnrichments,
   createDefaultFlourBlend,
@@ -29,7 +28,7 @@ function homepageRecipe(href: string): { flour: number; water: number; hydration
   applyUrlRecipeParams(state, parseUrlRecipeParams(new URL(href, 'https://thedoughformula.com').searchParams));
   const enrichments = createDefaultEnrichments();
   const recipe = calculateRecipe(state, enrichments, createDefaultFlourBlend());
-  const rows = ingredientRows(state, enrichments, recipe, calculatePrefermentIngredients(state, recipe.flourWeight));
+  const rows = ingredientRows(state, enrichments, recipe);
   const grams = (match: (name: string) => boolean) => rows.filter((r) => match(r.name)).reduce((sum, r) => sum + r.weight, 0);
   return { flour: grams((n) => n.endsWith('Flour')), water: grams((n) => n === 'Water'), hydration: state.hydration };
 }
@@ -43,7 +42,7 @@ describe('homepage calculator contract (drift guard)', () => {
     expect(src).toContain("import * as calc from '../lib/bread-calculator';");
     expect(src).toContain('const state: RecipeState = calc.createDefaultState();');
     expect(src).toContain('const calculateRecipe = () => calc.calculateRecipe(state, enrichmentState, flourBlend);');
-    expect(src).toContain('const ingredients = calc.ingredientRows(state, enrichmentState, recipe, prefIngredients);');
+    expect(src).toContain('const ingredients = calc.ingredientRows(state, enrichmentState, recipe);');
     expect(src).toContain('const fromUrl = calc.parseUrlRecipeParams(new URLSearchParams(window.location.search));');
     expect(src).toContain('calc.applyUrlRecipeParams(state, fromUrl);');
     // No recipe math left inline in the page.
