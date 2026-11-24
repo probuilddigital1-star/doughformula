@@ -51,9 +51,9 @@ import { SWEEP_SIZE, runSweep, type SweepResult, type Tally } from './helpers/br
  * same way: `it.fails` first, then the fix, then the `.fails` comes off.
  *
  * Tests marked FLAGGED pin today's behavior where the right answer is a judgment call for the
- * site owner, so a change there is a decision and not an accident. The one left is the
- * style-blind schedule (J7), which is not decided yet. The time model (J5) was decided on
- * 2026-11-23 and is tested in section 9.
+ * site owner, so a change there is a decision and not an accident. None are left: the time
+ * model (J5) and the style-aware schedule (J7) were decided on 2026-11-23 and are tested in
+ * section 9, and the style times (J6) in section 10.
  */
 
 const styleState = (id: string, over: Partial<RecipeState> = {}): RecipeState => {
@@ -539,51 +539,116 @@ describe('9. timing and schedule', () => {
     }
   });
 
-  const target = new Date('2026-03-14T09:00:00');
-  const minutesOfDay = (text: string) => {
-    const m = text.match(/^(\d+):(\d\d) (AM|PM)$/)!;
-    return ((Number(m[1]) % 12) + (m[3] === 'PM' ? 12 : 0)) * 60 + Number(m[2]);
-  };
+  // J7, decided 2026-11-23: each style bakes its own way, the rise and proof slots follow the
+  // Timing tab, and a plan that crosses midnight gives every time its day.
+  const target = new Date('2026-03-14T09:00:00'); // a Saturday
+  const plan = (state: RecipeState, at = target) => generateBakingSchedule(state, at).map((s) => `${s.time} | ${s.task} | ${s.duration}`);
   const tasks = (state: RecipeState) => generateBakingSchedule(state, target).map((s) => s.task);
 
-  it('works back from the serving time: cool for an hour, bake 45 minutes before that, preheat 45 before that', () => {
-    const schedule = generateBakingSchedule(stateWith(), target);
-    expect(schedule.slice(-3).map((s) => `${s.time} ${s.task}`)).toEqual(['6:30 AM Preheat oven (with Dutch oven)', '7:15 AM Bake bread', '8:00 AM Cool on wire rack']);
-    expect(schedule[0].task).toBe('Mix final dough');
+  it('Sourdough for Saturday 9:00 AM: an overnight fridge proof, so every time carries its day', () => {
+    expect(plan(stateWith())).toEqual([
+      'Fri 2:45 PM | Mix final dough | 10-15 min',
+      'Fri 3:00 PM | Bulk fermentation (stretch & fold) | 4-6 hrs',
+      'Fri 8:00 PM | Shape and refrigerate | 8-12 hrs',
+      'Sat 6:00 AM | Remove from fridge, let warm | 30 min',
+      'Sat 6:30 AM | Preheat oven to 500°F with the Dutch oven inside | 45 min',
+      'Sat 7:15 AM | Bake in the Dutch oven, lid on 20 min, then lid off 25 min | 45 min',
+      'Sat 8:00 AM | Cool on wire rack | 1 hr',
+    ]);
   });
 
-  it('puts the preferment first and adds the fridge steps for a cold retard', () => {
-    expect(tasks(stateWith({ prefermentType: 'biga' }))[0]).toBe('Mix Biga');
-    expect(tasks(stateWith({ coldRetard: true }))).toEqual(expect.arrayContaining(['Shape & refrigerate overnight', 'Remove from fridge, let warm']));
-    expect(tasks(stateWith({ coldRetard: true }))).not.toContain('Shape and final proof');
+  it('No-Knead for 9:00 AM starts the day before, and says so (was "1:45 PM" with no day)', () => {
+    expect(plan(styleState('no-knead'))).toEqual([
+      'Fri 1:55 PM | Mix final dough | 10-15 min',
+      'Fri 2:10 PM | Bulk fermentation | 12-18 hrs',
+      'Sat 5:10 AM | Shape and final proof | 1-2 hrs',
+      'Sat 6:40 AM | Preheat oven to 450°F with the Dutch oven inside | 30 min',
+      'Sat 7:10 AM | Bake in the Dutch oven, lid on 30 min, then lid off 15-20 min | 45-50 min',
+      'Sat 8:00 AM | Cool on wire rack | 1 hr',
+    ]);
   });
 
-  it('the bulk slot follows the yeast: 5 h for a starter, 15 h under 0.5% yeast, 2 h otherwise', () => {
-    const bulkHours = (state: RecipeState) => {
+  it('Focaccia for 6:00 PM stays on one day, so no day labels, and bakes in its oiled pan', () => {
+    expect(plan(styleState('focaccia'), new Date('2026-03-14T18:00:00'))).toEqual([
+      '12:35 PM | Mix final dough | 10-15 min',
+      '12:50 PM | Bulk fermentation (stretch & fold) | 1.5-2 hrs',
+      '2:35 PM | Shape and final proof | 1-2 hrs',
+      '4:05 PM | Preheat oven to 425°F | 20-30 min',
+      '4:35 PM | Bake in the oiled pan | 20-25 min',
+      '5:00 PM | Cool on wire rack | 1 hr',
+    ]);
+  });
+
+  it('Brioche goes in the fridge after the first rise, then is shaped cold (was the Sourdough fridge step)', () => {
+    expect(plan(styleState('brioche'))).toEqual([
+      'Fri 2:15 PM | Mix final dough | 10-15 min',
+      'Fri 2:30 PM | Bulk fermentation | 1.5-2 hrs',
+      'Fri 4:15 PM | Refrigerate the dough | 8-16 hrs',
+      'Sat 4:15 AM | Shape the cold dough and proof | 2-3 hrs',
+      'Sat 6:45 AM | Preheat oven to 350°F | 20-30 min',
+      'Sat 7:15 AM | Egg wash and bake in the loaf pan | 35-45 min',
+      'Sat 8:00 AM | Cool on wire rack | 1 hr',
+    ]);
+  });
+
+  it('every style preheats and bakes its own way, and the schedule says what its steps say (was one Dutch oven bake for all)', () => {
+    for (const style of BREAD_STYLES) {
+      const s = generateBakingSchedule(styleState(style.id, { coldRetard: false }), target);
+      const preheat = s.find((x) => x.task.startsWith('Preheat oven'))!;
+      const bake = s[s.indexOf(preheat) + 1];
+      const steps = style.instructions.join(' | ');
+      expect(/dutch oven/i.test(preheat.task), style.id).toBe(/dutch oven/i.test(steps));
+      expect(/steam/i.test(bake.task), style.id).toBe(/steam/i.test(steps));
+      if (style.id === 'custom') continue;
+      expect(steps, `${style.id} oven`).toContain(preheat.task.match(/(\d+°F)/)![1]);
+      const lid = bake.task.match(/lid on (\S+ min), then lid off (\S+ min)/);
+      for (const part of lid ? [lid[1], lid[2]] : [bake.duration]) expect(steps, `${style.id} bake`).toContain(part);
+    }
+    expect(BREAD_STYLES.find((s) => s.id === 'brioche')!.instructions.at(-1)).toBe('Egg wash and bake at 350°F for 35-45 minutes');
+  });
+
+  it('the rise and proof slots are the middle of the Timing tab range, to the quarter hour (was 5, 15 or 2 h and always 1.5 h)', () => {
+    const slot = (state: RecipeState, starts: string) => {
       const s = generateBakingSchedule(state, target);
-      const i = s.findIndex((x) => x.task.startsWith('Bulk fermentation'));
-      return (((minutesOfDay(s[i + 1].time) - minutesOfDay(s[i].time)) % 1440) + 1440) % 1440 / 60;
+      const i = s.findIndex((x) => x.task.startsWith(starts));
+      return (s[i + 1].start.getTime() - s[i].start.getTime()) / 3_600_000;
     };
-    expect(bulkHours(styleState('sourdough'))).toBe(5);
-    expect(bulkHours(styleState('no-knead'))).toBe(15);
-    expect(bulkHours(styleState('baguette'))).toBe(2);
+    const mid = (r: [number, number]) => Math.round(((r[0] + r[1]) / 2) * 4) / 4;
+    for (const style of BREAD_STYLES) {
+      for (const ddt of [65, 75, 85]) {
+        const state = styleState(style.id, { coldRetard: false, ddt });
+        const p = fermentationPlan(state);
+        expect(slot(state, 'Bulk fermentation'), `${style.id} ${ddt}°F rise`).toBe(mid(p.rise));
+        expect(slot(state, 'Shape and final proof'), `${style.id} ${ddt}°F proof`).toBe(mid(p.proof!));
+        const shown = generateBakingSchedule(state, target);
+        expect(shown.find((x) => x.task.startsWith('Bulk fermentation'))!.duration).toBe(estimateFermentationTimes(state).bulk);
+      }
+    }
   });
 
-  it('FLAGGED: the schedule steps are the same for every style, Dutch oven preheat included', () => {
-    // Cold Retard starts on for some styles (J6) and adds the fridge steps, so compare with it off.
-    const sourdough = tasks(styleState('sourdough', { coldRetard: false }));
-    for (const style of BREAD_STYLES) expect(tasks(styleState(style.id, { coldRetard: false })), style.id).toEqual(sourdough);
-    expect(sourdough).toContain('Preheat oven (with Dutch oven)');
+  it('only the styles that fold say so in the rise step', () => {
+    const folds = BREAD_STYLES.filter((s) => s.instructions.some((step) => /\bfold every\b/i.test(step))).map((s) => s.id);
+    expect(folds).toEqual(['sourdough', 'baguette', 'focaccia', 'ciabatta']);
+    for (const style of BREAD_STYLES) {
+      expect(tasks(styleState(style.id)), style.id).toContain(folds.includes(style.id) ? 'Bulk fermentation (stretch & fold)' : 'Bulk fermentation');
+    }
+  });
+
+  it('puts the preferment first, and a card with no fridge step of its own proofs 8-18 hrs in the fridge', () => {
+    expect(tasks(stateWith({ prefermentType: 'biga' }))[0]).toBe('Mix Biga');
+    const baguette = generateBakingSchedule(styleState('baguette', { coldRetard: true }), target);
+    expect(baguette.map((s) => `${s.task} | ${s.duration}`)).toEqual(expect.arrayContaining(['Shape and refrigerate | 8-18 hrs', 'Remove from fridge, let warm | 30 min']));
+    expect(baguette.map((s) => s.task)).not.toContain('Shape and final proof');
   });
 
   it('the autolyse rest comes before the final mix (was KNOWN ISSUE M)', () => {
-    // Cold Retard off: the Sourdough card now starts with it on (J6), which adds the fridge steps.
     const schedule = generateBakingSchedule(stateWith({ autolyse: true, autolyseDuration: 30, coldRetard: false }), target);
     const order = schedule.map((s) => s.task);
     expect(order.indexOf('Autolyse (flour + water rest)')).toBe(order.indexOf('Mix final dough') - 1);
     expect(order.indexOf('Mix final dough')).toBe(order.indexOf('Bulk fermentation (stretch & fold)') - 1);
-    // Sourdough, ready at 9:00 AM: bulk at midnight, mix a quarter hour before, autolyse 30 minutes before that.
-    expect(schedule.slice(0, 3).map((s) => s.time)).toEqual(['11:15 PM', '11:45 PM', '12:00 AM']);
+    // Sourdough with Cold Retard off, ready at 9:00 AM: proof 2.5 h from 4:00 AM, bulk 5 h from
+    // 11:00 PM, mix a quarter hour before, autolyse 30 minutes before that.
+    expect(schedule.slice(0, 3).map((s) => s.time)).toEqual(['Fri 10:15 PM', 'Fri 10:45 PM', 'Fri 11:00 PM']);
   });
 
   it('each calendar event runs until the next step starts', () => {
@@ -595,12 +660,13 @@ describe('9. timing and schedule', () => {
     expect(stamps('DTSTART')).toEqual(schedule.map((s) => s.start.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'));
   });
 
-  it('the calendar file puts each step at the time the schedule shows (was KNOWN ISSUE M)', () => {
+  it('the calendar file puts each step at the time and day the schedule shows (was KNOWN ISSUE M)', () => {
     const schedule = generateBakingSchedule(stateWith(), target);
     const starts = [...scheduleIcs(schedule, target).matchAll(/DTSTART:(\d{4})(\d\d)(\d\d)T(\d\d)(\d\d)(\d\d)Z/g)].map((m) =>
-      formatScheduleTime(new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]))),
+      formatScheduleTime(new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6])), true),
     );
     expect(starts).toEqual(schedule.map((s) => s.time));
+    expect(scheduleIcs(schedule, target)).toContain('SUMMARY:Shape and refrigerate');
   });
 });
 

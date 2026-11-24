@@ -16,7 +16,9 @@ import {
   createDefaultState,
   estimateFermentationTimes,
   estimatePrefermentTiming,
+  fermentationPlan,
   flourShares,
+  formatHourRange,
   formatWeight,
   ingredientRows,
   isValidBlend,
@@ -49,74 +51,92 @@ export interface ScheduleItem {
   start: Date;
 }
 
-export function formatScheduleTime(date: Date): string {
-  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+/** A step's clock time, "1:45 PM". With `withDay`, the weekday goes in front: "Fri 1:45 PM". */
+export function formatScheduleTime(date: Date, withDay = false): string {
+  const time = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  return withDay ? `${date.toLocaleDateString('en-US', { weekday: 'short' })} ${time}` : time;
 }
 
-// Generate baking schedule
+/**
+ * How each style preheats and bakes (audit item J7). Oven temperatures and bake times are the
+ * ones the style's own steps give; a test holds the two together. Minutes are [shortest,
+ * longest]; the schedule gives each step its longest time.
+ */
+interface StyleBake {
+  preheatTask: string;
+  preheat: [number, number];
+  bakeTask: string;
+  bake: [number, number];
+  /** The steps fold during the first rise. */
+  folds: boolean;
+}
+
+const STYLE_BAKE: Record<string, StyleBake> = {
+  'sourdough': { preheatTask: 'Preheat oven to 500°F with the Dutch oven inside', preheat: [45, 45], bakeTask: 'Bake in the Dutch oven, lid on 20 min, then lid off 25 min', bake: [45, 45], folds: true },
+  'baguette': { preheatTask: 'Preheat oven to 475°F with a baking stone or sheet, and a pan for steam', preheat: [45, 45], bakeTask: 'Score and bake with steam', bake: [22, 25], folds: true },
+  'focaccia': { preheatTask: 'Preheat oven to 425°F', preheat: [20, 30], bakeTask: 'Bake in the oiled pan', bake: [20, 25], folds: true },
+  'sandwich': { preheatTask: 'Preheat oven to 375°F', preheat: [20, 30], bakeTask: 'Bake in the loaf pan', bake: [30, 35], folds: false },
+  'ciabatta': { preheatTask: 'Preheat oven to 475°F with a baking stone or sheet, and a pan for steam', preheat: [45, 45], bakeTask: 'Bake with steam', bake: [20, 25], folds: true },
+  'brioche': { preheatTask: 'Preheat oven to 350°F', preheat: [20, 30], bakeTask: 'Egg wash and bake in the loaf pan', bake: [35, 45], folds: false },
+  'no-knead': { preheatTask: 'Preheat oven to 450°F with the Dutch oven inside', preheat: [30, 30], bakeTask: 'Bake in the Dutch oven, lid on 30 min, then lid off 15-20 min', bake: [45, 50], folds: false },
+  'custom': { preheatTask: 'Preheat oven', preheat: [30, 30], bakeTask: 'Bake bread', bake: [35, 45], folds: false }
+};
+
+const minutesText = ([low, high]: [number, number]) => (low === high ? `${low} min` : `${low}-${high} min`);
+
+/** The middle of a range of hours, to the quarter hour, in minutes. */
+const slotMinutes = ([low, high]: [number, number]) => (Math.round(((low + high) / 2) * 4) / 4) * 60;
+
+/**
+ * The bake schedule, worked back from when the bread should be ready. The rise, proof and
+ * fridge steps take the Timing tab's times (the middle of each range); the preheat and bake
+ * follow the style. When the plan runs over more than one day, every time carries its day.
+ */
 export function generateBakingSchedule(state: RecipeState, targetDateTime: Date): ScheduleItem[] {
-  const schedule: ScheduleItem[] = [];
+  const steps: Array<{ task: string; duration: string; minutes: number }> = [];
+  const add = (task: string, duration: string, minutes: number) => steps.unshift({ task, duration, minutes });
+  const bake = STYLE_BAKE[state.style] ?? STYLE_BAKE['custom'];
+  const plan = fermentationPlan(state);
+  const shown = estimateFermentationTimes(state);
 
-  // Work backwards from target time
-  let currentTime = new Date(targetDateTime);
-  const addStep = (task: string, duration: string) => {
-    schedule.unshift({ time: formatScheduleTime(currentTime), task, duration, start: new Date(currentTime) });
-  };
+  add('Cool on wire rack', '1 hr', 60);
+  add(bake.bakeTask, minutesText(bake.bake), bake.bake[1]);
+  add(bake.preheatTask, minutesText(bake.preheat), bake.preheat[1]);
 
-  // Cooling time (1 hour)
-  currentTime.setHours(currentTime.getHours() - 1);
-  addStep('Cool on wire rack', '1 hr');
-
-  // Baking time (depends on style, but average 45 min)
-  currentTime.setMinutes(currentTime.getMinutes() - 45);
-  addStep('Bake bread', '35-45 min');
-
-  // Preheat (30-45 min for Dutch oven)
-  currentTime.setMinutes(currentTime.getMinutes() - 45);
-  addStep('Preheat oven (with Dutch oven)', '45 min');
-
-  // Final proof
-  const fermentTimes = estimateFermentationTimes(state);
-  const proofHours = state.coldRetard ? 0.5 : 1.5; // If cold retard, just warmup
-  currentTime.setMinutes(currentTime.getMinutes() - proofHours * 60);
-
-  if (state.coldRetard) {
-    addStep('Remove from fridge, let warm', '30 min');
-    // Cold retard overnight
-    currentTime = new Date(currentTime);
-    currentTime.setHours(currentTime.getHours() - 12);
-    addStep('Shape & refrigerate overnight', '8-12 hrs');
+  if (plan.fridge && !plan.fridgeAfterRise) {
+    // The shaped loaf proofs in the fridge.
+    add('Remove from fridge, let warm', '30 min', 30);
+    add('Shape and refrigerate', formatHourRange(...plan.fridge), slotMinutes(plan.fridge));
+  } else if (plan.fridge) {
+    // The dough goes in the fridge after the first rise and is shaped cold.
+    add('Shape the cold dough and proof', shown.proof, slotMinutes(plan.proof!));
+    add('Refrigerate the dough', formatHourRange(...plan.fridge), slotMinutes(plan.fridge));
   } else {
-    addStep('Shape and final proof', fermentTimes.proof);
+    add('Shape and final proof', shown.proof, slotMinutes(plan.proof!));
   }
 
-  // Bulk fermentation
-  const bulkHours = state.yeastType === 'starter' ? 5 : (state.yeastPercent < 0.5 ? 15 : 2);
-  currentTime.setMinutes(currentTime.getMinutes() - bulkHours * 60);
-  addStep('Bulk fermentation (stretch & fold)', fermentTimes.bulk);
-
-  // Mix dough
-  currentTime.setMinutes(currentTime.getMinutes() - 15);
-  addStep('Mix final dough', '10-15 min');
+  add(bake.folds ? 'Bulk fermentation (stretch & fold)' : 'Bulk fermentation', shown.bulk, slotMinutes(plan.rise));
+  add('Mix final dough', '10-15 min', 15);
 
   // Autolyse (if enabled): the flour and water rest comes before the final mix
-  if (state.autolyse) {
-    currentTime.setMinutes(currentTime.getMinutes() - state.autolyseDuration);
-    addStep('Autolyse (flour + water rest)', `${state.autolyseDuration} min`);
-  }
+  if (state.autolyse) add('Autolyse (flour + water rest)', `${state.autolyseDuration} min`, state.autolyseDuration);
 
   // Preferment (if enabled)
-  if (state.prefermentType !== 'none') {
-    const prefTiming = estimatePrefermentTiming(state);
-    const prefData = PREFERMENT_DATA[state.prefermentType];
-    if (prefData) {
-      const prefHours = (prefData.fermentTimeMin + prefData.fermentTimeMax) / 2;
-      currentTime.setMinutes(currentTime.getMinutes() - prefHours * 60);
-      addStep(`Mix ${prefData.name}`, prefTiming.fermentTime);
-    }
+  const prefData = PREFERMENT_DATA[state.prefermentType];
+  if (state.prefermentType !== 'none' && prefData) {
+    const prefHours = (prefData.fermentTimeMin + prefData.fermentTimeMax) / 2;
+    add(`Mix ${prefData.name}`, estimatePrefermentTiming(state).fermentTime, prefHours * 60);
   }
 
-  return schedule;
+  // Each step starts when the ones after it, added up, are subtracted from the ready time.
+  let at = targetDateTime.getTime() - steps.reduce((sum, s) => sum + s.minutes, 0) * 60_000;
+  const starts = steps.map((s) => {
+    const start = new Date(at);
+    at += s.minutes * 60_000;
+    return start;
+  });
+  const days = new Set([...starts, targetDateTime].map((d) => d.toDateString()));
+  return steps.map((s, i) => ({ time: formatScheduleTime(starts[i], days.size > 1), task: s.task, duration: s.duration, start: starts[i] }));
 }
 
 /** The calendar file behind "Add to Calendar": one event per schedule step, at the time the

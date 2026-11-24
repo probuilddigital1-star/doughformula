@@ -90,7 +90,7 @@ const STYLE_TEXT: Record<string, Pick<BreadStyle, 'description' | 'flour' | 'ins
       'Add salt, knead 2 more minutes',
       'Bulk ferment {rise}{then-fridge}',
       'Shape the{cold} dough, proof {proof} until doubled',
-      'Egg wash and bake at 350°F for 25-30 minutes'
+      'Egg wash and bake at 350°F for 35-45 minutes'
     ]
   },
   'no-knead': {
