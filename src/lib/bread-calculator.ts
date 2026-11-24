@@ -68,8 +68,8 @@ export function createDefaultState(): RecipeState {
     flourTemp: 70,
     mixerType: 'hand',
     frictionFactor: 11,
-    // Timing
-    coldRetard: false,
+    // Timing: Cold Retard starts the way the Sourdough card sets it
+    coldRetard: STYLE_TIMES['sourdough'].coldRetard,
     // Preferment
     prefermentType: 'none',
     prefermentPercent: 20,
@@ -150,6 +150,46 @@ export const STYLE_DDT_DEFAULTS: Record<string, number> = {
   'custom': 75
 };
 
+/** Hours as [shortest, longest]. */
+export type HourRange = [number, number];
+
+/**
+ * Each style's own times (audit item J6), in hours at the style's own yeast and dough
+ * temperature. The steps and the Timing tab both read them, so they cannot disagree.
+ *
+ * - `rise`: the whole first rise at room temperature, from mixing to shaping, folds included.
+ * - `proof`: the final proof at room temperature with Cold Retard off. Without one, the J5
+ *   curve's proof is used.
+ * - `coldRetard`: whether Cold Retard starts on when the card is picked.
+ * - `fridge`: the style's own cold retard. `after: 'shape'` means the shaped loaf proofs in the
+ *   fridge; `after: 'rise'` means the dough goes in after the first rise and is shaped cold,
+ *   then proofs `proofAfter` at room temperature.
+ *
+ * Fridge times stay fixed. Room times stretch or shrink with the J5 curve when the baker
+ * changes the yeast or the dough temperature. A style without an entry (Custom) uses the J5
+ * curve as it is.
+ */
+export interface StyleTimes {
+  rise: HourRange;
+  proof?: HourRange;
+  coldRetard: boolean;
+  fridge?: { after: 'shape'; hours: HourRange } | { after: 'rise'; hours: HourRange; proofAfter: HourRange };
+}
+
+export const STYLE_TIMES: Record<string, StyleTimes> = {
+  'sourdough': { rise: [4, 6], proof: [1, 2], coldRetard: true, fridge: { after: 'shape', hours: [8, 12] } },
+  'baguette': { rise: [2, 3], proof: [0.75, 1], coldRetard: false },
+  'focaccia': { rise: [1.5, 2], proof: [1, 2], coldRetard: false },
+  'sandwich': { rise: [1, 1.5], proof: [0.75, 1], coldRetard: false },
+  'ciabatta': { rise: [2.5, 3], proof: [0.5, 0.75], coldRetard: false },
+  'brioche': { rise: [1.5, 2], coldRetard: true, fridge: { after: 'rise', hours: [8, 16], proofAfter: [2, 3] } },
+  'no-knead': { rise: [12, 18], proof: [1, 2], coldRetard: false }
+};
+
+/** Cold Retard switched on for a style that has no fridge step of its own: the shaped loaf
+ *  proofs in the fridge. */
+const GENERAL_FRIDGE: HourRange = [8, 18];
+
 /** The settings a style card carries. The page reads them off the card's data attributes. */
 export type StyleSettings = Pick<StyleRecipe, 'hydration' | 'salt' | 'yeastType' | 'yeastPercent' | 'wholeGrain'> & {
   style: string;
@@ -170,6 +210,7 @@ export function applyStyle(state: RecipeState, s: StyleSettings): void {
 
   // Update DDT based on bread style
   state.ddt = STYLE_DDT_DEFAULTS[state.style] || 75;
+  state.coldRetard = STYLE_TIMES[state.style]?.coldRetard ?? false;
 }
 
 // ============================================
@@ -563,14 +604,90 @@ export function fermentationHours(state: RecipeState): { bulkMin: number; bulkMa
   return { bulkMin: bulkMin * t, bulkMax: bulkMax * t, proofMin: proofMin * t, proofMax: proofMax * t };
 }
 
+/**
+ * The bake's time plan in hours, before rounding. `rise` and `proof` are at room temperature;
+ * `proof` is null when the shaped loaf proofs in the fridge. `fridge` is the cold retard, if
+ * Cold Retard is on, and `fridgeAfterRise` says it comes between the first rise and shaping.
+ */
+export function fermentationPlan(state: RecipeState): { rise: HourRange; proof: HourRange | null; fridge: HourRange | null; fridgeAfterRise: boolean } {
+  const now = fermentationHours(state);
+  const times = STYLE_TIMES[state.style];
+  let rise: HourRange = [now.bulkMin, now.bulkMax];
+  let proof: HourRange = [now.proofMin, now.proofMax];
+  // A style's room times scale from its own settings by the J5 curve.
+  let toRoomProof = (range: HourRange): HourRange => range;
+
+  if (times) {
+    const recipe = STYLE_RECIPES.find((s) => s.id === state.style)!;
+    const base = fermentationHours({ ...state, yeastType: recipe.yeastType, yeastPercent: recipe.yeastPercent, ddt: STYLE_DDT_DEFAULTS[state.style] });
+    rise = [times.rise[0] * (now.bulkMin / base.bulkMin), times.rise[1] * (now.bulkMax / base.bulkMax)];
+    toRoomProof = (range) => [range[0] * (now.proofMin / base.proofMin), range[1] * (now.proofMax / base.proofMax)];
+    if (times.proof) proof = toRoomProof(times.proof);
+  }
+
+  if (!state.coldRetard) return { rise, proof, fridge: null, fridgeAfterRise: false };
+  const fridge = times?.fridge;
+  if (fridge?.after === 'rise') return { rise, proof: toRoomProof(fridge.proofAfter), fridge: fridge.hours, fridgeAfterRise: true };
+  return { rise, proof: null, fridge: fridge?.hours ?? GENERAL_FRIDGE, fridgeAfterRise: false };
+}
+
+/** A time range for a step, in words: "4-6 hours", "45-60 minutes". */
+function stepRange(range: HourRange): string {
+  return formatHourRange(range[0], range[1]).replace(/ hrs$/, ' hours').replace(/ min$/, ' minutes');
+}
+
 // Estimate fermentation times based on temperature and yeast type
 export function estimateFermentationTimes(state: RecipeState): { bulk: string; proof: string; total: string } {
-  const h = fermentationHours(state);
+  const plan = fermentationPlan(state);
+  const roomProof = plan.proof ?? [0, 0];
   return {
-    bulk: formatHourRange(h.bulkMin, h.bulkMax),
-    proof: formatHourRange(h.proofMin, h.proofMax),
-    total: formatHourRange(h.bulkMin + h.proofMin, h.bulkMax + h.proofMax)
+    bulk: formatHourRange(...plan.rise),
+    // A loaf that proofs in the fridge shows its fridge time here.
+    proof: formatHourRange(...(plan.proof ?? plan.fridge!)),
+    // Time at room temperature; the fridge time is in the note under it.
+    total: formatHourRange(plan.rise[0] + roomProof[0], plan.rise[1] + roomProof[1])
   };
+}
+
+/** Everything the Timing tab prints: the three times and the line under each. */
+export function timingText(state: RecipeState): {
+  bulk: string; proof: string; total: string; bulkNote: string; proofNote: string; totalNote: string; fridgeHours: string;
+} {
+  const plan = fermentationPlan(state);
+  const bulkNote = state.yeastType === 'starter'
+    ? 'Look for 50-75% rise with visible bubbles. Dough should be airy and jiggly.'
+    : plan.rise[0] >= 8
+      ? 'Long, slow ferment develops flavor. Dough should be bubbly and doubled.'
+      : 'Look for doubled volume with a domed surface.';
+  const proofNote = !plan.fridge
+    ? 'Poke test: dough should spring back slowly but not completely.'
+    : plan.fridgeAfterRise
+      ? 'Shape the cold dough and proof it at room temperature until doubled.'
+      : 'Cold proof in refrigerator. Bake straight from cold or let warm 30 min.';
+  // The hours in the Cold Retard box: this style's fridge time, or the general one.
+  const fridgeHours = stepRange(plan.fridge ?? STYLE_TIMES[state.style]?.fridge?.hours ?? GENERAL_FRIDGE);
+  return {
+    ...estimateFermentationTimes(state),
+    bulkNote,
+    proofNote,
+    totalNote: plan.fridge ? `Plus ${fridgeHours} cold retard in refrigerator` : 'Active time from mixing to baking',
+    fridgeHours
+  };
+}
+
+/**
+ * A style's steps with their times filled in from the same plan the Timing tab shows.
+ * `{rise}` is the first rise; `{proof}` is the final proof, or the fridge time when the
+ * shaped loaf proofs in the fridge; `{then-fridge}` is ", then refrigerate ..." when the dough
+ * goes in the fridge after the first rise, and nothing otherwise.
+ */
+export function styleSteps(state: RecipeState): string[] {
+  const plan = fermentationPlan(state);
+  const proof = plan.proof ? stepRange(plan.proof) : `${stepRange(plan.fridge!)} in the refrigerator`;
+  const thenFridge = plan.fridgeAfterRise ? `, then refrigerate ${stepRange(plan.fridge!)}` : '';
+  return state.instructions.map((step) =>
+    step.replace('{rise}', stepRange(plan.rise)).replace('{proof}', proof).replace('{then-fridge}', thenFridge)
+  );
 }
 
 // Calculate total whole grain percentage from flour blend

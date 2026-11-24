@@ -500,7 +500,8 @@ describe('share links carry the whole recipe', () => {
     const query = link(state, enrichments, blend);
     expect(query).toBe(
       'style=brioche&loaves=3&weight=650&hydration=58&salt=2.1&yeast=fresh&yeastpct=3.3&flours=ap.80_spelt.20&pref=biga&prefpct=30' +
-        '&fat=butter&fatpct=30&eggs=yolks&eggcount=6&sweet=none&unit=oz&temp=c&ddt=79&room=74&flourtemp=66&mixer=stand&retard=1&autolyse=45',
+        // Cold Retard is on here, as Brioche starts (J6), so the link does not carry it.
+        '&fat=butter&fatpct=30&eggs=yolks&eggcount=6&sweet=none&unit=oz&temp=c&ddt=79&room=74&flourtemp=66&mixer=stand&autolyse=45',
     );
     const opened = open(query);
     expect(printed(opened.state, opened.enrichments, opened.blend).rows).toEqual(printed(state, enrichments, blend).rows);

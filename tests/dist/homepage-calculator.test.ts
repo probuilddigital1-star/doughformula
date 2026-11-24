@@ -12,6 +12,8 @@ import {
   formatWeight,
   ingredientRows,
   starterHydrationNote,
+  styleSteps,
+  timingText,
   yeastSliderRange,
 } from '../../src/lib/bread-calculator';
 
@@ -72,7 +74,19 @@ describe('homepage default recipe in the server HTML', () => {
   it('lists the Sourdough steps', () => {
     const list = home.match(/<ol[^>]*id="instructions-list"[^>]*>([\s\S]*?)<\/ol>/)![1];
     const steps = [...list.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/g)].map((m) => text(m[1]));
-    expect(steps).toEqual(BREAD_STYLES[0].instructions.map((step, i) => `${i + 1} ${step}`));
+    const filled = styleSteps({ ...state, instructions: BREAD_STYLES[0].instructions });
+    expect(steps).toEqual(filled.map((step, i) => `${i + 1} ${step}`));
+    expect(filled[3]).toBe('Shape and proof 8-12 hours in the refrigerator');
+  });
+
+  it('starts with Cold Retard on for Sourdough, and the Timing tab says so', () => {
+    const t = timingText(state);
+    expect(home).toMatch(/<input type="checkbox" id="cold-retard-toggle"[^>]*\schecked/);
+    expect(home.match(/<div id="cold-retard-info" class="([^"]*)"/)![1]).not.toMatch(/\bhidden\b/);
+    expect(home).toContain(`<span id="cold-retard-hours">${t.fridgeHours}</span>`);
+    for (const [id, value] of [['bulk-description', t.bulkNote], ['proof-description', t.proofNote], ['total-time-note', t.totalNote]]) {
+      expect(text(home.match(new RegExp(`<p[^>]*id="${id}"[^>]*>([\\s\\S]*?)</p>`))![1]), id).toBe(value);
+    }
   });
 
   it('starts the Yeast, Flour and Timing tabs on the values the script would set', () => {

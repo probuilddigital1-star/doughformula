@@ -10,6 +10,8 @@ import { STYLE_RECIPES, type StyleRecipe } from './bread-calculator';
 export interface BreadStyle extends StyleRecipe {
   description: string;
   flour: string;
+  /** The steps, with `{rise}`, `{proof}` and `{then-fridge}` where the times go. styleSteps()
+   *  in ./bread-calculator.ts fills them from the style's times, as the Timing tab shows them. */
   instructions: string[];
 }
 
@@ -20,9 +22,8 @@ const STYLE_TEXT: Record<string, Pick<BreadStyle, 'description' | 'flour' | 'ins
     instructions: [
       'Mix flour and water, autolyse 30-60 minutes',
       'Add starter and salt, mix until combined',
-      'Stretch and fold every 30 min for 2 hours',
-      'Bulk ferment 4-6 hours at room temperature',
-      'Shape and proof overnight in refrigerator (8-12 hrs)',
+      'Bulk ferment {rise} at room temperature, with a stretch and fold every 30 min for the first 2 hours',
+      'Shape and proof {proof}',
       'Bake in Dutch oven at 500°F for 20 min covered, 25 min uncovered'
     ]
   },
@@ -32,10 +33,9 @@ const STYLE_TEXT: Record<string, Pick<BreadStyle, 'description' | 'flour' | 'ins
     instructions: [
       'Mix flour, water, yeast. Autolyse 20 minutes',
       'Add salt, mix until smooth',
-      'Fold every 30 minutes for 1.5 hours',
-      'Bulk ferment 2-3 hours until doubled',
+      'Bulk ferment {rise} until doubled, with a fold every 30 minutes for the first 1.5 hours',
       'Divide and pre-shape, rest 20 minutes',
-      'Final shape into baguettes, proof 45-60 minutes',
+      'Final shape into baguettes, proof {proof}',
       'Score and bake at 475°F with steam for 22-25 minutes'
     ]
   },
@@ -46,9 +46,9 @@ const STYLE_TEXT: Record<string, Pick<BreadStyle, 'description' | 'flour' | 'ins
     instructions: [
       'Mix flour, water, yeast, and the olive oil',
       'Add salt, mix until smooth and elastic',
-      'Stretch and fold every 30 min for 1.5 hours',
+      'Bulk ferment {rise}, with a stretch and fold every 30 min for the first hour',
       'Pour into oiled pan, dimple with fingers',
-      'Proof 1-2 hours until puffy',
+      'Proof {proof} until puffy',
       'Dimple again, drizzle olive oil, add toppings',
       'Bake at 425°F for 20-25 minutes until golden'
     ]
@@ -62,9 +62,9 @@ const STYLE_TEXT: Record<string, Pick<BreadStyle, 'description' | 'flour' | 'ins
       'Mix flour, salt, and yeast',
       'Add the water and the butter (or oil)',
       'Knead 8-10 minutes until smooth',
-      'Bulk ferment 1-1.5 hours until doubled',
+      'Bulk ferment {rise} until doubled',
       'Shape into loaf, place in greased pan',
-      'Proof 45-60 minutes until risen above pan',
+      'Proof {proof} until risen above pan',
       'Bake at 375°F for 30-35 minutes'
     ]
   },
@@ -75,10 +75,9 @@ const STYLE_TEXT: Record<string, Pick<BreadStyle, 'description' | 'flour' | 'ins
       'Mix flour, water, yeast into shaggy dough',
       'Rest 30 minutes (autolyse)',
       'Add salt, fold until incorporated',
-      'Stretch and fold every 30 min for 3 hours',
-      'Bulk ferment 2-3 hours until very bubbly',
+      'Bulk ferment {rise} until very bubbly, with a stretch and fold every 30 min for the first 1.5 hours',
       'Gently turn out, divide without degassing',
-      'Proof 30-45 min, bake at 475°F with steam for 20-25 min'
+      'Proof {proof}, bake at 475°F with steam for 20-25 min'
     ]
   },
   'brioche': {
@@ -89,8 +88,8 @@ const STYLE_TEXT: Record<string, Pick<BreadStyle, 'description' | 'flour' | 'ins
       'Knead until smooth, about 10 minutes',
       'Gradually add soft butter (25%), knead until silky',
       'Add salt, knead 2 more minutes',
-      'Bulk ferment 2 hours, then refrigerate overnight',
-      'Shape cold dough, proof 2-3 hours until doubled',
+      'Bulk ferment {rise}{then-fridge}',
+      'Shape the dough, proof {proof} until doubled',
       'Egg wash and bake at 350°F for 25-30 minutes'
     ]
   },
@@ -99,11 +98,11 @@ const STYLE_TEXT: Record<string, Pick<BreadStyle, 'description' | 'flour' | 'ins
     flour: 'Bread Flour or All-Purpose',
     instructions: [
       'Mix flour, water, salt, and yeast until shaggy (2 min)',
-      'Cover and let rise at room temperature 12-18 hours',
+      'Cover and let rise at room temperature {rise}',
       'Dough is ready when bubbly and doubled',
       'Turn out onto floured surface, fold into ball',
       'Let rest 15 min, then shape into round',
-      'Proof in bowl lined with floured towel 1-2 hours',
+      'Proof in bowl lined with floured towel {proof}',
       'Preheat Dutch oven at 450°F for 30 min',
       'Bake covered 30 min, uncovered 15-20 min until deep golden'
     ]

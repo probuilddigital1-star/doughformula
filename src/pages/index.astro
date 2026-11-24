@@ -17,11 +17,12 @@ import {
   calculateWaterTemp,
   createDefaultEnrichments,
   createDefaultState,
-  estimateFermentationTimes,
   formatTemp,
   formatWeight,
   ingredientRows,
   starterHydrationNote,
+  styleSteps,
+  timingText,
   waterTempFormulaText,
   waterTempText,
   yeastSliderRange,
@@ -72,7 +73,8 @@ const defaultState = createDefaultState();
 const starterNoteOnLoad = starterHydrationNote(defaultState);
 // The same goes for the water temperature: the server HTML shows what the script will.
 const waterTempOnLoad = calculateWaterTemp(defaultState);
-const timesOnLoad = estimateFermentationTimes(defaultState);
+const timesOnLoad = timingText(defaultState);
+const stepsOnLoad = styleSteps({ ...defaultState, instructions: BREAD_STYLES[0].instructions });
 // And for the recipe itself. The whole default recipe is in the server HTML, built by the
 // code the script runs, so a plain visit has nothing to work out or draw on load. The script
 // renders from the first change on.
@@ -737,9 +739,7 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
                       <span class="font-medium text-[var(--espresso)]">Bulk Fermentation</span>
                       <span class="text-lg font-display font-semibold text-[var(--accent-gold)]" id="bulk-time">{timesOnLoad.bulk}</span>
                     </div>
-                    <p class="text-xs text-[var(--crust-brown)]" id="bulk-description">
-                      Look for 50-75% rise with visible bubbles. Dough should be airy and jiggly.
-                    </p>
+                    <p class="text-xs text-[var(--crust-brown)]" id="bulk-description">{timesOnLoad.bulkNote}</p>
                   </div>
 
                   <!-- Final Proof -->
@@ -748,9 +748,7 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
                       <span class="font-medium text-[var(--espresso)]">Final Proof</span>
                       <span class="text-lg font-display font-semibold text-[var(--accent-gold)]" id="proof-time">{timesOnLoad.proof}</span>
                     </div>
-                    <p class="text-xs text-[var(--crust-brown)]" id="proof-description">
-                      Poke test: dough should spring back slowly but not completely.
-                    </p>
+                    <p class="text-xs text-[var(--crust-brown)]" id="proof-description">{timesOnLoad.proofNote}</p>
                   </div>
 
                   <!-- Cold Retard Option -->
@@ -760,14 +758,14 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
                       <p class="text-xs text-[var(--crust-brown)]">Overnight in refrigerator</p>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" id="cold-retard-toggle" class="sr-only peer">
+                      <input type="checkbox" id="cold-retard-toggle" class="sr-only peer" checked={defaultState.coldRetard}>
                       <div class="w-11 h-6 bg-[var(--border-light)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--accent-gold)]"></div>
                     </label>
                   </div>
 
-                  <div id="cold-retard-info" class="hidden bg-blue-50 rounded-lg p-3 border border-blue-200">
+                  <div id="cold-retard-info" class:list={[{ hidden: !defaultState.coldRetard }, 'bg-blue-50 rounded-lg p-3 border border-blue-200']}>
                     <p class="text-sm text-blue-800">
-                      <span class="font-medium">Cold Retard:</span> 8-18 hours at 38-41°F (3-5°C). Develops complex flavors and fits your schedule.
+                      <span class="font-medium">Cold Retard:</span> <span id="cold-retard-hours">{timesOnLoad.fridgeHours}</span> at 38-41°F (3-5°C). Develops complex flavors and fits your schedule.
                     </p>
                   </div>
 
@@ -777,9 +775,7 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
                       <span class="text-sm font-medium text-[var(--espresso)]">Total Active Time:</span>
                       <span class="text-lg font-display font-semibold text-[var(--accent-gold)]" id="total-time">{timesOnLoad.total}</span>
                     </div>
-                    <p class="text-xs text-[var(--crust-brown)] mt-1" id="total-time-note">
-                      Active time from mixing to baking
-                    </p>
+                    <p class="text-xs text-[var(--crust-brown)] mt-1" id="total-time-note">{timesOnLoad.totalNote}</p>
                   </div>
 
                   <!-- Plan My Bake Button -->
@@ -1015,7 +1011,7 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
               <div>
                 <h4 class="font-medium text-lg mb-3">Instructions</h4>
                 <ol class="space-y-3" id="instructions-list">
-                  {breadStyles[0].instructions.map((inst, i) => (
+                  {stepsOnLoad.map((inst, i) => (
                     <li class="flex gap-3">
                       <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--accent-gold)] text-white text-sm flex items-center justify-center">{i + 1}</span>
                       <span class="text-[var(--crust-brown)]">{inst}</span>
@@ -1492,7 +1488,6 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
   // The shared math, bound to this page's state
   const formatTemp = (tempF: number) => calc.formatTemp(state, tempF);
   const formatWeight = (grams: number) => calc.formatWeight(state, grams);
-  const estimateFermentationTimes = () => calc.estimateFermentationTimes(state);
   const estimatePrefermentTiming = () => calc.estimatePrefermentTiming(state);
   const calculateRecipe = () => calc.calculateRecipe(state, enrichmentState, flourBlend);
 
@@ -1630,7 +1625,7 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
     // Update instructions
     const instructionsList = document.getElementById('instructions-list');
     if (instructionsList && state.instructions.length > 0) {
-      instructionsList.innerHTML = state.instructions.map((inst, i) => `
+      instructionsList.innerHTML = calc.styleSteps(state).map((inst, i) => `
         <li class="flex gap-3">
           <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--accent-gold)] text-white text-sm flex items-center justify-center">${i + 1}</span>
           <span class="text-[var(--crust-brown)]">${inst}</span>
@@ -1736,46 +1731,19 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
     }
 
     // Update Timing tab
-    const fermentTimes = estimateFermentationTimes();
-
-    const bulkTime = document.getElementById('bulk-time');
-    if (bulkTime) bulkTime.textContent = fermentTimes.bulk;
-
-    const proofTime = document.getElementById('proof-time');
-    if (proofTime) proofTime.textContent = fermentTimes.proof;
-
-    const totalTime = document.getElementById('total-time');
-    if (totalTime) totalTime.textContent = fermentTimes.total;
-
-    // Update timing descriptions based on yeast type
-    const bulkDescription = document.getElementById('bulk-description');
-    if (bulkDescription) {
-      if (state.yeastType === 'starter') {
-        bulkDescription.textContent = 'Look for 50-75% rise with visible bubbles. Dough should be airy and jiggly.';
-      } else if (state.yeastPercent < 0.5) {
-        bulkDescription.textContent = 'Long, slow ferment develops flavor. Dough should be bubbly and doubled.';
-      } else {
-        bulkDescription.textContent = 'Look for doubled volume with a domed surface.';
-      }
-    }
-
-    const proofDescription = document.getElementById('proof-description');
-    if (proofDescription) {
-      if (state.coldRetard) {
-        proofDescription.textContent = 'Cold proof in refrigerator. Bake straight from cold or let warm 30 min.';
-      } else {
-        proofDescription.textContent = 'Poke test: dough should spring back slowly but not completely.';
-      }
-    }
-
-    // Update total time note
-    const totalTimeNote = document.getElementById('total-time-note');
-    if (totalTimeNote) {
-      if (state.coldRetard) {
-        totalTimeNote.textContent = 'Plus 8-18 hours cold retard in refrigerator';
-      } else {
-        totalTimeNote.textContent = 'Active time from mixing to baking';
-      }
+    // The times and the line under each come from the same plan as the steps
+    const timing = calc.timingText(state);
+    for (const [id, value] of [
+      ['bulk-time', timing.bulk],
+      ['proof-time', timing.proof],
+      ['total-time', timing.total],
+      ['bulk-description', timing.bulkNote],
+      ['proof-description', timing.proofNote],
+      ['total-time-note', timing.totalNote],
+      ['cold-retard-hours', timing.fridgeHours],
+    ]) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
     }
 
     // Show/hide cold retard info
@@ -1869,6 +1837,8 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
       (document.getElementById('whole-grain-slider') as HTMLInputElement).value = String(state.wholeGrain);
       (document.getElementById('salt-slider') as HTMLInputElement).value = String(state.salt);
       (document.getElementById('ddt-slider') as HTMLInputElement).value = String(state.ddt);
+      // Cold Retard starts on for some styles (Sourdough, Brioche); the baker can switch it off
+      (document.getElementById('cold-retard-toggle') as HTMLInputElement).checked = state.coldRetard;
 
       // The style's whole grain share becomes the flour blend, on bread flour
       setWholeGrain(state.wholeGrain, 'bread');

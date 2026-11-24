@@ -16,11 +16,15 @@ import {
   calculateWholeGrainPercent,
   clampToField,
   createDefaultEnrichments,
+  createDefaultFlourBlend,
   createDefaultState,
   estimateFermentationTimes,
   estimatePrefermentTiming,
   fermentationHours,
+  fermentationPlan,
   formatHourRange,
+  styleSteps,
+  timingText,
   formatTemp,
   formatTempDifference,
   formatWeight,
@@ -33,7 +37,7 @@ import {
   yeastSliderRange,
   type RecipeState,
 } from '../../src/lib/bread-calculator';
-import { formatScheduleTime, generateBakingSchedule, recipeCopyText, scheduleIcs } from '../../src/lib/bread-calculator-actions';
+import { formatScheduleTime, generateBakingSchedule, parseShareSettings, recipeCopyText, scheduleIcs, shareLinkParams } from '../../src/lib/bread-calculator-actions';
 import { printed, stateWith } from './helpers/bread-calculator';
 import { SWEEP_SIZE, runSweep, type SweepResult, type Tally } from './helpers/bread-calculator-sweep';
 
@@ -429,8 +433,9 @@ describe('9. timing and schedule', () => {
 
   // J5, decided 2026-11-23. Anchors at 75°F: 1% instant 1.5-2 h and 0.25% instant 4.5-6 h on one
   // curve; 10% starter 7-9 h and 20% starter 4-6 h; 17% shorter per 5°F warmer, compounding.
-  const bulkAt = (over: Partial<RecipeState>) => estimateFermentationTimes(stateWith({ ddt: 75, ...over })).bulk;
-  const hoursAt = (over: Partial<RecipeState>) => fermentationHours(stateWith({ ddt: 75, ...over }));
+  // The Custom card has no style times (J6), so it shows the curve itself.
+  const bulkAt = (over: Partial<RecipeState>) => estimateFermentationTimes(stateWith({ style: 'custom', ddt: 75, ...over })).bulk;
+  const hoursAt = (over: Partial<RecipeState>) => fermentationHours(stateWith({ style: 'custom', ddt: 75, ...over }));
 
   it('first rise at 75°F: 1% instant 1.5-2 hrs, 0.25% instant 4.5-6 hrs, 10% starter 7-9 hrs, 20% starter 4-6 hrs', () => {
     expect(bulkAt({ yeastType: 'instant', yeastPercent: 1 })).toBe('1.5-2 hrs');
@@ -518,10 +523,10 @@ describe('9. timing and schedule', () => {
 
   it('time ranges are rounded to a quarter hour and keep one unit (was "2-2 hrs", "43-86 min", "59-118 min")', () => {
     // The three the audit quoted: Baguette bulk, Sandwich proof, Sourdough proof at 76°F.
-    // Their values moved with the J5 time model; the rounding is what these pin.
-    expect(estimateFermentationTimes(styleState('baguette')).bulk).toBe('2.5-3.5 hrs');
-    expect(estimateFermentationTimes(styleState('sandwich')).proof).toBe('45-75 min');
-    expect(estimateFermentationTimes(styleState('sourdough')).proof).toBe('1-2 hrs');
+    // Their values now come from the J6 style times; the rounding is what these pin.
+    expect(estimateFermentationTimes(styleState('baguette')).bulk).toBe('2-3 hrs');
+    expect(estimateFermentationTimes(styleState('sandwich')).proof).toBe('45-60 min');
+    expect(estimateFermentationTimes(styleState('sourdough', { coldRetard: false })).proof).toBe('1-2 hrs');
     expect(formatHourRange(1.9, 2.1)).toBe('2-2.25 hrs');
     expect(formatHourRange(0.72, 1.43)).toBe('45-90 min');
     expect(formatHourRange(3.94, 5.91)).toBe('4-6 hrs');
@@ -565,13 +570,15 @@ describe('9. timing and schedule', () => {
   });
 
   it('FLAGGED: the schedule steps are the same for every style, Dutch oven preheat included', () => {
-    const sourdough = tasks(styleState('sourdough'));
-    for (const style of BREAD_STYLES) expect(tasks(styleState(style.id)), style.id).toEqual(sourdough);
+    // Cold Retard starts on for some styles (J6) and adds the fridge steps, so compare with it off.
+    const sourdough = tasks(styleState('sourdough', { coldRetard: false }));
+    for (const style of BREAD_STYLES) expect(tasks(styleState(style.id, { coldRetard: false })), style.id).toEqual(sourdough);
     expect(sourdough).toContain('Preheat oven (with Dutch oven)');
   });
 
   it('the autolyse rest comes before the final mix (was KNOWN ISSUE M)', () => {
-    const schedule = generateBakingSchedule(stateWith({ autolyse: true, autolyseDuration: 30 }), target);
+    // Cold Retard off: the Sourdough card now starts with it on (J6), which adds the fridge steps.
+    const schedule = generateBakingSchedule(stateWith({ autolyse: true, autolyseDuration: 30, coldRetard: false }), target);
     const order = schedule.map((s) => s.task);
     expect(order.indexOf('Autolyse (flour + water rest)')).toBe(order.indexOf('Mix final dough') - 1);
     expect(order.indexOf('Mix final dough')).toBe(order.indexOf('Bulk fermentation (stretch & fold)') - 1);
@@ -594,6 +601,125 @@ describe('9. timing and schedule', () => {
       formatScheduleTime(new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]))),
     );
     expect(starts).toEqual(schedule.map((s) => s.time));
+  });
+});
+
+describe('10. style times (J6): the steps and the Timing tab read one table', () => {
+  // Decided 2026-11-23. Times are at each card's own yeast and dough temperature. Folds happen
+  // inside the first rise, and the first rise is the whole time from mixing to shaping. Fridge
+  // times stay fixed; room times stretch or shrink with the J5 curve.
+  const card = (id: string, over: Partial<RecipeState> = {}) => {
+    const state = styleState(id, over);
+    return { state, times: timingText(state), steps: styleSteps(state) };
+  };
+  const spelled = (range: string) => range.replace(/ hrs$/, ' hours').replace(/ min$/, ' minutes');
+
+  it('each card starts on its J6 times, with Cold Retard on for Sourdough and Brioche only', () => {
+    const expected: Record<string, [string, string, boolean]> = {
+      'sourdough': ['4-6 hrs', '8-12 hrs', true],
+      'baguette': ['2-3 hrs', '45-60 min', false],
+      'focaccia': ['1.5-2 hrs', '1-2 hrs', false],
+      'sandwich': ['1-1.5 hrs', '45-60 min', false],
+      'ciabatta': ['2.5-3 hrs', '30-45 min', false],
+      'brioche': ['1.5-2 hrs', '2-3 hrs', true],
+      'no-knead': ['12-18 hrs', '1-2 hrs', false],
+      'custom': ['1.5-2 hrs', '45-90 min', false],
+    };
+    for (const style of BREAD_STYLES) {
+      const { state, times } = card(style.id);
+      expect([times.bulk, times.proof, state.coldRetard], style.id).toEqual(expected[style.id]);
+    }
+    expect(createDefaultState().coldRetard).toBe(true);
+  });
+
+  it('the fridge time shows in the total note: 8-12 hrs after shaping for Sourdough, 8-16 hrs after the first rise for Brioche', () => {
+    const sourdough = card('sourdough').times;
+    expect(sourdough.total).toBe('4-6 hrs');
+    expect(sourdough.totalNote).toBe('Plus 8-12 hours cold retard in refrigerator');
+    expect(sourdough.proofNote).toBe('Cold proof in refrigerator. Bake straight from cold or let warm 30 min.');
+    const brioche = card('brioche').times;
+    expect(brioche.total).toBe('3.5-5 hrs');
+    expect(brioche.totalNote).toBe('Plus 8-16 hours cold retard in refrigerator');
+    expect(brioche.proofNote).toBe('Shape the cold dough and proof it at room temperature until doubled.');
+    // Another card with Cold Retard switched on proofs in the fridge for the general 8-18 hours.
+    expect(card('baguette', { coldRetard: true }).times).toMatchObject({ bulk: '2-3 hrs', proof: '8-18 hrs', total: '2-3 hrs' });
+  });
+
+  it('with Cold Retard off, Sourdough proofs 1-2 hrs and Brioche falls back to the J5 proof', () => {
+    expect(card('sourdough', { coldRetard: false }).times).toMatchObject({ bulk: '4-6 hrs', proof: '1-2 hrs', total: '5-8 hrs', totalNote: 'Active time from mixing to baking' });
+    expect(card('brioche', { coldRetard: false }).times).toMatchObject({ bulk: '1.5-2 hrs', proof: estimateFermentationTimes(stateWith({ style: 'custom', coldRetard: false, ddt: 77, yeastType: 'instant', yeastPercent: 1.2 })).proof });
+  });
+
+  it('fridge times stay fixed; room times follow the J5 curve from the settings each card starts on', () => {
+    const warm = card('sourdough', { ddt: 86 });
+    expect(warm.times.proof).toBe('8-12 hrs');
+    expect(warm.times.totalNote).toBe('Plus 8-12 hours cold retard in refrigerator');
+    const j5 = (over: Partial<RecipeState>) => fermentationHours(stateWith({ style: 'custom', ...over }));
+    const ratio = j5({ yeastType: 'starter', yeastPercent: 20, ddt: 86 }).bulkMin / j5({ yeastType: 'starter', yeastPercent: 20, ddt: 76 }).bulkMin;
+    expect(fermentationPlan(warm.state).rise[0]).toBeCloseTo(4 * ratio, 9);
+    const cool = card('brioche', { ddt: 70 });
+    expect(cool.times.totalNote).toBe('Plus 8-16 hours cold retard in refrigerator');
+    expect(fermentationPlan(cool.state).proof![1]).toBeCloseTo(3 * 0.83 ** -1.4, 9);
+    // More yeast on No-Knead shortens its 12-18 hrs by the curve.
+    const twice = fermentationPlan(styleState('no-knead', { yeastPercent: 0.5 }));
+    expect(twice.rise[0]).toBeCloseTo(12 / Math.sqrt(3), 9);
+  });
+
+  it('every step with a time says what the Timing tab says, with Cold Retard on or off, at any temperature', () => {
+    for (const style of BREAD_STYLES) {
+      for (const coldRetard of [true, false]) {
+        for (const ddt of [65, 75, 85]) {
+          const { times, steps } = card(style.id, { coldRetard, ddt });
+          const text = steps.join(' | ');
+          expect(text, `${style.id} ${ddt}°F`).not.toMatch(/[{}]/);
+          if (style.id === 'custom') continue;
+          expect(text, `${style.id} rise`).toContain(spelled(times.bulk));
+          const plan = fermentationPlan(styleState(style.id, { coldRetard, ddt }));
+          const proofText = plan.proof ? spelled(times.proof) : `${spelled(times.proof)} in the refrigerator`;
+          expect(text, `${style.id} proof`).toContain(proofText);
+          if (plan.fridgeAfterRise) expect(text, `${style.id} fridge`).toContain(`then refrigerate ${spelled(formatHourRange(...plan.fridge!))}`);
+        }
+      }
+    }
+  });
+
+  it('the default steps read as decided, folds inside the first rise', () => {
+    expect(card('sourdough').steps).toEqual([
+      'Mix flour and water, autolyse 30-60 minutes',
+      'Add starter and salt, mix until combined',
+      'Bulk ferment 4-6 hours at room temperature, with a stretch and fold every 30 min for the first 2 hours',
+      'Shape and proof 8-12 hours in the refrigerator',
+      'Bake in Dutch oven at 500°F for 20 min covered, 25 min uncovered',
+    ]);
+    expect(card('sourdough', { coldRetard: false }).steps[3]).toBe('Shape and proof 1-2 hours');
+    expect(card('baguette').steps[2]).toBe('Bulk ferment 2-3 hours until doubled, with a fold every 30 minutes for the first 1.5 hours');
+    expect(card('focaccia').steps[2]).toBe('Bulk ferment 1.5-2 hours, with a stretch and fold every 30 min for the first hour');
+    expect(card('ciabatta').steps[3]).toBe('Bulk ferment 2.5-3 hours until very bubbly, with a stretch and fold every 30 min for the first 1.5 hours');
+    expect(card('brioche').steps.slice(4, 6)).toEqual(['Bulk ferment 1.5-2 hours, then refrigerate 8-16 hours', 'Shape the dough, proof 2-3 hours until doubled']);
+    expect(card('brioche', { coldRetard: false }).steps[4]).toBe('Bulk ferment 1.5-2 hours');
+    for (const style of BREAD_STYLES) {
+      // No step folds on its own, before or after the rise.
+      for (const step of style.instructions) if (/\bfold every\b/i.test(step)) expect(step, style.id).toMatch(/^Bulk ferment \{rise\}/);
+    }
+  });
+
+  it('the first rise label follows the time shown, not a 0.5% yeast line', () => {
+    const long = 'Long, slow ferment develops flavor. Dough should be bubbly and doubled.';
+    const doubled = 'Look for doubled volume with a domed surface.';
+    expect(card('no-knead').times.bulkNote).toBe(long);
+    expect(card('baguette').times.bulkNote).toBe(doubled);
+    expect(card('custom', { yeastPercent: 0.4 }).times.bulkNote).toBe(doubled);
+    expect(card('custom', { yeastPercent: 0.1, ddt: 70 }).times.bulkNote).toBe(long);
+    expect(card('sourdough').times.bulkNote).toBe('Look for 50-75% rise with visible bubbles. Dough should be airy and jiggly.');
+  });
+
+  it('a share link carries Cold Retard only when it differs from the card, both ways', () => {
+    const link = (state: RecipeState) => shareLinkParams(state, createDefaultEnrichments(), createDefaultFlourBlend()).filter(([k]) => k === 'retard');
+    expect(link(styleState('sourdough'))).toEqual([]);
+    expect(link(styleState('sourdough', { coldRetard: false }))).toEqual([['retard', '0']]);
+    expect(link(styleState('baguette', { coldRetard: true }))).toEqual([['retard', '1']]);
+    expect(parseShareSettings(new URLSearchParams('retard=0')).coldRetard).toBe(false);
+    expect(parseShareSettings(new URLSearchParams('retard=1')).coldRetard).toBe(true);
   });
 });
 
