@@ -10,7 +10,7 @@ import { STYLE_RECIPES, type StyleRecipe } from './bread-calculator';
 export interface BreadStyle extends StyleRecipe {
   description: string;
   flour: string;
-  /** The steps, with `{rise}`, `{proof}` and `{then-fridge}` where the times go. styleSteps()
+  /** The steps, with `{rise}`, `{proof}`, `{then-fridge}` and `{cold}` where the times go. styleSteps()
    *  in ./bread-calculator.ts fills them from the style's times, as the Timing tab shows them. */
   instructions: string[];
 }
@@ -89,7 +89,7 @@ const STYLE_TEXT: Record<string, Pick<BreadStyle, 'description' | 'flour' | 'ins
       'Gradually add soft butter (25%), knead until silky',
       'Add salt, knead 2 more minutes',
       'Bulk ferment {rise}{then-fridge}',
-      'Shape the dough, proof {proof} until doubled',
+      'Shape the{cold} dough, proof {proof} until doubled',
       'Egg wash and bake at 350°F for 25-30 minutes'
     ]
   },

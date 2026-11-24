@@ -177,12 +177,13 @@ export interface StyleTimes {
 }
 
 export const STYLE_TIMES: Record<string, StyleTimes> = {
-  'sourdough': { rise: [4, 6], proof: [1, 2], coldRetard: true, fridge: { after: 'shape', hours: [8, 12] } },
+  // Starter dough and rich dough proof slower than plain yeast dough.
+  'sourdough': { rise: [4, 6], proof: [2, 3], coldRetard: true, fridge: { after: 'shape', hours: [8, 12] } },
   'baguette': { rise: [2, 3], proof: [0.75, 1], coldRetard: false },
   'focaccia': { rise: [1.5, 2], proof: [1, 2], coldRetard: false },
   'sandwich': { rise: [1, 1.5], proof: [0.75, 1], coldRetard: false },
   'ciabatta': { rise: [2.5, 3], proof: [0.5, 0.75], coldRetard: false },
-  'brioche': { rise: [1.5, 2], coldRetard: true, fridge: { after: 'rise', hours: [8, 16], proofAfter: [2, 3] } },
+  'brioche': { rise: [1.5, 2], proof: [1, 1.5], coldRetard: true, fridge: { after: 'rise', hours: [8, 16], proofAfter: [2, 3] } },
   'no-knead': { rise: [12, 18], proof: [1, 2], coldRetard: false }
 };
 
@@ -679,14 +680,18 @@ export function timingText(state: RecipeState): {
  * A style's steps with their times filled in from the same plan the Timing tab shows.
  * `{rise}` is the first rise; `{proof}` is the final proof, or the fridge time when the
  * shaped loaf proofs in the fridge; `{then-fridge}` is ", then refrigerate ..." when the dough
- * goes in the fridge after the first rise, and nothing otherwise.
+ * goes in the fridge after the first rise, and nothing otherwise; `{cold}` is " cold" then too.
  */
 export function styleSteps(state: RecipeState): string[] {
   const plan = fermentationPlan(state);
   const proof = plan.proof ? stepRange(plan.proof) : `${stepRange(plan.fridge!)} in the refrigerator`;
   const thenFridge = plan.fridgeAfterRise ? `, then refrigerate ${stepRange(plan.fridge!)}` : '';
   return state.instructions.map((step) =>
-    step.replace('{rise}', stepRange(plan.rise)).replace('{proof}', proof).replace('{then-fridge}', thenFridge)
+    step
+      .replace('{rise}', stepRange(plan.rise))
+      .replace('{proof}', proof)
+      .replace('{then-fridge}', thenFridge)
+      .replace('{cold}', plan.fridgeAfterRise ? ' cold' : '')
   );
 }
 
