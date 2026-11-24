@@ -105,3 +105,24 @@ describe('homepage default recipe in the server HTML', () => {
     expect(src).toContain('const flourBlend: FlourEntry[] = calc.blendForWholeGrain(state.wholeGrain);');
   });
 });
+
+describe('homepage preferment "Ready when" lines', () => {
+  // The controls box and the recipe card each show a "Ready when" line. They once shared one id,
+  // so the script updated the first and the card's line stayed on the poolish text.
+  const ids = [...home.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
+  const readyIds = [...home.matchAll(/<p[^>]*\sid="([^"]+)"[^>]*>\s*Ready when:/g)].map((m) => m[1]);
+
+  it('uses every id on the page once', () => {
+    const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
+    expect(dupes).toEqual([]);
+  });
+
+  it('gives the controls box and the recipe card their own line, and the script fills both', () => {
+    const src = readFileSync(join(process.cwd(), 'src/pages/index.astro'), 'utf8');
+    expect(readyIds).toHaveLength(2);
+    expect(new Set(readyIds).size).toBe(2);
+    for (const id of readyIds) {
+      expect(src.includes(`getElementById('${id}')`), id).toBe(true);
+    }
+  });
+});

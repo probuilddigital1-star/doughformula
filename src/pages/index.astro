@@ -970,7 +970,7 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
                   <div class="space-y-2" id="preferment-ingredients-list">
                     <!-- Populated by JS -->
                   </div>
-                  <p class="text-xs text-[var(--crust-brown)] mt-3 pt-3 border-t border-[var(--border-light)]" id="preferment-ready-signs">
+                  <p class="text-xs text-[var(--crust-brown)] mt-3 pt-3 border-t border-[var(--border-light)]" id="recipe-preferment-ready-signs">
                     Ready when: domed, very bubbly, just starting to recede
                   </p>
                 </div>
@@ -1549,7 +1549,7 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
         const prefData = PREFERMENT_DATA[state.prefermentType];
         const prefTitle = document.getElementById('preferment-title');
         const prefTimingBadge = document.getElementById('preferment-timing-badge');
-        const prefReadySigns = document.getElementById('preferment-ready-signs');
+        const prefReadySigns = document.getElementById('recipe-preferment-ready-signs');
         const prefIngList = document.getElementById('preferment-ingredients-list');
 
         if (prefTitle) prefTitle.textContent = prefData.name.toUpperCase();
