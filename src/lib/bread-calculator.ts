@@ -523,44 +523,53 @@ export function formatHourRange(minHours: number, maxHours: number): string {
   return `${low}-${high} hrs`;
 }
 
-// Estimate fermentation times based on temperature and yeast type
-export function estimateFermentationTimes(state: RecipeState): { bulk: string; proof: string; total: string } {
-  // Base times at 75°F (24°C)
-  let baseBulkMin = 1.5; // hours
-  let baseBulkMax = 2;
-  let baseProofMin = 0.75;
-  let baseProofMax = 1.5;
+/**
+ * How much a temperature shortens or stretches a time, against a base temperature: 17% shorter
+ * for every 5°F warmer, compounding, and the reverse when cooler.
+ */
+export function temperatureFactor(tempF: number, baseF: number): number {
+  return Math.pow(0.83, (tempF - baseF) / 5);
+}
 
-  // Adjust for yeast type
+/**
+ * First rise (bulk) and final proof in hours, before rounding. The anchors are at 75°F dough.
+ *
+ * Commercial yeast is turned into its instant yeast equal first. One curve runs through 1%
+ * instant at 1.5-2 hrs and 0.25% at 4.5-6 hrs: every 4 times less yeast triples the time.
+ * A starter runs through 20% at 4-6 hrs and 10% at 7-9 hrs, each end on its own curve. The
+ * amount is held to the slider's range, so the curves are never read past what a baker can set.
+ */
+export function fermentationHours(state: RecipeState): { bulkMin: number; bulkMax: number; proofMin: number; proofMax: number } {
+  const range = yeastSliderRange(state.yeastType);
+  const percent = Math.min(range.max, Math.max(range.min, state.yeastPercent));
+  let bulkMin: number, bulkMax: number, proofMin: number, proofMax: number;
+
   if (state.yeastType === 'starter') {
-    baseBulkMin = 4;
-    baseBulkMax = 6;
-    baseProofMin = 1;
-    baseProofMax = 2;
-  } else if (state.yeastPercent < 0.5) {
-    // Low yeast (like no-knead)
-    baseBulkMin = 12;
-    baseBulkMax = 18;
+    const ratio = percent / 20;
+    bulkMin = 4 * Math.pow(ratio, -Math.log2(7 / 4));
+    bulkMax = 6 * Math.pow(ratio, -Math.log2(9 / 6));
+    proofMin = 1;
+    proofMax = 2;
+  } else {
+    const instant = percent / YEAST_CONVERSIONS[state.yeastType];
+    const curve = Math.pow(instant, -Math.log(3) / Math.log(4));
+    bulkMin = 1.5 * curve;
+    bulkMax = 2 * curve;
+    proofMin = 0.75;
+    proofMax = 1.5;
   }
 
-  // Temperature adjustment: ~10% change per degree F from 75°F
-  const tempDiff = state.ddt - 75;
-  const tempFactor = Math.pow(0.93, tempDiff / 5); // Warmer = faster
+  const t = temperatureFactor(state.ddt, 75);
+  return { bulkMin: bulkMin * t, bulkMax: bulkMax * t, proofMin: proofMin * t, proofMax: proofMax * t };
+}
 
-  const adjustedBulkMin = baseBulkMin * tempFactor;
-  const adjustedBulkMax = baseBulkMax * tempFactor;
-  const adjustedProofMin = baseProofMin * tempFactor;
-  const adjustedProofMax = baseProofMax * tempFactor;
-
-  const formatTime = formatHourRange;
-
-  const totalMin = adjustedBulkMin + adjustedProofMin;
-  const totalMax = adjustedBulkMax + adjustedProofMax;
-
+// Estimate fermentation times based on temperature and yeast type
+export function estimateFermentationTimes(state: RecipeState): { bulk: string; proof: string; total: string } {
+  const h = fermentationHours(state);
   return {
-    bulk: formatTime(adjustedBulkMin, adjustedBulkMax),
-    proof: formatTime(adjustedProofMin, adjustedProofMax),
-    total: formatTime(totalMin, totalMax)
+    bulk: formatHourRange(h.bulkMin, h.bulkMax),
+    proof: formatHourRange(h.proofMin, h.proofMax),
+    total: formatHourRange(h.bulkMin + h.proofMin, h.bulkMax + h.proofMax)
   };
 }
 
@@ -811,9 +820,8 @@ export function estimatePrefermentTiming(state: RecipeState): { fermentTime: str
   const prefData = PREFERMENT_DATA[state.prefermentType];
   if (!prefData) return { fermentTime: '-', startTime: '-' };
 
-  // Adjust timing based on room temperature
-  const tempDiff = state.roomTemp - 70; // Base temp 70°F
-  const tempFactor = Math.pow(0.93, tempDiff / 5); // Warmer = faster
+  // Adjust timing based on room temperature, from a 70°F base
+  const tempFactor = temperatureFactor(state.roomTemp, 70);
 
   const minTime = Math.round(prefData.fermentTimeMin * tempFactor);
   const maxTime = Math.round(prefData.fermentTimeMax * tempFactor);

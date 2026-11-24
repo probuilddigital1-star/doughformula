@@ -18,6 +18,8 @@ import {
   createDefaultEnrichments,
   createDefaultState,
   estimateFermentationTimes,
+  estimatePrefermentTiming,
+  fermentationHours,
   formatHourRange,
   formatTemp,
   formatTempDifference,
@@ -45,8 +47,9 @@ import { SWEEP_SIZE, runSweep, type SweepResult, type Tally } from './helpers/br
  * same way: `it.fails` first, then the fix, then the `.fails` comes off.
  *
  * Tests marked FLAGGED pin today's behavior where the right answer is a judgment call for the
- * site owner, so a change there is a decision and not an accident. The three left are the
- * time model (audit item J5) and the style-blind schedule (J7), which are not decided yet.
+ * site owner, so a change there is a decision and not an accident. The one left is the
+ * style-blind schedule (J7), which is not decided yet. The time model (J5) was decided on
+ * 2026-11-23 and is tested in section 9.
  */
 
 const styleState = (id: string, over: Partial<RecipeState> = {}): RecipeState => {
@@ -412,7 +415,7 @@ describe('9. timing and schedule', () => {
   };
   const everyTimingState = function* (): Generator<RecipeState> {
     for (const ddt of [68, 70, 73, 75, 76, 78, 80, 86]) {
-      for (const [yeastType, yeastPercent] of [['starter', 20], ['instant', 0.25], ['instant', 1], ['active-dry', 1.25], ['fresh', 3]] as const) {
+      for (const [yeastType, yeastPercent] of [['starter', 10], ['starter', 20], ['starter', 40], ['instant', 0.1], ['instant', 0.25], ['instant', 1], ['instant', 3], ['active-dry', 1.25], ['fresh', 3]] as const) {
         yield stateWith({ ddt, yeastType, yeastPercent });
       }
     }
@@ -424,21 +427,87 @@ describe('9. timing and schedule', () => {
     }
   });
 
-  it('FLAGGED: base times at 75°F are 4-6 h bulk for a starter, 12-18 h under 0.5% yeast, and one short range for any other yeast amount', () => {
-    expect(estimateFermentationTimes(stateWith({ ddt: 75 })).total).toBe('5-8 hrs');
-    expect(estimateFermentationTimes(stateWith({ ddt: 75 })).bulk).toBe('4-6 hrs');
-    expect(estimateFermentationTimes(stateWith({ ddt: 75, yeastType: 'instant', yeastPercent: 0.4 })).bulk).toBe('12-18 hrs');
-    const half = estimateFermentationTimes(stateWith({ ddt: 75, yeastType: 'instant', yeastPercent: 0.5 }));
-    const three = estimateFermentationTimes(stateWith({ ddt: 75, yeastType: 'instant', yeastPercent: 3 }));
-    expect(half).toEqual(three);
-    // The 0.5% line is not converted by yeast type: 0.6% fresh (about 0.2% instant) gets the short time.
-    expect(estimateFermentationTimes(stateWith({ ddt: 75, yeastType: 'fresh', yeastPercent: 0.6 }))).toEqual(half);
+  // J5, decided 2026-11-23. Anchors at 75°F: 1% instant 1.5-2 h and 0.25% instant 4.5-6 h on one
+  // curve; 10% starter 7-9 h and 20% starter 4-6 h; 17% shorter per 5°F warmer, compounding.
+  const bulkAt = (over: Partial<RecipeState>) => estimateFermentationTimes(stateWith({ ddt: 75, ...over })).bulk;
+  const hoursAt = (over: Partial<RecipeState>) => fermentationHours(stateWith({ ddt: 75, ...over }));
+
+  it('first rise at 75°F: 1% instant 1.5-2 hrs, 0.25% instant 4.5-6 hrs, 10% starter 7-9 hrs, 20% starter 4-6 hrs', () => {
+    expect(bulkAt({ yeastType: 'instant', yeastPercent: 1 })).toBe('1.5-2 hrs');
+    expect(bulkAt({ yeastType: 'instant', yeastPercent: 0.25 })).toBe('4.5-6 hrs');
+    expect(bulkAt({ yeastType: 'starter', yeastPercent: 10 })).toBe('7-9 hrs');
+    expect(bulkAt({ yeastType: 'starter', yeastPercent: 20 })).toBe('4-6 hrs');
   });
 
-  it('FLAGGED: 5°F warmer shortens every time by 7%', () => {
-    const at = (ddt: number) => estimateFermentationTimes(stateWith({ ddt, yeastType: 'instant', yeastPercent: 0.25 })).bulk;
-    expect(at(75)).toBe('12-18 hrs');
-    expect(at(80)).toBe(`${(12 * 0.93).toFixed(0)}-${(18 * 0.93).toFixed(0)} hrs`);
+  it('instant yeast follows one smooth curve through both anchors, with no jump (was a cliff at 0.5%)', () => {
+    // Every 4 times less yeast triples the time, so half the yeast is the square root of 3 times longer.
+    const half = hoursAt({ yeastType: 'instant', yeastPercent: 0.5 });
+    expect(half.bulkMin).toBeCloseTo(1.5 * Math.sqrt(3), 6);
+    expect(half.bulkMax).toBeCloseTo(2 * Math.sqrt(3), 6);
+    expect(bulkAt({ yeastType: 'instant', yeastPercent: 0.4 })).not.toBe(bulkAt({ yeastType: 'instant', yeastPercent: 0.5 }));
+    for (let p = 0.1; p * 1.01 <= 3; p *= 1.01) {
+      const a = hoursAt({ yeastType: 'instant', yeastPercent: p });
+      const b = hoursAt({ yeastType: 'instant', yeastPercent: p * 1.01 });
+      expect(a.bulkMin / b.bulkMin, `${p}%`).toBeLessThan(1.01);
+      expect(a.bulkMin / b.bulkMin, `${p}%`).toBeGreaterThan(1);
+    }
+  });
+
+  it('every yeast type is read as its instant yeast equal first (0.6% fresh is 0.2% instant)', () => {
+    const same = (a: Partial<RecipeState>, b: Partial<RecipeState>) => {
+      const x = hoursAt(a), y = hoursAt(b);
+      for (const k of ['bulkMin', 'bulkMax', 'proofMin', 'proofMax'] as const) expect(x[k], `${a.yeastType} ${a.yeastPercent}% ${k}`).toBeCloseTo(y[k], 9);
+    };
+    const instant1 = { yeastType: 'instant', yeastPercent: 1 } as const;
+    same({ yeastType: 'active-dry', yeastPercent: 1.25 }, instant1);
+    same({ yeastType: 'fresh', yeastPercent: 3 }, instant1);
+    same({ yeastType: 'fresh', yeastPercent: 0.6 }, { yeastType: 'instant', yeastPercent: 0.2 });
+    expect(bulkAt({ yeastType: 'fresh', yeastPercent: 0.75 })).toBe('4.5-6 hrs');
+  });
+
+  it('the starter amount changes the time: 15% sits between 10% and 20%, and 40% is shorter still', () => {
+    const at = (p: number) => hoursAt({ yeastType: 'starter', yeastPercent: p });
+    expect(at(15).bulkMin).toBeGreaterThan(at(20).bulkMin);
+    expect(at(15).bulkMin).toBeLessThan(at(10).bulkMin);
+    expect(at(40).bulkMax).toBeLessThan(at(20).bulkMax);
+    expect(at(40).bulkMin).toBeLessThan(at(40).bulkMax);
+  });
+
+  it('5°F warmer is 17% shorter, compounding, and the reverse when cooler, for every time', () => {
+    const base = hoursAt({ yeastType: 'instant', yeastPercent: 1 });
+    for (const [ddt, factor] of [[80, 0.83], [85, 0.83 ** 2], [70, 1 / 0.83], [65, 1 / 0.83 ** 2], [76, 0.83 ** 0.2]] as const) {
+      const t = hoursAt({ yeastType: 'instant', yeastPercent: 1, ddt });
+      for (const key of ['bulkMin', 'bulkMax', 'proofMin', 'proofMax'] as const) {
+        expect(t[key], `${key} at ${ddt}°F`).toBeCloseTo(base[key] * factor, 9);
+      }
+    }
+    expect(bulkAt({ yeastType: 'instant', yeastPercent: 1, ddt: 80 })).toBe('1.25-1.75 hrs');
+  });
+
+  it('the preferment box uses the same temperature rule, from its 70°F room base', () => {
+    const poolish = (roomTemp: number) => estimatePrefermentTiming(stateWith({ prefermentType: 'poolish', roomTemp })).fermentTime;
+    expect(poolish(70)).toBe('8-12 hrs');
+    expect(poolish(75)).toBe('7-10 hrs');
+    expect(poolish(80)).toBe('6-8 hrs');
+    expect(poolish(65)).toBe('10-14 hrs');
+  });
+
+  it('more yeast or starter never means more time, and warmer never means more time', () => {
+    const keys = ['bulkMin', 'bulkMax', 'proofMin', 'proofMax'] as const;
+    for (const yeastType of ['instant', 'active-dry', 'fresh', 'starter'] as const) {
+      const range = yeastSliderRange(yeastType);
+      for (let ddt = 60; ddt <= 90; ddt += 1) {
+        let prev = hoursAt({ yeastType, yeastPercent: range.min, ddt });
+        for (let i = 1; i <= 40; i++) {
+          const p = range.min + ((range.max - range.min) * i) / 40;
+          const next = hoursAt({ yeastType, yeastPercent: p, ddt });
+          for (const k of keys) expect(next[k], `${yeastType} ${p}% at ${ddt}°F ${k}`).toBeLessThanOrEqual(prev[k]);
+          const warmer = hoursAt({ yeastType, yeastPercent: p, ddt: ddt + 1 });
+          for (const k of keys) expect(warmer[k], `${yeastType} ${p}% at ${ddt + 1}°F ${k}`).toBeLessThan(next[k]);
+          prev = next;
+        }
+      }
+    }
   });
 
   it('a time range never shows the same number twice, like "2-2 hrs" (was KNOWN ISSUE L)', () => {
@@ -449,8 +518,9 @@ describe('9. timing and schedule', () => {
 
   it('time ranges are rounded to a quarter hour and keep one unit (was "2-2 hrs", "43-86 min", "59-118 min")', () => {
     // The three the audit quoted: Baguette bulk, Sandwich proof, Sourdough proof at 76°F.
-    expect(estimateFermentationTimes(styleState('baguette')).bulk).toBe('1.5-2 hrs');
-    expect(estimateFermentationTimes(styleState('sandwich')).proof).toBe('45-90 min');
+    // Their values moved with the J5 time model; the rounding is what these pin.
+    expect(estimateFermentationTimes(styleState('baguette')).bulk).toBe('2.5-3.5 hrs');
+    expect(estimateFermentationTimes(styleState('sandwich')).proof).toBe('45-75 min');
     expect(estimateFermentationTimes(styleState('sourdough')).proof).toBe('1-2 hrs');
     expect(formatHourRange(1.9, 2.1)).toBe('2-2.25 hrs');
     expect(formatHourRange(0.72, 1.43)).toBe('45-90 min');
