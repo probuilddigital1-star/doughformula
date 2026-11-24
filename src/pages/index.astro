@@ -399,7 +399,7 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
                   <!-- Primary Flour -->
                   <div class="flour-entry" data-flour-index="0">
                     <div class="flex items-center gap-2 mb-2">
-                      <select class="flour-type-select input flex-1 py-2" data-flour="0">
+                      <select class="flour-type-select input flex-1 min-w-0 py-2" data-flour="0">
                         <option value="bread">Bread Flour (12-14% protein)</option>
                         <option value="ap">All-Purpose (10-12% protein)</option>
                         <option value="whole-wheat">Whole Wheat</option>
@@ -420,7 +420,7 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
                   <!-- Additional Flour Slots (hidden by default) -->
                   <div id="flour-slot-1" class:list={['flour-entry', { hidden: blendOnLoad.length < 2 }]} data-flour-index="1">
                     <div class="flex items-center gap-2 mb-2">
-                      <select class="flour-type-select input flex-1 py-2" data-flour="1">
+                      <select class="flour-type-select input flex-1 min-w-0 py-2" data-flour="1">
                         <option value="bread">Bread Flour</option>
                         <option value="ap">All-Purpose</option>
                         <option value="whole-wheat" selected>Whole Wheat</option>
@@ -443,7 +443,7 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
 
                   <div id="flour-slot-2" class="flour-entry hidden" data-flour-index="2">
                     <div class="flex items-center gap-2 mb-2">
-                      <select class="flour-type-select input flex-1 py-2" data-flour="2">
+                      <select class="flour-type-select input flex-1 min-w-0 py-2" data-flour="2">
                         <option value="bread">Bread Flour</option>
                         <option value="ap">All-Purpose</option>
                         <option value="whole-wheat">Whole Wheat</option>
@@ -523,7 +523,7 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
                     </div>
                     <div id="fat-controls" class="hidden mt-2 pl-4 space-y-2">
                       <div class="flex items-center gap-2">
-                        <select id="fat-type-select" class="input py-1 text-sm">
+                        <select id="fat-type-select" class="input min-w-0 py-1 text-sm">
                           <option value="butter">Butter (15% water)</option>
                           <option value="oil">Oil (0% water)</option>
                         </select>
@@ -552,7 +552,7 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
                     </div>
                     <div id="egg-controls" class="hidden mt-2 pl-4 space-y-2">
                       <div class="flex items-center gap-2">
-                        <select id="egg-type-select" class="input py-1 text-sm">
+                        <select id="egg-type-select" class="input min-w-0 py-1 text-sm">
                           <option value="whole">Whole Eggs (75% water)</option>
                           <option value="yolks">Yolks Only (50% water)</option>
                           <option value="whites">Whites Only (90% water)</option>
@@ -585,13 +585,13 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
                     </div>
                     <div id="dairy-controls" class="hidden mt-2 pl-4 space-y-2">
                       <div class="flex items-center gap-2">
-                        <select id="dairy-type-select" class="input py-1 text-sm">
+                        <select id="dairy-type-select" class="input min-w-0 py-1 text-sm">
                           <option value="whole-milk">Whole Milk (87% water)</option>
                           <option value="buttermilk">Buttermilk (90% water)</option>
                           <option value="cream">Heavy Cream (58% water)</option>
                         </select>
                         <input type="number" id="dairy-percent" class="input w-16 text-center py-1" value="50" min="10" max="100" />
-                        <span class="text-sm text-[var(--crust-brown)]">% of liquid</span>
+                        <span class="text-sm text-[var(--crust-brown)] whitespace-nowrap">% of liquid</span>
                       </div>
                     </div>
                   </div>
@@ -616,7 +616,7 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
                     </div>
                     <div id="sweet-controls" class="hidden mt-2 pl-4 space-y-2">
                       <div class="flex items-center gap-2">
-                        <select id="sweet-type-select" class="input py-1 text-sm">
+                        <select id="sweet-type-select" class="input min-w-0 py-1 text-sm">
                           <option value="sugar">Sugar (0% water)</option>
                           <option value="honey">Honey (17% water)</option>
                           <option value="maple">Maple Syrup (33% water)</option>
@@ -1374,7 +1374,7 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
   <!-- Baking Schedule Modal -->
   <div id="schedule-modal" class="fixed inset-0 z-50 hidden">
     <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="schedule-modal-overlay"></div>
-    <div class="absolute inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:max-w-lg sm:w-full bg-[var(--cream-flour)] rounded-xl shadow-2xl overflow-hidden">
+    <div class="absolute inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:max-w-lg sm:w-full sm:max-h-[calc(100%-2rem)] bg-[var(--cream-flour)] rounded-xl shadow-2xl overflow-y-auto">
       <div class="p-6">
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-display text-xl">Plan My Bake</h3>
