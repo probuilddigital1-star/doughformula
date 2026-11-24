@@ -411,7 +411,7 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
                         <option value="tipo-00">Tipo 00</option>
                       </select>
                       <div class="flex items-center gap-1">
-                        <input type="number" class="flour-percent-input input w-16 text-center py-2" value={blendOnLoad[0].percent} min="0" max="100" data-flour="0" />
+                        <input type="number" class="flour-percent-input input w-22 shrink-0 text-center py-2" value={blendOnLoad[0].percent} min="0" max="100" data-flour="0" />
                         <span class="text-sm text-[var(--crust-brown)]">%</span>
                       </div>
                     </div>
@@ -432,7 +432,7 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
                         <option value="tipo-00">Tipo 00</option>
                       </select>
                       <div class="flex items-center gap-1">
-                        <input type="number" class="flour-percent-input input w-16 text-center py-2" value={blendOnLoad[1]?.percent ?? 0} min="0" max="100" data-flour="1" />
+                        <input type="number" class="flour-percent-input input w-22 shrink-0 text-center py-2" value={blendOnLoad[1]?.percent ?? 0} min="0" max="100" data-flour="1" />
                         <span class="text-sm text-[var(--crust-brown)]">%</span>
                       </div>
                       <button class="remove-flour-btn text-[var(--crust-brown)] hover:text-red-500 p-1" data-flour="1">
@@ -455,7 +455,7 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
                         <option value="tipo-00">Tipo 00</option>
                       </select>
                       <div class="flex items-center gap-1">
-                        <input type="number" class="flour-percent-input input w-16 text-center py-2" value="0" min="0" max="100" data-flour="2" />
+                        <input type="number" class="flour-percent-input input w-22 shrink-0 text-center py-2" value="0" min="0" max="100" data-flour="2" />
                         <span class="text-sm text-[var(--crust-brown)]">%</span>
                       </div>
                       <button class="remove-flour-btn text-[var(--crust-brown)] hover:text-red-500 p-1" data-flour="2">
@@ -527,7 +527,7 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
                           <option value="butter">Butter (15% water)</option>
                           <option value="oil">Oil (0% water)</option>
                         </select>
-                        <input type="number" id="fat-percent" class="input w-16 text-center py-1" value="5" min="1" max="30" />
+                        <input type="number" id="fat-percent" class="input w-22 shrink-0 text-center py-1" value="5" min="1" max="30" />
                         <span class="text-sm text-[var(--crust-brown)]">%</span>
                       </div>
                     </div>
@@ -557,7 +557,7 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
                           <option value="yolks">Yolks Only (50% water)</option>
                           <option value="whites">Whites Only (90% water)</option>
                         </select>
-                        <input type="number" id="egg-count" class="input w-16 text-center py-1" value="2" min="1" max="12" />
+                        <input type="number" id="egg-count" class="input w-22 shrink-0 text-center py-1" value="2" min="1" max="12" />
                         <span class="text-sm text-[var(--crust-brown)]">eggs</span>
                       </div>
                       <p class="text-xs text-[var(--crust-brown)]">≈ <span id="egg-weight">100</span>g total</p>
@@ -590,7 +590,7 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
                           <option value="buttermilk">Buttermilk (90% water)</option>
                           <option value="cream">Heavy Cream (58% water)</option>
                         </select>
-                        <input type="number" id="dairy-percent" class="input w-16 text-center py-1" value="50" min="10" max="100" />
+                        <input type="number" id="dairy-percent" class="input w-22 shrink-0 text-center py-1" value="50" min="10" max="100" />
                         <span class="text-sm text-[var(--crust-brown)] whitespace-nowrap">% of liquid</span>
                       </div>
                     </div>
@@ -622,7 +622,7 @@ const yeastRangeOnLoad = yeastSliderRange(defaultState.yeastType);
                           <option value="maple">Maple Syrup (33% water)</option>
                           <option value="malt">Malt Syrup (20% water)</option>
                         </select>
-                        <input type="number" id="sweet-percent" class="input w-16 text-center py-1" value="5" min="1" max="20" />
+                        <input type="number" id="sweet-percent" class="input w-22 shrink-0 text-center py-1" value="5" min="1" max="20" />
                         <span class="text-sm text-[var(--crust-brown)]">%</span>
                       </div>
                     </div>
